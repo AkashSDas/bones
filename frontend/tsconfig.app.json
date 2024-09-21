@@ -16,8 +16,8 @@
 
         /* Linting */
         "strict": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
+        "noUnusedLocals": false, // this is conflicting with @typescript-eslint/no-unused-vars
+        "noUnusedParameters": false, // this is conflicting with @typescript-eslint/no-unused-vars
         "noFallthroughCasesInSwitch": true,
 
         /* Path Aliases */
