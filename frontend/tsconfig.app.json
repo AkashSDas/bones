@@ -26,7 +26,7 @@
             "@/*": ["./src/*"]
         },
 
-        "types": ["vitest/globals"]
+        "types": ["vitest/globals", "axe-playwright"]
     },
     "include": ["src", "./src/tests/setup.ts", "./playwright.config.ts"]
 }
