@@ -7,11 +7,15 @@
         "dev": "tsc -v && vite",
         "vers": "tsc -v",
         "build": "tsc -b && vite build",
-        "lint": "eslint .",
         "preview": "vite preview",
         "test": "vitest",
         "test:cov": "vitest --coverage",
-        "test:ui": "vitest --ui"
+        "test:ui": "vitest --ui",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "lint:strict": "eslint . --max-warnings=0",
+        "prettier": "prettier --write */**/*.{js,json,ts,tsx,css,md}",
+        "prepare": "cd .. && husky ./frontend/.husky"
     },
     "dependencies": {
         "react": "18.3.1",
@@ -29,18 +33,30 @@
         "@vitejs/plugin-react": "4.3.1",
         "@vitest/coverage-v8": "2.1.1",
         "eslint": "9.9.0",
-        "eslint-config-prettier": "^9.1.0",
-        "eslint-plugin-prettier": "^5.2.1",
+        "eslint-config-prettier": "9.1.0",
+        "eslint-plugin-prettier": "5.2.1",
         "eslint-plugin-react": "7.36.1",
         "eslint-plugin-react-hooks": "5.1.0-rc.0",
         "eslint-plugin-react-refresh": "0.4.9",
         "globals": "15.9.0",
+        "husky": "9.1.6",
         "jsdom": "25.0.0",
+        "lint-staged": "^15.2.10",
         "prettier": "3.3.3",
         "prettier-plugin-tailwindcss": "0.6.6",
         "typescript": "5.5.3",
         "typescript-eslint": "8.0.1",
         "vite": "5.4.1",
         "vitest": "2.1.1"
+    },
+    "lint-staged": {
+        "*/**/*.{js,jsx,ts,tsx}": [
+            "prettier --write",
+            "eslint --fix",
+            "eslint"
+        ],
+        "*/**/*.{json,css,md}": [
+            "prettier --write"
+        ]
     }
 }

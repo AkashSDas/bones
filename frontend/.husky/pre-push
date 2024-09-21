@@ -1,0 +1,4 @@
+# frontend/.husky/pre-push
+cd ./frontend
+pnpm test --watchAll=false
+pnpm build
