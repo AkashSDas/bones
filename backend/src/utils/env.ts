@@ -15,9 +15,11 @@ const EnvironmentVariablesSchema = z.object({
     }),
 });
 
-function loadEnv(): z.infer<typeof EnvironmentVariablesSchema> {
+export async function loadEnv(): Promise<
+    z.infer<typeof EnvironmentVariablesSchema>
+> {
     try {
-        return EnvironmentVariablesSchema.parse({
+        return await EnvironmentVariablesSchema.parseAsync({
             port: process.env.PORT,
         });
     } catch (e) {
@@ -27,4 +29,4 @@ function loadEnv(): z.infer<typeof EnvironmentVariablesSchema> {
 }
 
 /** Environment variables (validated) */
-export const env = loadEnv();
+export const env = await loadEnv();
