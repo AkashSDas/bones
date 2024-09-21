@@ -1,14 +1,43 @@
 {
     "name": "backend",
+    "version": "0.1.0",
+    "type": "module",
     "scripts": {
-        "dev": "tsx watch src/index.ts"
+        "dev": "node -v && tsc -v && tsx watch src/index.ts",
+        "vers": "tsc -v",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "lint:strict": "eslint . --max-warnings=0",
+        "prettier": "prettier --write src/**/*.{js,json,ts,tsx,css,md}",
+        "prepare": "cd .. && husky ./backend/.husky"
     },
     "dependencies": {
         "@hono/node-server": "^1.13.1",
-        "hono": "^4.6.2"
+        "dotenv": "^16.4.5",
+        "hono": "^4.6.2",
+        "zod": "^3.23.8"
     },
     "devDependencies": {
+        "@trivago/prettier-plugin-sort-imports": "^4.3.0",
         "@types/node": "^20.11.17",
-        "tsx": "^4.7.1"
+        "eslint": "^9.11.0",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-prettier": "^5.2.1",
+        "husky": "^9.1.6",
+        "lint-staged": "^15.2.10",
+        "prettier": "^3.3.3",
+        "tsx": "^4.7.1",
+        "typescript": "5.5.3",
+        "typescript-eslint": "^8.6.0"
+    },
+    "lint-staged": {
+        "*/**/*.{js,jsx,ts,tsx}": [
+            "prettier --write",
+            "eslint --fix",
+            "eslint"
+        ],
+        "*/**/*.{json,css,md}": [
+            "prettier --write"
+        ]
     }
 }

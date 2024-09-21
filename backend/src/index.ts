@@ -1,11 +1,19 @@
+// Update preitter to have this file imported first so that it will
+// load all of the environment variables
+import { env } from "./utils/env";
+
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
-import { testRouter } from "./api/testing";
-import { cors } from "hono/cors";
-import { prettyJSON } from "hono/pretty-json";
 import { compress } from "hono/compress";
+import { cors } from "hono/cors";
+
+import { testRouter } from "./api/testing";
 
 const app = new Hono();
+
+// ==========================
+// Middlewares
+// ==========================
 
 app.use(
     "/api/*",
@@ -16,17 +24,19 @@ app.use(
         exposeHeaders: ["Content-Length"],
         maxAge: 600,
         credentials: true,
-    })
+    }),
 );
-app.use(prettyJSON());
 app.use(compress({ encoding: "gzip" }));
+
+// ==========================
+// Endpoints
+// ==========================
 
 app.route("/api/test", testRouter);
 
-const port = 8000;
-console.log(`Server is running on port ${port}`);
+console.log(`Server is running on port ${env.port}`);
 
 serve({
     fetch: app.fetch,
-    port,
+    port: env.port,
 });

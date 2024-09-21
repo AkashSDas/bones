@@ -1,0 +1,3 @@
+# backend/.husky/pre-commit
+cd ./backend
+pnpm lint-staged
