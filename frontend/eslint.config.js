@@ -12,6 +12,7 @@ export default tseslint.config(
         ignores: [
             "dist",
             "coverage",
+            "playwright-report",
             "node_modules",
             "package-lock.json",
             "pnpm-lock.yaml",

@@ -28,5 +28,5 @@
 
         "types": ["vitest/globals"]
     },
-    "include": ["src", "./src/tests/setup.ts"]
+    "include": ["src", "./src/tests/setup.ts", "./playwright.config.ts"]
 }
