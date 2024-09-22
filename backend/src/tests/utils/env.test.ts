@@ -17,31 +17,31 @@ describe("loadEnv", () => {
         vi.restoreAllMocks(); // Restore all mocks after each test
     });
 
-    it("should parse valid PORT from environment variables", async () => {
+    it("should parse valid PORT from environment variables", () => {
         process.env.PORT = "3000";
 
-        const parsedEnv = await loadEnv();
+        const parsedEnv = loadEnv();
         expect(parsedEnv.PORT).toBe(3000);
     });
 
-    it("should call process.exit with 1 for invalid PORT", async () => {
+    it("should call process.exit with 1 for invalid PORT", () => {
         process.env.PORT = "invalid-port";
 
-        await loadEnv();
+        loadEnv();
         expect(mockExit).toHaveBeenCalledWith(1);
     });
 
-    it("should call process.exit with 1 for missing PORT", async () => {
-        delete process.env.PORT;
+    it("should call process.exit with 1 for missing PORT", () => {
+        process.env.PORT = undefined;
 
-        await loadEnv();
+        loadEnv();
         expect(mockExit).toHaveBeenCalledWith(1);
     });
 
-    it('should parse "8a0b" as port 8', async () => {
+    it("should parse '8a0b' as port 8", () => {
         process.env.PORT = "8a0b";
 
-        const parsedEnv = await loadEnv();
+        const parsedEnv = loadEnv();
         expect(parsedEnv.PORT).toBe(8);
     });
 });

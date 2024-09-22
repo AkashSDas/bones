@@ -28,39 +28,59 @@ const EnvironmentVariablesSchema = z
         DB_NAME: z.string(),
         DB_MIGRATING: stringBoolean,
         DB_SEEDING: stringBoolean,
+        LOG_LEVEL: z
+            .enum([
+                "fatal",
+                "error",
+                "warn",
+                "info",
+                "debug",
+                "trace",
+                "silent",
+            ])
+            .default("debug"),
+        CORS_ORIGINS: z.string().transform((v): string[] => {
+            try {
+                const origins = v.split(",");
+
+                if (!Array.isArray(origins)) {
+                    throw Error("CORS_ORIGINS must be an array");
+                } else if (origins.length === 0) {
+                    throw Error("CORS_ORIGINS must not be empty");
+                } else {
+                    return origins;
+                }
+            } catch (e) {
+                throw Error(
+                    `Failed to parse CORS_ORIGINS: ${e}. Received value: ${v}`,
+                );
+            }
+        }),
     })
     .transform((env) => ({
         PORT: env.PORT,
         DB_URL: `postgresql://${env.DB_USERNAME}:${env.DB_PASSWORD}@${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}`,
         DB_MIGRATING: env.DB_MIGRATING,
         DB_SEEDING: env.DB_SEEDING,
+        LOG_LEVEL: env.LOG_LEVEL,
+        CORS_ORIGINS: env.CORS_ORIGINS,
     }));
 
-export async function loadEnv(): Promise<
-    z.infer<typeof EnvironmentVariablesSchema>
-> {
+export function loadEnv(): z.infer<typeof EnvironmentVariablesSchema> {
     try {
         const { parsed, error } = config();
 
         if (parsed) {
-            return await EnvironmentVariablesSchema.parseAsync({
-                PORT: parsed.PORT,
-                DB_USERNAME: parsed.DB_USERNAME,
-                DB_PASSWORD: parsed.DB_PASSWORD,
-                DB_HOST: parsed.DB_HOST,
-                DB_PORT: parsed.DB_PORT,
-                DB_NAME: parsed.DB_NAME,
-                DB_MIGRATING: parsed.DB_MIGRATING,
-                DB_SEEDING: parsed.DB_SEEDING,
-            });
+            return EnvironmentVariablesSchema.parse(parsed);
         } else {
             throw Error(`Failed to parse environment variables: ${error}`);
         }
     } catch (e) {
+        // Cannot use `log.error` since it has not been initialized first
         console.error(`Failed to load environment variables: ${e}`);
         process.exit(1);
     }
 }
 
 /** Environment variables (validated) */
-export const env = await loadEnv();
+export const env = loadEnv();
