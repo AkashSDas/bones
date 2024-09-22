@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "useDefineForClassFields": true,
+        "lib": ["ES2020", "DOM", "DOM.Iterable"],
+        "module": "ESNext",
+        "skipLibCheck": true,
+
+        /* Bundler mode */
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "isolatedModules": true,
+        "moduleDetection": "force",
+        "noEmit": true,
+        "jsx": "react-jsx",
+
+        /* Linting */
+        "strict": true,
+        "noUnusedLocals": false, // this is conflicting with @typescript-eslint/no-unused-vars
+        "noUnusedParameters": false, // this is conflicting with @typescript-eslint/no-unused-vars
+        "noFallthroughCasesInSwitch": true,
+
+        /* Path Aliases */
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./src/*"]
+        },
+
+        "types": ["vitest/globals", "axe-playwright"]
+    },
+    "include": ["src", "./src/tests/setup.ts", "./playwright.config.ts"]
+}

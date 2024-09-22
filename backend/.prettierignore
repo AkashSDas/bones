@@ -1,0 +1,5 @@
+node_modules
+coverage
+playwright-report
+package-lock.json
+pnpm-lock.yaml

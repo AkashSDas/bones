@@ -1,0 +1,3 @@
+# backend/.husky/pre-push
+cd ./backend
+pnpm test
