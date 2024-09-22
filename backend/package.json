@@ -12,12 +12,17 @@
         "prepare": "cd .. && husky ./backend/.husky",
         "test": "vitest",
         "test:cov": "vitest --coverage",
-        "test:ui": "vitest --ui"
+        "test:ui": "vitest --ui",
+        "db:generate": "drizzle-kit generate:pg",
+        "db:migrate": "cross-env DB_MIGRATING=true tsx src/db/migrate.ts",
+        "db:seed": "cross-env DB_SEEDING=true tsx src/db/seed.ts"
     },
     "dependencies": {
+        "@dotenvx/dotenvx": "^1.14.1",
         "@hono/node-server": "^1.13.1",
-        "dotenv": "^16.4.5",
+        "drizzle-orm": "^0.33.0",
         "hono": "^4.6.2",
+        "postgres": "^3.4.4",
         "zod": "^3.23.8"
     },
     "devDependencies": {
@@ -25,6 +30,8 @@
         "@types/node": "^20.11.17",
         "@vitest/coverage-v8": "^2.1.1",
         "@vitest/ui": "^2.1.1",
+        "cross-env": "^7.0.3",
+        "drizzle-kit": "^0.24.2",
         "eslint": "^9.11.0",
         "eslint-config-prettier": "^9.1.0",
         "eslint-plugin-prettier": "^5.2.1",

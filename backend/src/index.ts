@@ -34,9 +34,9 @@ app.use(compress({ encoding: "gzip" }));
 
 app.route("/api/test", testRouter);
 
-console.log(`Server is running on port ${env.port}`);
+console.log(`Server is running on port ${env.PORT}`);
 
 serve({
     fetch: app.fetch,
-    port: env.port,
+    port: env.PORT,
 });

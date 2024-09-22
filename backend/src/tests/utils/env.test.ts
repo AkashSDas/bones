@@ -21,7 +21,7 @@ describe("loadEnv", () => {
         process.env.PORT = "3000";
 
         const parsedEnv = await loadEnv();
-        expect(parsedEnv.port).toBe(3000);
+        expect(parsedEnv.PORT).toBe(3000);
     });
 
     it("should call process.exit with 1 for invalid PORT", async () => {
@@ -42,6 +42,6 @@ describe("loadEnv", () => {
         process.env.PORT = "8a0b";
 
         const parsedEnv = await loadEnv();
-        expect(parsedEnv.port).toBe(8);
+        expect(parsedEnv.PORT).toBe(8);
     });
 });

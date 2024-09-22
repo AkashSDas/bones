@@ -6,7 +6,7 @@
     "singleQuote": false,
     "trailingComma": "all",
     "importOrder": [
-        "dotenv/config",
+        "@dotenvx/dotenvx",
         "./utils/env",
         "^@?\\w",
         "^@/(.*)$",
