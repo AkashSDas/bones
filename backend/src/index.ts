@@ -44,6 +44,8 @@ app.use(
 app.use(correlationIdMiddleware);
 app.use(logger());
 app.use(async function printRequestTrackingInfo(c, next) {
+    // TODO: fina a better way to map logs with requestId and correlationId.
+    // This middleware isn't useful.
     log.info(`[X-Request-ID] ${c.get("requestId")}`);
     log.info(`[X-correlation-ID] ${c.get("correlationId")}`);
     await next();
