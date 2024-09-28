@@ -14,9 +14,10 @@
         "test:watch": "vitest --watch",
         "test:cov": "vitest --coverage",
         "test:ui": "vitest --ui",
-        "db:generate": "drizzle-kit generate:pg",
+        "db:generate": "drizzle-kit generate",
         "db:migrate": "cross-env DB_MIGRATING=true tsx src/db/migrate.ts",
-        "db:seed": "cross-env DB_SEEDING=true tsx src/db/seed.ts"
+        "db:seed": "cross-env DB_SEEDING=true tsx src/db/seed.ts",
+        "db:studio": "drizzle-kit studio"
     },
     "dependencies": {
         "@dotenvx/dotenvx": "^1.14.1",
