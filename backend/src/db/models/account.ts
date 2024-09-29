@@ -1,94 +1,43 @@
 import { relations } from "drizzle-orm";
-import {
-    boolean,
-    index,
-    pgTable,
-    serial,
-    timestamp,
-    uuid,
-    varchar,
-} from "drizzle-orm/pg-core";
-import { ulid } from "ulid";
+import { boolean, index, pgTable, varchar } from "drizzle-orm/pg-core";
+
+import { orm } from "@/utils/db";
 
 import { user } from "./user";
 
-/**
- * Account table:
- * -------------------------------------
- *
- * ```text
- * id: int, pk
- * account_id: uuid, unique, index
- * email: varchar, unique, index
- * account_name: varchar, unique, index
- *
- * password_hash: varchar
- * password_age: timestamp
- * forgot_password_token: varchar, null
- * forgot_password_token_age: timestamp, null
- *
- * is_verifed: bool
- * verification_token: varchar
- * verification_token_age: timestamp
- *
- * last_logged_in_at: timestamp
- * created_at: timestamp
- * updated_at: timestamp
- * ```
- *
- * 1..* with user table
- */
 export const account = pgTable(
     "accounts",
     {
-        id: serial("id").primaryKey(),
-        accountId: uuid("account_id")
-            .$defaultFn(() => ulid())
-            .notNull()
-            .unique(),
+        // Basic info
+        id: orm.pk(),
+        accountId: orm.ulid("account_id").unique(),
         email: varchar("email", { length: 255 }).notNull().unique(),
         accountName: varchar("account_name", { length: 255 })
             .notNull()
             .unique(),
 
+        // Password related fields
         passwordHash: varchar("password_hash", { length: 255 }).notNull(),
-        passwordAge: timestamp("password_age", {
-            withTimezone: true,
-            mode: "string",
-        }).notNull(),
+        passwordAge: orm.timestamp("password_age").notNull(),
         forgotPasswordToken: varchar("forgot_password_token", { length: 255 }),
-        forgotPasswordTokenAge: timestamp("forgot_password_token_age", {
-            withTimezone: true,
-            mode: "string",
-        }),
+        forgotPasswordTokenAge: orm.timestamp("forgot_password_token_age"),
 
+        // Account verification related fields
         isVerified: boolean("is_verified").notNull().default(false),
         verificationToken: varchar("verification_token", { length: 255 }),
-        verificationTokenAge: timestamp("verification_token_age", {
-            withTimezone: true,
-            mode: "string",
-        }),
+        verificationTokenAge: orm.timestamp("verification_token_age"),
+        lastVerifiedAt: orm.timestamp("last_verified_at"),
 
-        lastLoggedInAt: timestamp("last_logged_in_at", {
-            withTimezone: true,
-            mode: "string",
-        }).notNull(),
-        createdAt: timestamp("created_at", {
-            withTimezone: true,
-            mode: "string",
-        })
-            .notNull()
-            .defaultNow(),
-        updatedAt: timestamp("updated_at", {
-            withTimezone: true,
-            mode: "string",
-        })
-            .notNull()
-            .defaultNow(),
+        // Account activity info
+        lastLoggedInAt: orm.timestamp("last_logged_in_at").notNull(),
+        createdAt: orm.timestamp("created_at").notNull().defaultNow(),
+        updatedAt: orm.timestamp("updated_at").notNull().defaultNow(),
     },
     function (table) {
         return {
             accountId: index().on(table.accountId),
+            email: index().on(table.email),
+            accountName: index().on(table.accountName),
         };
     },
 );

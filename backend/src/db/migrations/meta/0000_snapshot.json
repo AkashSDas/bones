@@ -1,5 +1,5 @@
 {
-    "id": "feca4d24-9a97-419e-b648-ec2dcc3a8771",
+    "id": "e740ff33-522c-46d1-b1f7-52e8be061969",
     "prevId": "00000000-0000-0000-0000-000000000000",
     "version": "7",
     "dialect": "postgresql",
@@ -75,6 +75,12 @@
                     "primaryKey": false,
                     "notNull": false
                 },
+                "last_verified_at": {
+                    "name": "last_verified_at",
+                    "type": "timestamp with time zone",
+                    "primaryKey": false,
+                    "notNull": false
+                },
                 "last_logged_in_at": {
                     "name": "last_logged_in_at",
                     "type": "timestamp with time zone",
@@ -102,6 +108,36 @@
                     "columns": [
                         {
                             "expression": "account_id",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                },
+                "accounts_email_index": {
+                    "name": "accounts_email_index",
+                    "columns": [
+                        {
+                            "expression": "email",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                },
+                "accounts_account_name_index": {
+                    "name": "accounts_account_name_index",
+                    "columns": [
+                        {
+                            "expression": "account_name",
                             "isExpression": false,
                             "asc": true,
                             "nulls": "last"
@@ -155,6 +191,13 @@
                     "primaryKey": false,
                     "notNull": true
                 },
+                "is_blocked": {
+                    "name": "is_blocked",
+                    "type": "boolean",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": false
+                },
                 "password_hash": {
                     "name": "password_hash",
                     "type": "varchar(255)",
@@ -166,13 +209,6 @@
                     "type": "timestamp with time zone",
                     "primaryKey": false,
                     "notNull": true
-                },
-                "is_blocked": {
-                    "name": "is_blocked",
-                    "type": "boolean",
-                    "primaryKey": false,
-                    "notNull": true,
-                    "default": false
                 },
                 "last_logged_in_at": {
                     "name": "last_logged_in_at",
@@ -216,6 +252,36 @@
                     "concurrently": false,
                     "method": "btree",
                     "with": {}
+                },
+                "users_username_index": {
+                    "name": "users_username_index",
+                    "columns": [
+                        {
+                            "expression": "username",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
+                },
+                "users_account_id_index": {
+                    "name": "users_account_id_index",
+                    "columns": [
+                        {
+                            "expression": "account_id",
+                            "isExpression": false,
+                            "asc": true,
+                            "nulls": "last"
+                        }
+                    ],
+                    "isUnique": false,
+                    "concurrently": false,
+                    "method": "btree",
+                    "with": {}
                 }
             },
             "foreignKeys": {
@@ -235,6 +301,11 @@
                     "name": "users_user_id_unique",
                     "nullsNotDistinct": false,
                     "columns": ["user_id"]
+                },
+                "users_username_unique": {
+                    "name": "users_username_unique",
+                    "nullsNotDistinct": false,
+                    "columns": ["username"]
                 }
             }
         }
