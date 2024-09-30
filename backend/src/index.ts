@@ -3,19 +3,21 @@
 import { env } from "./utils/env";
 
 import { serve } from "@hono/node-server";
-import { Hono } from "hono";
+import { swaggerUI } from "@hono/swagger-ui";
+import { OpenAPIHono } from "@hono/zod-openapi";
 import { compress } from "hono/compress";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { requestId } from "hono/request-id";
 import { ulid } from "ulid";
 
+import { iamRouter } from "./api/iam";
 import { testRouter } from "./api/testing";
 import { log } from "./lib/logger";
 import { correlationIdMiddleware } from "./middlewares/correlation-id";
-import type { HonoVariables } from "./utils/types";
+import type { AppBindings } from "./utils/types";
 
-const app = new Hono<{ Variables: HonoVariables }>();
+const app = new OpenAPIHono<AppBindings>();
 
 // ==========================
 // Middlewares
@@ -57,7 +59,17 @@ app.use(compress({ encoding: "gzip" }));
 // Endpoints
 // ==========================
 
-app.route("/api/test", testRouter);
+app.doc("/api/doc", {
+    openapi: "3.0.0",
+    info: {
+        version: "1.0.0",
+        title: "Bones",
+    },
+});
+app.get("/api/doc/ui", swaggerUI({ url: "/api/doc" }));
+
+app.route("/api/v1/test", testRouter);
+app.route("/api/v1/iam", iamRouter);
 
 log.info(`Server is running on port ${env.PORT}`);
 
