@@ -1,9 +1,19 @@
 import { relations } from "drizzle-orm";
-import { boolean, index, pgTable, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, pgEnum, pgTable, varchar } from "drizzle-orm/pg-core";
 
 import { orm } from "@/utils/db";
 
 import { user } from "./user";
+
+// Enums needs to be exported to create them in migrations
+// Manually had to add enum since drizzle kit is not being able to detect enums
+// https://github.com/drizzle-team/drizzle-orm/issues/2389
+export const accountStatusEnum = pgEnum("account_status", [
+    "uninitialized",
+    "active",
+    "suspended",
+    "deactive",
+]);
 
 export const account = pgTable(
     "accounts",
@@ -15,6 +25,7 @@ export const account = pgTable(
         accountName: varchar("account_name", { length: 255 })
             .notNull()
             .unique(),
+        status: accountStatusEnum("status").notNull().default("uninitialized"),
 
         // Password related fields
         passwordHash: varchar("password_hash", { length: 255 }).notNull(),

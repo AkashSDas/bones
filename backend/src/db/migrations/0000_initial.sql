@@ -1,8 +1,13 @@
+-- manually adding enum since drizzle kit is not being able to detect enums
+-- https://github.com/drizzle-team/drizzle-orm/issues/2389
+CREATE TYPE account_status AS ENUM ('uninitialized', 'active', 'suspended', 'deactive')
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "accounts" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"account_id" uuid NOT NULL,
 	"email" varchar(255) NOT NULL,
 	"account_name" varchar(255) NOT NULL,
+	"status" "account_status" DEFAULT 'uninitialized' NOT NULL,
 	"password_hash" varchar(255) NOT NULL,
 	"password_age" timestamp with time zone NOT NULL,
 	"forgot_password_token" varchar(255),

@@ -1,5 +1,5 @@
 {
-    "id": "e740ff33-522c-46d1-b1f7-52e8be061969",
+    "id": "adf9863b-91f0-4418-ae33-b3e3e9655309",
     "prevId": "00000000-0000-0000-0000-000000000000",
     "version": "7",
     "dialect": "postgresql",
@@ -31,6 +31,14 @@
                     "type": "varchar(255)",
                     "primaryKey": false,
                     "notNull": true
+                },
+                "status": {
+                    "name": "status",
+                    "type": "account_status",
+                    "typeSchema": "public",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": "'uninitialized'"
                 },
                 "password_hash": {
                     "name": "password_hash",
