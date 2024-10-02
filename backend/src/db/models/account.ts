@@ -25,7 +25,11 @@ export const account = pgTable(
         accountName: varchar("account_name", { length: 255 })
             .notNull()
             .unique(),
+
+        // Account status related fields
         status: accountStatusEnum("status").notNull().default("uninitialized"),
+        changeStatusToken: varchar("change_status_token", { length: 255 }),
+        changeStatusTokenAge: orm.timestamp("change_status_token_age"),
 
         // Password related fields
         passwordHash: varchar("password_hash", { length: 255 }).notNull(),

@@ -8,6 +8,13 @@
             "when": 1727879843451,
             "tag": "0000_initial",
             "breakpoints": true
+        },
+        {
+            "idx": 1,
+            "version": "7",
+            "when": 1727882968101,
+            "tag": "0001_add_change_status_related_columns_in_account_table",
+            "breakpoints": true
         }
     ]
 }
