@@ -136,6 +136,11 @@ class Logger {
     }
 
     // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    debug(msg: any) {
+        this.log("debug", msg);
+    }
+
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
     error(msg: any) {
         this.log("error", msg);
     }
