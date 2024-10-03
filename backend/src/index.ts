@@ -2,9 +2,12 @@
 // load all of the environment variables
 import { env } from "./utils/env";
 
+import { createBullBoard } from "@bull-board/api";
+import { HonoAdapter } from "@bull-board/hono";
+import "@bull-board/hono";
 import { serve } from "@hono/node-server";
+import { serveStatic } from "@hono/node-server/serve-static";
 import { swaggerUI } from "@hono/swagger-ui";
-import { OpenAPIHono } from "@hono/zod-openapi";
 import { compress } from "hono/compress";
 import { cors } from "hono/cors";
 import { requestId } from "hono/request-id";
@@ -14,9 +17,11 @@ import { iamRouter } from "./api/iam";
 import { testRouter } from "./api/testing";
 import { asyncLocalStorage, log } from "./lib/logger";
 import { correlationIdMiddleware } from "./middlewares/correlation-id";
-import type { AppBindings } from "./utils/types";
+import { createHonoApp } from "./utils/app";
+import { HttpError, InternalServerError, NotFoundError } from "./utils/http";
+import { taskQueue } from "./utils/task-queue";
 
-const app = new OpenAPIHono<AppBindings>();
+const app = createHonoApp();
 
 // ==========================
 // Middlewares
@@ -53,6 +58,34 @@ app.use(async function runWithinContext(c, next) {
 });
 
 app.use(compress({ encoding: "gzip" }));
+
+// ==========================
+// Events
+// ==========================
+
+app.onError(function handleAppError(err, c) {
+    if (err instanceof HttpError) {
+        return err.toJSON(c);
+    } else {
+        log.error(`Unhandled error: ${err}\n${err.stack}`);
+        return new InternalServerError({ message: "Internal Servier Error" }).toJSON(c);
+    }
+});
+
+app.notFound(function handleNotFound(c) {
+    return new NotFoundError({ message: "Not Found" }).toJSON(c);
+});
+
+// ==========================
+// Task Queue Setup
+// ==========================
+
+const serverAdapter = new HonoAdapter(serveStatic);
+createBullBoard({ serverAdapter, queues: taskQueue.queueAdapter });
+
+const basePath = "/api/task-queue/ui";
+serverAdapter.setBasePath(basePath);
+app.route(basePath, serverAdapter.registerPlugin());
 
 // ==========================
 // Endpoints
