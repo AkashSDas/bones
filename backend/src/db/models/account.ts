@@ -22,9 +22,7 @@ export const account = pgTable(
         id: orm.pk(),
         accountId: orm.ulid("account_id").unique(),
         email: varchar("email", { length: 255 }).notNull().unique(),
-        accountName: varchar("account_name", { length: 255 })
-            .notNull()
-            .unique(),
+        accountName: varchar("account_name", { length: 255 }).notNull().unique(),
 
         // Account status related fields
         status: accountStatusEnum("status").notNull().default("uninitialized"),
@@ -33,6 +31,7 @@ export const account = pgTable(
 
         // Password related fields
         passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+        passwordSalt: varchar("password_salt", { length: 255 }).notNull(),
         passwordAge: orm.timestamp("password_age").notNull(),
         forgotPasswordToken: varchar("forgot_password_token", { length: 255 }),
         forgotPasswordTokenAge: orm.timestamp("forgot_password_token_age"),
@@ -62,3 +61,6 @@ export const accountRelations = relations(account, function ({ many }) {
         users: many(user),
     };
 });
+
+export type NewAccount = typeof account.$inferInsert;
+export type Account = typeof account.$inferSelect;

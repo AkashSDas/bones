@@ -15,6 +15,13 @@
             "when": 1727882968101,
             "tag": "0001_add_change_status_related_columns_in_account_table",
             "breakpoints": true
+        },
+        {
+            "idx": 2,
+            "version": "7",
+            "when": 1727933670191,
+            "tag": "0002_add_password_column_in_account_table",
+            "breakpoints": true
         }
     ]
 }
