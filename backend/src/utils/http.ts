@@ -6,7 +6,7 @@ import type { AppBindings, Optional } from "./types";
 
 type StatusCode = NonNullable<ConstructorParameters<typeof HTTPException>[0]>;
 
-export const status: Record<string, StatusCode> = {
+export const status = {
     OK: 200,
     CREATED: 201,
     NO_CONTENT: 204,
@@ -21,7 +21,7 @@ export const status: Record<string, StatusCode> = {
     BAD_GATEWAY: 502,
     SERVICE_UNAVAILABLE: 503,
     GATEWAY_TIMEOUT: 504,
-};
+} as const;
 
 // =====================================
 // Schemas

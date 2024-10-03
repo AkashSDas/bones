@@ -20,6 +20,8 @@ const stringBoolean = z.coerce
 
 const EnvironmentVariablesSchema = z
     .object({
+        APP_URL: z.string().url(),
+
         PORT: z.string().transform(validatePort),
         LOG_LEVEL: z
             .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
@@ -49,24 +51,55 @@ const EnvironmentVariablesSchema = z
         DB_MIGRATING: stringBoolean,
         DB_SEEDING: stringBoolean,
 
+        REDIS_HOST: z.string(),
+        REDIS_PORT: z.string().transform(validatePort),
+
         SMTP_HOST: z.string(),
         SMTP_PORT: z.string().transform(validatePort),
         SMTP_USERNAME: z.string(),
         SMTP_PASSWORD: z.string(),
         FROM_EMAIL: z.string().email(),
+
+        ACCESS_TOKEN_SECRET: z.string(),
+        REFRESH_TOKEN_SECRET: z.string(),
+        ACCESS_TOKEN_AGE: z.string(),
+        REFRESH_TOKEN_AGE: z.string(),
+        REFRESH_TOKEN_AGE_IN_DATE: z.string().transform(function (v) {
+            const date = Date.parse(v);
+
+            if (isNaN(date) === true) {
+                return new Date(Date.now() + 24 * 60 * 1000);
+            } else {
+                return new Date(date);
+            }
+        }),
     })
     .transform((env) => ({
+        APP_URL: env.APP_URL,
+
         PORT: env.PORT,
+        LOG_LEVEL: env.LOG_LEVEL,
+
+        CORS_ORIGINS: env.CORS_ORIGINS,
+
         DB_URL: `postgresql://${env.DB_USERNAME}:${env.DB_PASSWORD}@${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}`,
         DB_MIGRATING: env.DB_MIGRATING,
         DB_SEEDING: env.DB_SEEDING,
-        LOG_LEVEL: env.LOG_LEVEL,
-        CORS_ORIGINS: env.CORS_ORIGINS,
+
+        REDIS_HOST: env.REDIS_HOST,
+        REDIS_PORT: env.REDIS_PORT,
+
         SMTP_HOST: env.SMTP_HOST,
         SMTP_PORT: env.SMTP_PORT,
         SMTP_USERNAME: env.SMTP_USERNAME,
-        SMTP_PASSWORD: env.DB_PASSWORD,
+        SMTP_PASSWORD: env.SMTP_PASSWORD,
         FROM_EMAIL: env.FROM_EMAIL,
+
+        ACCESS_TOKEN_SECRET: env.ACCESS_TOKEN_SECRET,
+        REFRESH_TOKEN_SECRET: env.REFRESH_TOKEN_SECRET,
+        ACCESS_TOKEN_AGE: env.ACCESS_TOKEN_AGE,
+        REFRESH_TOKEN_AGE: env.REFRESH_TOKEN_AGE,
+        REFRESH_TOKEN_AGE_IN_DATE: env.REFRESH_TOKEN_AGE_IN_DATE,
     }));
 
 export function loadEnv(): z.infer<typeof EnvironmentVariablesSchema> {
