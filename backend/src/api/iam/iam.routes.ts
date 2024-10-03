@@ -1,5 +1,6 @@
 import { createRoute } from "@hono/zod-openapi";
 
+import { commonOpenApiResponses, errorSchemas } from "@/utils/http";
 import type { AppRouteHandler } from "@/utils/types";
 
 import * as schemas from "./iam.schema";
@@ -18,11 +19,28 @@ export const accountSignup = createRoute({
         },
     },
     responses: {
-        200: {
+        ...commonOpenApiResponses,
+        201: {
             description: "Success response",
             content: {
                 "application/json": {
                     schema: schemas.SignupResponseBodySchema,
+                },
+            },
+        },
+        400: {
+            description: "Validation error",
+            content: {
+                "application/json": {
+                    schema: errorSchemas.ZodValidationErrorSchema,
+                },
+            },
+        },
+        409: {
+            description: "Account already exists",
+            content: {
+                "application/json": {
+                    schema: errorSchemas.ConflictErrorSchema,
                 },
             },
         },

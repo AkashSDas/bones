@@ -22,11 +22,7 @@ export const SignupRequestBodySchema = z.object({
             description: `Unqiue name for your account. You can change this name 
             in your account settings after you sign up`,
         }),
-    password: z
-        .string()
-        .min(8)
-        .max(255)
-        .openapi({ description: "Account password" }),
+    password: z.string().min(8).max(255).openapi({ description: "Account password" }),
 });
 
 export const SignupResponseBodySchema = z.object({
@@ -34,5 +30,8 @@ export const SignupResponseBodySchema = z.object({
         .string()
         .min(8)
         .max(255)
-        .openapi({ example: "Success response message" }),
+        .openapi({ example: "Account created successfully" }),
+    accessToken: z
+        .string()
+        .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
 });

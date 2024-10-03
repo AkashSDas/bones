@@ -1,11 +1,9 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
-
-import type { AppBindings } from "@/utils/types";
+import { createHonoApp } from "@/utils/app";
 
 import * as handlers from "./iam.handlers";
 import * as routes from "./iam.routes";
 
-const app = new OpenAPIHono<AppBindings>();
+const app = createHonoApp();
 
 const router = app.openapi(routes.accountSignup, handlers.accountSignup);
 
