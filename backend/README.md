@@ -9,4 +9,6 @@ docker run --name bones-postgres \
   -e POSTGRES_DB=postgres \
   -p 5432:5432 \
   -d postgres
+
+docker run --name bones-redis -d -p 6379:6379 redis
 ```

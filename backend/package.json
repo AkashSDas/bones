@@ -20,12 +20,17 @@
         "db:studio": "drizzle-kit studio"
     },
     "dependencies": {
+        "@bull-board/api": "^6.0.0",
+        "@bull-board/hono": "^6.0.0",
         "@dotenvx/dotenvx": "^1.14.1",
         "@hono/node-server": "^1.13.1",
         "@hono/swagger-ui": "^0.4.1",
         "@hono/zod-openapi": "^0.16.2",
+        "argon2": "^0.41.1",
+        "bull": "^4.16.3",
         "drizzle-orm": "^0.33.0",
         "hono": "^4.6.2",
+        "nodemailer": "^6.9.15",
         "pino": "^9.4.0",
         "pino-pretty": "^11.2.2",
         "postgres": "^3.4.4",
@@ -36,6 +41,7 @@
     "devDependencies": {
         "@trivago/prettier-plugin-sort-imports": "^4.3.0",
         "@types/node": "^20.11.17",
+        "@types/nodemailer": "^6.4.16",
         "@vitest/coverage-v8": "^2.1.1",
         "@vitest/ui": "^2.1.1",
         "cross-env": "^7.0.3",
