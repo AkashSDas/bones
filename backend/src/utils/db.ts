@@ -1,5 +1,5 @@
 import { serial, timestamp, uuid } from "drizzle-orm/pg-core";
-import { ulid } from "ulid";
+import { v7 as uuid7 } from "uuid";
 
 /**
  * Utility functions for creating column definitions in DrizzleORM.
@@ -8,9 +8,9 @@ export const orm = {
     pk: function (columnName: string = "id") {
         return serial(columnName).notNull().primaryKey();
     },
-    ulid: function (columnName: string) {
+    uuid: function (columnName: string) {
         return uuid(columnName)
-            .$defaultFn(() => ulid()) // create ULID
+            .$defaultFn(() => uuid7())
             .notNull();
     },
     timestamp: function (columnName: string) {

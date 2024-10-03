@@ -9,7 +9,7 @@ export const user = pgTable(
     "users",
     {
         id: orm.pk(),
-        userId: orm.ulid("user_id").unique(),
+        userId: orm.uuid("user_id").unique(),
         username: varchar("username", { length: 255 }).notNull().unique(),
 
         isBlocked: boolean("is_blocked").notNull().default(false),

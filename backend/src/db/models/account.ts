@@ -20,7 +20,7 @@ export const account = pgTable(
     {
         // Basic info
         id: orm.pk(),
-        accountId: orm.ulid("account_id").unique(),
+        accountId: orm.uuid("account_id").unique(),
         email: varchar("email", { length: 255 }).notNull().unique(),
         accountName: varchar("account_name", { length: 255 }).notNull().unique(),
 

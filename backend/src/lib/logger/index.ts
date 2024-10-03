@@ -118,8 +118,9 @@ class Logger {
     }
 
     // eslint-disable-next-line  @typescript-eslint/no-explicit-any
-    log(level: pino.Level, msg: any) {
-        const data = this.getContext(level);
+    log(level: pino.Level, msg: any, extraData: Record<string, any> = {}) {
+        let data = this.getContext(level);
+        data = { ...data, ...extraData };
 
         if (msg instanceof Error) {
             this.logInstance[level](data, this.formatError(msg));
@@ -131,28 +132,28 @@ class Logger {
     }
 
     // eslint-disable-next-line  @typescript-eslint/no-explicit-any
-    info(msg: any) {
-        this.log("info", msg);
+    info(msg: any, extraData: Record<string, any> = {}) {
+        this.log("info", msg, extraData);
     }
 
     // eslint-disable-next-line  @typescript-eslint/no-explicit-any
-    debug(msg: any) {
-        this.log("debug", msg);
+    debug(msg: any, extraData: Record<string, any> = {}) {
+        this.log("debug", msg, extraData);
     }
 
     // eslint-disable-next-line  @typescript-eslint/no-explicit-any
-    error(msg: any) {
-        this.log("error", msg);
+    error(msg: any, extraData: Record<string, any> = {}) {
+        this.log("error", msg, extraData);
     }
 
     // eslint-disable-next-line  @typescript-eslint/no-explicit-any
-    warn(msg: any) {
-        this.log("warn", msg);
+    warn(msg: any, extraData: Record<string, any> = {}) {
+        this.log("warn", msg, extraData);
     }
 
     // eslint-disable-next-line  @typescript-eslint/no-explicit-any
-    fatal(msg: any) {
-        this.log("fatal", msg);
+    fatal(msg: any, extraData: Record<string, any> = {}) {
+        this.log("fatal", msg, extraData);
     }
 }
 

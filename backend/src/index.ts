@@ -11,7 +11,7 @@ import { swaggerUI } from "@hono/swagger-ui";
 import { compress } from "hono/compress";
 import { cors } from "hono/cors";
 import { requestId } from "hono/request-id";
-import { ulid } from "ulid";
+import { v7 as uuid } from "uuid";
 
 import { iamRouter } from "./api/iam";
 import { testRouter } from "./api/testing";
@@ -42,7 +42,7 @@ app.use(
 app.use(
     requestId({
         generator(_c) {
-            return ulid();
+            return uuid();
         },
         headerName: "X-Request-ID",
     }),
