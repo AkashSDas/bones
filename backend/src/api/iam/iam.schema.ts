@@ -1,5 +1,7 @@
 import { z } from "@hono/zod-openapi";
 
+import { errorSchemas } from "@/utils/http";
+
 // ===========================
 // Create Account
 // ===========================
@@ -34,4 +36,32 @@ export const SignupResponseBodySchema = z.object({
     accessToken: z
         .string()
         .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
+});
+
+// ===========================
+// Activate Account
+// ===========================
+
+export const ActivateAccountParamsSchema = z.object({
+    activationToken: z.string().length(16).openapi({
+        example: "9a7ce1f997862565",
+        description: "Activation token",
+    }),
+});
+
+export const ActivateAccountQuerySchema = z.object({
+    redirect: z.enum(["true", "false"]).nullable().default("false"),
+});
+
+export const ActivateAccount400ResponseBodySchema = z.union([
+    errorSchemas.ZodValidationErrorSchema,
+    errorSchemas.BadRequestErrorSchema,
+]);
+
+export const ActivateAccountResponseBodySchema = z.object({
+    message: z
+        .string()
+        .min(8)
+        .max(255)
+        .openapi({ example: "Account activated successfully" }),
 });

@@ -47,4 +47,49 @@ export const accountSignup = createRoute({
     },
 });
 
+export const activateAccount = createRoute({
+    method: "get",
+    path: "/account/activate/{activationToken}",
+    tags: ["iam", "account"],
+    request: {
+        params: schemas.ActivateAccountParamsSchema,
+        query: schemas.ActivateAccountQuerySchema,
+    },
+    responses: {
+        ...commonOpenApiResponses,
+        200: {
+            description: "Success response",
+            content: {
+                "application/json": {
+                    schema: schemas.ActivateAccountResponseBodySchema,
+                },
+            },
+        },
+        302: {
+            description: "Redirect after successful/failed account activation",
+            headers: {
+                Location: {
+                    description: "The URL of the page to redirect to",
+                    schema: {
+                        type: "string",
+                        examples: [
+                            "https://example.com/login?activation=failed",
+                            "https://example.com/login?activation=success",
+                        ],
+                    },
+                },
+            },
+        },
+        400: {
+            description: "Validation Error",
+            content: {
+                "application/json": {
+                    schema: schemas.ActivateAccount400ResponseBodySchema,
+                },
+            },
+        },
+    },
+});
+
 export type AccountSignupHandler = AppRouteHandler<typeof accountSignup>;
+export type ActivateAccountHandler = AppRouteHandler<typeof activateAccount>;

@@ -21,6 +21,7 @@ const stringBoolean = z.coerce
 const EnvironmentVariablesSchema = z
     .object({
         APP_URL: z.string().url(),
+        CLIENT_URL: z.string().url(),
 
         PORT: z.string().transform(validatePort),
         LOG_LEVEL: z
@@ -76,6 +77,7 @@ const EnvironmentVariablesSchema = z
     })
     .transform((env) => ({
         APP_URL: env.APP_URL,
+        CLIENT_URL: env.CLIENT_URL,
 
         PORT: env.PORT,
         LOG_LEVEL: env.LOG_LEVEL,

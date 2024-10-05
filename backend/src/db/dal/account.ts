@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, lte } from "drizzle-orm";
 
 import { log } from "@/lib/logger";
 
@@ -30,6 +30,41 @@ class AccountDAL {
         } catch (e) {
             log.error(`Failed to create account: ${e}`);
             throw Error("Failed to create account", { cause: e });
+        }
+    }
+
+    async findAccountByAcctivationToken(tokenHash: string): Promise<number | null> {
+        const result = await this.db
+            .select({ id: account.id })
+            .from(account)
+            .where(
+                and(
+                    eq(account.changeStatusToken, tokenHash),
+                    lte(
+                        account.changeStatusTokenAge,
+                        new Date(Date.now() + 10 * 60 * 1000).toUTCString(), // 10 minutes
+                    ),
+                ),
+            )
+            .limit(1);
+
+        return result.length > 0 ? result[0].id : null;
+    }
+
+    async activateAccount(id: number): Promise<void> {
+        const result = await this.db
+            .update(account)
+            .set({
+                isVerified: true,
+                status: "active",
+                changeStatusToken: null,
+                changeStatusTokenAge: null,
+            })
+            .where(eq(account.id, id))
+            .returning({ updatedId: account.id });
+
+        if (result.length === 0 || result[0].updatedId !== id) {
+            throw new Error("DB query to activate account failed");
         }
     }
 }

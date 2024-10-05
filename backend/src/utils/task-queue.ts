@@ -13,13 +13,14 @@ import { formatZodErrors } from "./schema";
 // Task Queue Schema
 // ================================
 
-const SendAccountActivationEmail = z.object({
-    accountId: z.string().uuid().describe("Account ID (not pk)"),
-    email: z.string().email(),
-    activationHash: z.string(),
-    requestId: z.string(),
-    correlationId: z.string(),
-});
+const SendAccountActivationEmail = z
+    .object({
+        email: z.string().email(),
+        activationHash: z.string(),
+        requestId: z.string(),
+        correlationId: z.string(),
+    })
+    .strict();
 
 // ================================
 // Queues
@@ -64,21 +65,21 @@ class TaskQueue {
         const result = await SendAccountActivationEmail.safeParseAsync(job.data);
 
         if (result.success) {
-            const { accountId, activationHash, correlationId, requestId } = result.data;
+            const { email, activationHash, correlationId, requestId } = result.data;
             const logData = { requestId, correlationId };
 
             try {
-                const url = `${env.APP_URL}/${activationHash}`;
-                log.debug(`Send account activation email: ${accountId}`, logData);
+                const url = `${env.APP_URL}/${activationHash}?redirect=true`;
+                log.debug("Send account activation email", logData);
 
                 await sendEmail({
                     subject: "Activate your Bones account",
-                    to: result.data.email,
+                    to: email,
                     text: `Activate your account: ${url}`,
                     html: `Activate your account: <a href="${url}">${url}</a>`,
                 });
             } catch (e) {
-                log.error(`Failed to send email: ${accountId}, ${e}`, logData);
+                log.error(`Failed to send email: ${e}`, logData);
             }
         } else {
             const errors = formatZodErrors(result.error);

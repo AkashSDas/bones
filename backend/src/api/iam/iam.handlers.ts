@@ -1,12 +1,16 @@
 import { env } from "@/utils/env";
 
 import { setCookie } from "hono/cookie";
-import { HTTPException } from "hono/http-exception";
 
 import { dal } from "@/db/dal";
 import { log } from "@/lib/logger";
 import { auth } from "@/utils/auth";
-import { ConflictError, status } from "@/utils/http";
+import {
+    BadRequestError,
+    ConflictError,
+    InternalServerError,
+    status,
+} from "@/utils/http";
 import { taskQueue } from "@/utils/task-queue";
 
 import * as routes from "./iam.routes";
@@ -22,9 +26,7 @@ export const accountSignup: routes.AccountSignupHandler = async (c) => {
 
         const activationToken = auth.createToken();
         const activationHashToken = auth.hashToken(activationToken);
-        const activationTokenAge = new Date(
-            new Date().getTime() + 10 * 60 * 1000,
-        ).toUTCString();
+        const activationTokenAge = new Date(new Date().getTime()).toUTCString();
 
         const account = await dal.account.create({
             email: body.email,
@@ -55,7 +57,6 @@ export const accountSignup: routes.AccountSignupHandler = async (c) => {
         log.debug(`Adding send email task: ${account.accountId}`);
         await taskQueue.addSendEmailTask({
             email: body.email,
-            accountId: account.accountId,
             activationHash: activationToken,
             requestId: c.get("requestId") ?? "N/A",
             correlationId: c.get("correlationId") ?? "N/A",
@@ -67,3 +68,64 @@ export const accountSignup: routes.AccountSignupHandler = async (c) => {
         );
     }
 };
+
+export const activateAccount: routes.ActivateAccountHandler = async (c) => {
+    const token = c.req.param("activationToken");
+    const redirect = c.req.query("redirect");
+
+    const hash = auth.hashToken(token);
+    const accountId = await dal.account.findAccountByAcctivationToken(hash);
+
+    if (accountId === null) {
+        log.error("Invalid or expired token");
+
+        if (redirect === "true") {
+            return c.redirect(`${env.CLIENT_URL}/login?activation=failed`);
+        } else {
+            throw new BadRequestError({
+                message: "Activation token is either invalid or expired",
+            });
+        }
+    } else {
+        try {
+            await dal.account.activateAccount(accountId);
+            log.info("Account activated and verified");
+
+            if (redirect === "true") {
+                return c.redirect(`${env.CLIENT_URL}/login`);
+            } else {
+                return c.json({ message: "Account activated successfully" });
+            }
+        } catch (e) {
+            log.error(`Failed to activate account: ${e}`);
+
+            if (redirect === "true") {
+                return c.redirect(`${env.CLIENT_URL}/login?activation=failed`);
+            } else {
+                throw new InternalServerError({
+                    message: "Failed to activate account",
+                });
+            }
+        }
+    }
+};
+
+// Routes to add
+//
+// - Get email address unique and account name
+// - Login account
+// - Activate account
+// - Forgot password
+// - Reset password
+// - Refresh access token
+// - Change account status
+//
+// - Create user
+// - Get username unique
+// - Update user
+// - Delete user
+// - Get users
+//
+// - Create all of the above routes
+// - Refactor code
+// - Tests
