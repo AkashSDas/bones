@@ -10,6 +10,7 @@ class AuthUtil {
     }
 
     async hashPwd(pwd: string, saltSize: number = 16): Promise<[string, string]> {
+        // There's no need to save this salt separately as argon save it in hash str
         const salt = this.generateSalt(saltSize);
         const hash = await argon2.hash(pwd, { type: argon2.argon2id, salt });
 

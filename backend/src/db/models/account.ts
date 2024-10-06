@@ -33,7 +33,6 @@ export const account = pgTable(
 
         // Password related fields
         passwordHash: varchar("password_hash", { length: 255 }).notNull(),
-        passwordSalt: varchar("password_salt", { length: 255 }).notNull(),
         passwordAge: orm.timestamp("password_age").notNull(),
         forgotPasswordToken: varchar("forgot_password_token", { length: 255 }),
         forgotPasswordTokenAge: orm.timestamp("forgot_password_token_age"),

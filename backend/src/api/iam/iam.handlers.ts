@@ -24,7 +24,7 @@ export const accountSignup: routes.AccountSignupHandler = async (c) => {
     if (exists) {
         throw new ConflictError({ message: "Account already exists" });
     } else {
-        const [hash, salt] = await auth.hashPwd(body.password);
+        const [hash] = await auth.hashPwd(body.password);
 
         const activationToken = auth.createToken();
         const activationHashToken = auth.hashToken(activationToken);
@@ -35,7 +35,6 @@ export const accountSignup: routes.AccountSignupHandler = async (c) => {
             accountName: body.accountName,
 
             passwordHash: hash,
-            passwordSalt: salt,
             passwordAge: new Date().toUTCString(),
 
             changeStatusToken: activationHashToken,

@@ -22,6 +22,13 @@
             "when": 1727933670191,
             "tag": "0002_add_password_column_in_account_table",
             "breakpoints": true
+        },
+        {
+            "idx": 3,
+            "version": "7",
+            "when": 1728198592116,
+            "tag": "0003_remove_password_salt_column_from_accounts",
+            "breakpoints": true
         }
     ]
 }
