@@ -49,6 +49,8 @@ export const errorSchemas = {
     ZodValidationErrorSchema,
     ConflictErrorSchema,
     InternalServerErrorSchema,
+
+    UserBadRequestScheams: z.union([ZodValidationErrorSchema, BadRequestErrorSchema]),
 };
 
 // =====================================

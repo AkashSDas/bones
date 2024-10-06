@@ -84,7 +84,7 @@ export const activateAccount = createRoute({
             description: "Validation Error",
             content: {
                 "application/json": {
-                    schema: schemas.ActivateAccount400ResponseBodySchema,
+                    schema: errorSchemas.UserBadRequestScheams,
                 },
             },
         },
@@ -146,7 +146,7 @@ export const accountLogin = createRoute({
             description: "Validation Error",
             content: {
                 "application/json": {
-                    schema: schemas.Login400ResponseBodySchema,
+                    schema: errorSchemas.UserBadRequestScheams,
                 },
             },
         },
@@ -180,7 +180,41 @@ export const resetPassword = createRoute({
             description: "Validation Error",
             content: {
                 "application/json": {
-                    schema: schemas.ResetPassword400ResponseBodySchema,
+                    schema: errorSchemas.UserBadRequestScheams,
+                },
+            },
+        },
+    },
+});
+
+export const completeResetPassword = createRoute({
+    method: "post",
+    path: "/account/reset-password/{resetToken}",
+    tags: ["iam", "account"],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: schemas.CompleteResetPasswordRequestBodySchema,
+                },
+            },
+        },
+    },
+    responses: {
+        ...commonOpenApiResponses,
+        200: {
+            description: "Successfully password reset",
+            content: {
+                "application/json": {
+                    schema: schemas.CompleteResetPasswordResponseBodySchema,
+                },
+            },
+        },
+        400: {
+            description: "Validation Error",
+            content: {
+                "application/json": {
+                    schema: errorSchemas.UserBadRequestScheams,
                 },
             },
         },
@@ -196,3 +230,6 @@ export type ActivateAccountHandler = AppRouteHandler<typeof activateAccount>;
 export type AccountExistsHandler = AppRouteHandler<typeof accountExists>;
 export type AccountLoginHandler = AppRouteHandler<typeof accountLogin>;
 export type ResetPasswordHandler = AppRouteHandler<typeof resetPassword>;
+export type CompleteResetPasswordHandler = AppRouteHandler<
+    typeof completeResetPassword
+>;

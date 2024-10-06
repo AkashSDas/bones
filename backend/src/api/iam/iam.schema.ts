@@ -1,8 +1,5 @@
 import { z } from "@hono/zod-openapi";
 
-import { AccountClientSchema } from "@/db/models/account";
-import { errorSchemas } from "@/utils/http";
-
 // ===========================
 // Create Account
 // ===========================
@@ -54,11 +51,6 @@ export const ActivateAccountQuerySchema = z.object({
     redirect: z.enum(["true", "false"]).nullable().default("false"),
 });
 
-export const ActivateAccount400ResponseBodySchema = z.union([
-    errorSchemas.ZodValidationErrorSchema,
-    errorSchemas.BadRequestErrorSchema,
-]);
-
 export const ActivateAccountResponseBodySchema = z.object({
     message: z
         .string()
@@ -102,11 +94,6 @@ export const LoginResponseBodySchema = z.object({
         .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
 });
 
-export const Login400ResponseBodySchema = z.union([
-    errorSchemas.ZodValidationErrorSchema,
-    errorSchemas.BadRequestErrorSchema,
-]);
-
 // ===========================
 // Forgot Password
 // ===========================
@@ -125,7 +112,17 @@ export const ResetPasswordResponseBodySchema = z.object({
     }),
 });
 
-export const ResetPassword400ResponseBodySchema = z.union([
-    errorSchemas.ZodValidationErrorSchema,
-    errorSchemas.BadRequestErrorSchema,
-]);
+// ===========================
+// Complete Reset Password
+// ===========================
+
+export const CompleteResetPasswordRequestBodySchema = z.object({
+    password: z.string().min(8).max(255).openapi({ description: "Account password" }),
+});
+
+export const CompleteResetPasswordResponseBodySchema = z.object({
+    message: z.string().openapi({
+        example: "Successfully password reset",
+        description: "Successfully password reset",
+    }),
+});

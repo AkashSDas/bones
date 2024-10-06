@@ -40,6 +40,24 @@ class AccountDAL {
         return result.length > 0 ? result[0].id : null;
     }
 
+    async findByResetPasswordToken(tokenHash: string): Promise<number | null> {
+        const result = await this.db
+            .select({ id: account.id })
+            .from(account)
+            .where(
+                and(
+                    eq(account.forgotPasswordToken, tokenHash),
+                    lte(
+                        account.forgotPasswordTokenAge,
+                        new Date(Date.now() + 10 * 60 * 1000).toUTCString(), // 10 minutes
+                    ),
+                ),
+            )
+            .limit(1);
+
+        return result.length > 0 ? result[0].id : null;
+    }
+
     async activate(id: number): Promise<void> {
         const result = await this.db
             .update(account)
@@ -137,6 +155,16 @@ class AccountDAL {
                 forgotPasswordTokenAge: duration.toUTCString(),
             })
             .where(eq(account.email, email));
+    }
+
+    async setPassword(id: number, pwd: string): Promise<void> {
+        await this.db
+            .update(account)
+            .set({
+                passwordHash: pwd,
+                passwordAge: new Date(Date.now()).toUTCString(),
+            })
+            .where(eq(account.id, id));
     }
 }
 

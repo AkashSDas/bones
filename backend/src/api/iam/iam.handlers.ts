@@ -195,6 +195,25 @@ export const resetPassword: routes.ResetPasswordHandler = async (c) => {
     }
 };
 
+export const completeResetPassword: routes.CompleteResetPasswordHandler = async (c) => {
+    const body = c.req.valid("json");
+    const token = c.req.param("resetToken");
+
+    const hash = auth.hashToken(token);
+    const accountId = await dal.account.findByResetPasswordToken(hash);
+
+    if (accountId === null) {
+        throw new BadRequestError({
+            message: "Activation token is either invalid or expired",
+        });
+    } else {
+        const [hash] = await auth.hashPwd(body.password);
+        await dal.account.setPassword(accountId, hash);
+
+        return c.json({ message: "Successfully password reset" }, status.OK);
+    }
+};
+
 // Routes to add
 //
 // TODO: Reset password
