@@ -3,7 +3,6 @@ import { env } from "@/utils/env";
 import { setCookie } from "hono/cookie";
 
 import { dal } from "@/db/dal";
-import { Account } from "@/db/models/account";
 import { log } from "@/lib/logger";
 import { auth } from "@/utils/auth";
 import {
@@ -56,9 +55,9 @@ export const accountSignup: routes.AccountSignupHandler = async (c) => {
         });
 
         log.debug(`Adding send email task: ${account.accountId}`);
-        await taskQueue.addSendEmailTask({
+        await taskQueue.addSendAccountActivationEmailTask({
             email: body.email,
-            activationHash: activationToken,
+            activationToken,
             requestId: c.get("requestId") ?? "N/A",
             correlationId: c.get("correlationId") ?? "N/A",
         });
@@ -168,9 +167,36 @@ export const accountLogin: routes.AccountLoginHandler = async (c) => {
     }
 };
 
+export const resetPassword: routes.ResetPasswordHandler = async (c) => {
+    const body = c.req.valid("json");
+    const exists = await dal.account.existsByEmail(body.email);
+
+    if (!exists) {
+        throw new BadRequestError({ message: "Account doesn't exists" });
+    } else {
+        const resetToken = auth.createToken();
+        const resetHashToken = auth.hashToken(resetToken);
+        const resetTokenAge = new Date(new Date().getTime());
+
+        await dal.account.setResetToken(body.email, resetHashToken, resetTokenAge);
+
+        log.debug("Adding send email task");
+        await taskQueue.addSendResetPasswordEmailTask({
+            email: body.email,
+            resetToken,
+            requestId: c.get("requestId") ?? "N/A",
+            correlationId: c.get("correlationId") ?? "N/A",
+        });
+
+        return c.json(
+            { message: "Successfully sent reset token to registered email" },
+            status.OK,
+        );
+    }
+};
+
 // Routes to add
 //
-// TODO: Forgot password
 // TODO: Reset password
 // TODO: Refresh access token
 // TODO: Change account status

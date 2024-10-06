@@ -124,6 +124,20 @@ class AccountDAL {
 
         return result.length > 0 ? result[0] : null;
     }
+
+    async setResetToken(
+        email: string,
+        tokenHash: string,
+        duration: Date,
+    ): Promise<void> {
+        await this.db
+            .update(account)
+            .set({
+                forgotPasswordToken: tokenHash,
+                forgotPasswordTokenAge: duration.toUTCString(),
+            })
+            .where(eq(account.email, email));
+    }
 }
 
 export const accountDAL = new AccountDAL(db);

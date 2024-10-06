@@ -153,6 +153,40 @@ export const accountLogin = createRoute({
     },
 });
 
+export const resetPassword = createRoute({
+    method: "post",
+    path: "/account/reset-password",
+    tags: ["iam", "account"],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: schemas.ResetPasswordRequestBodySchema,
+                },
+            },
+        },
+    },
+    responses: {
+        ...commonOpenApiResponses,
+        200: {
+            description: "Successfully login",
+            content: {
+                "application/json": {
+                    schema: schemas.ResetPasswordResponseBodySchema,
+                },
+            },
+        },
+        400: {
+            description: "Validation Error",
+            content: {
+                "application/json": {
+                    schema: schemas.ResetPassword400ResponseBodySchema,
+                },
+            },
+        },
+    },
+});
+
 // ===============================
 // Types
 // ===============================
@@ -161,3 +195,4 @@ export type AccountSignupHandler = AppRouteHandler<typeof accountSignup>;
 export type ActivateAccountHandler = AppRouteHandler<typeof activateAccount>;
 export type AccountExistsHandler = AppRouteHandler<typeof accountExists>;
 export type AccountLoginHandler = AppRouteHandler<typeof accountLogin>;
+export type ResetPasswordHandler = AppRouteHandler<typeof resetPassword>;

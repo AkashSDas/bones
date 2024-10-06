@@ -106,3 +106,26 @@ export const Login400ResponseBodySchema = z.union([
     errorSchemas.ZodValidationErrorSchema,
     errorSchemas.BadRequestErrorSchema,
 ]);
+
+// ===========================
+// Forgot Password
+// ===========================
+
+export const ResetPasswordRequestBodySchema = z.object({
+    email: z.string().email().openapi({
+        example: "akash@gmail.com",
+        description: "Email address for your account",
+    }),
+});
+
+export const ResetPasswordResponseBodySchema = z.object({
+    message: z.string().openapi({
+        example: "Password reset email sent to your email",
+        description: "Success response message",
+    }),
+});
+
+export const ResetPassword400ResponseBodySchema = z.union([
+    errorSchemas.ZodValidationErrorSchema,
+    errorSchemas.BadRequestErrorSchema,
+]);
