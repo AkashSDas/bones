@@ -68,12 +68,14 @@ app.onError(function handleAppError(err, c) {
         return err.toJSON(c);
     } else {
         log.error(`Unhandled error: ${err}\n${err.stack}`);
-        return new InternalServerError({ message: "Internal Servier Error" }).toJSON(c);
+        return new InternalServerError({
+            message: "Internal Servier Error (unhandled)",
+        }).toJSON(c);
     }
 });
 
 app.notFound(function handleNotFound(c) {
-    return new NotFoundError({ message: "Not Found" }).toJSON(c);
+    return new NotFoundError({ message: "Route Not Found" }).toJSON(c);
 });
 
 // ==========================

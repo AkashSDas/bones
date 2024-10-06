@@ -119,6 +119,40 @@ export const accountExists = createRoute({
     },
 });
 
+export const accountLogin = createRoute({
+    method: "post",
+    path: "/account/login",
+    tags: ["iam", "account"],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: schemas.LoginRequestBodySchema,
+                },
+            },
+        },
+    },
+    responses: {
+        ...commonOpenApiResponses,
+        200: {
+            description: "Successfully login",
+            content: {
+                "application/json": {
+                    schema: schemas.LoginResponseBodySchema,
+                },
+            },
+        },
+        400: {
+            description: "Validation Error",
+            content: {
+                "application/json": {
+                    schema: schemas.Login400ResponseBodySchema,
+                },
+            },
+        },
+    },
+});
+
 // ===============================
 // Types
 // ===============================
@@ -126,3 +160,4 @@ export const accountExists = createRoute({
 export type AccountSignupHandler = AppRouteHandler<typeof accountSignup>;
 export type ActivateAccountHandler = AppRouteHandler<typeof activateAccount>;
 export type AccountExistsHandler = AppRouteHandler<typeof accountExists>;
+export type AccountLoginHandler = AppRouteHandler<typeof accountLogin>;

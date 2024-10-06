@@ -3,12 +3,14 @@ import { env } from "@/utils/env";
 import { setCookie } from "hono/cookie";
 
 import { dal } from "@/db/dal";
+import { Account } from "@/db/models/account";
 import { log } from "@/lib/logger";
 import { auth } from "@/utils/auth";
 import {
     BadRequestError,
     ConflictError,
     InternalServerError,
+    NotFoundError,
     status,
 } from "@/utils/http";
 import { taskQueue } from "@/utils/task-queue";
@@ -17,7 +19,7 @@ import * as routes from "./iam.routes";
 
 export const accountSignup: routes.AccountSignupHandler = async (c) => {
     const body = c.req.valid("json");
-    const exists = await dal.account.checkAccountExists(body.email, body.accountName);
+    const exists = await dal.account.exists(body.email, body.accountName);
 
     if (exists) {
         throw new ConflictError({ message: "Account already exists" });
@@ -74,7 +76,7 @@ export const activateAccount: routes.ActivateAccountHandler = async (c) => {
     const redirect = c.req.query("redirect");
 
     const hash = auth.hashToken(token);
-    const accountId = await dal.account.findAccountByAcctivationToken(hash);
+    const accountId = await dal.account.findByAcctivationToken(hash);
 
     if (accountId === null) {
         log.error("Invalid or expired token");
@@ -88,7 +90,7 @@ export const activateAccount: routes.ActivateAccountHandler = async (c) => {
         }
     } else {
         try {
-            await dal.account.activateAccount(accountId);
+            await dal.account.activate(accountId);
             log.info("Account activated and verified");
 
             if (redirect === "true") {
@@ -122,15 +124,15 @@ export const accountExists: routes.AccountExistsHandler = async (c) => {
 
     try {
         if (accountName && !email) {
-            const exists = await dal.account.accountExistsByAccountName(accountName);
+            const exists = await dal.account.existsByAccountName(accountName);
             return c.json({ exists }, status.OK);
         } else if (!accountName && email) {
-            const exists = await dal.account.accountExistsByEmail(email);
+            const exists = await dal.account.existsByEmail(email);
             return c.json({ exists }, status.OK);
         } else {
             const exists = await Promise.all([
-                dal.account.accountExistsByEmail(email!),
-                dal.account.accountExistsByAccountName(accountName!),
+                dal.account.existsByEmail(email!),
+                dal.account.existsByAccountName(accountName!),
             ]);
             return c.json({ exists: exists.every(Boolean) }, status.OK);
         }
@@ -140,10 +142,35 @@ export const accountExists: routes.AccountExistsHandler = async (c) => {
     }
 };
 
+export const accountLogin: routes.AccountLoginHandler = async (c) => {
+    const body = c.req.valid("json");
+    const info = await dal.account.getHashInfo(body.email);
+
+    if (info === null) {
+        throw new NotFoundError({ message: "Account doesn't exists" });
+    } else {
+        const isRightPwd = await auth.verifyPwd(body.password, info.passwordHash);
+
+        if (!isRightPwd) {
+            throw new BadRequestError({ message: "Wrong password" });
+        } else {
+            const accessToken = auth.createAccessToken({ accountId: info.accountId });
+            const refreshToken = auth.createRefreshToken({ accountId: info.accountId });
+
+            setCookie(c, "refreshToken", refreshToken, {
+                expires: env.REFRESH_TOKEN_AGE_IN_DATE,
+                httpOnly: true,
+                secure: true,
+                sameSite: "none",
+            });
+
+            return c.json({ accessToken }, status.OK);
+        }
+    }
+};
+
 // Routes to add
 //
-// TODO: Get email address unique and account name
-// TODO: Login account
 // TODO: Forgot password
 // TODO: Reset password
 // TODO: Refresh access token

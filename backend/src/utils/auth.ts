@@ -16,6 +16,10 @@ class AuthUtil {
         return [hash, salt.toString("hex")];
     }
 
+    async verifyPwd(pwd: string, hash: string): Promise<boolean> {
+        return await argon2.verify(hash, pwd);
+    }
+
     createToken(length: number = 16): string {
         return crypto
             .randomBytes(Math.ceil(length / 2))

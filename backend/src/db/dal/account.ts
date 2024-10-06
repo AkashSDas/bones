@@ -4,22 +4,11 @@ import { log } from "@/lib/logger";
 
 import { type DB, db } from "..";
 import { account } from "../models";
-import { Account, type NewAccount } from "../models/account";
+import { Account, AccountClient, type NewAccount } from "../models/account";
 
 class AccountDAL {
     constructor(private db: DB) {
         this.db = db;
-    }
-
-    /** Check if a account with email and account name exists or not. */
-    async checkAccountExists(email: string, accountName: string): Promise<boolean> {
-        const result = await this.db
-            .select({ id: account.id })
-            .from(account)
-            .where(and(eq(account.email, email), eq(account.accountName, accountName)))
-            .limit(1);
-
-        return result.length > 0;
     }
 
     /** Create a new account. */
@@ -33,7 +22,7 @@ class AccountDAL {
         }
     }
 
-    async findAccountByAcctivationToken(tokenHash: string): Promise<number | null> {
+    async findByAcctivationToken(tokenHash: string): Promise<number | null> {
         const result = await this.db
             .select({ id: account.id })
             .from(account)
@@ -51,7 +40,7 @@ class AccountDAL {
         return result.length > 0 ? result[0].id : null;
     }
 
-    async activateAccount(id: number): Promise<void> {
+    async activate(id: number): Promise<void> {
         const result = await this.db
             .update(account)
             .set({
@@ -68,7 +57,18 @@ class AccountDAL {
         }
     }
 
-    async accountExistsByEmail(email: string): Promise<boolean> {
+    /** Check if a account with email and account name exists or not. */
+    async exists(email: string, accountName: string): Promise<boolean> {
+        const result = await this.db
+            .select({ id: account.id })
+            .from(account)
+            .where(and(eq(account.email, email), eq(account.accountName, accountName)))
+            .limit(1);
+
+        return result.length > 0;
+    }
+
+    async existsByEmail(email: string): Promise<boolean> {
         const result = await this.db
             .select({ id: account.id })
             .from(account)
@@ -78,7 +78,7 @@ class AccountDAL {
         return result.length > 0;
     }
 
-    async accountExistsByAccountName(accountName: string): Promise<boolean> {
+    async existsByAccountName(accountName: string): Promise<boolean> {
         const result = await this.db
             .select({ id: account.id })
             .from(account)
@@ -86,6 +86,43 @@ class AccountDAL {
             .limit(1);
 
         return result.length > 0;
+    }
+
+    async getHashInfo(
+        email: string,
+    ): Promise<Pick<Account, "accountId" | "passwordHash"> | null> {
+        const result = await this.db
+            .select({
+                passwordHash: account.passwordHash,
+                accountId: account.accountId,
+            })
+            .from(account)
+            .where(eq(account.email, email))
+            .limit(1);
+
+        return result.length > 0 ? result[0] : null;
+    }
+
+    async getByEmail(email: string): Promise<AccountClient | null> {
+        const result = await this.db
+            .select({
+                id: account.id,
+                accountId: account.accountId,
+                email: account.email,
+                accountName: account.accountName,
+                status: account.status,
+                passwordAge: account.passwordAge,
+                isVerified: account.isVerified,
+                lastVerifiedAt: account.lastVerifiedAt,
+                lastLoggedInAt: account.lastLoggedInAt,
+                createdAt: account.createdAt,
+                updatedAt: account.updatedAt,
+            })
+            .from(account)
+            .where(eq(account.email, email))
+            .limit(1);
+
+        return result.length > 0 ? result[0] : null;
     }
 }
 

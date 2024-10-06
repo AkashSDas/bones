@@ -1,5 +1,7 @@
 import { relations } from "drizzle-orm";
 import { boolean, index, pgEnum, pgTable, varchar } from "drizzle-orm/pg-core";
+import { createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
 
 import { orm } from "@/utils/db";
 
@@ -64,3 +66,20 @@ export const accountRelations = relations(account, function ({ many }) {
 
 export type NewAccount = typeof account.$inferInsert;
 export type Account = typeof account.$inferSelect;
+
+export const AccountSchema = createSelectSchema(account);
+export const AccountClientSchema = AccountSchema.pick({
+    id: true,
+    accountId: true,
+    email: true,
+    accountName: true,
+    status: true,
+    passwordAge: true,
+    isVerified: true,
+    lastVerifiedAt: true,
+    lastLoggedInAt: true,
+    createdAt: true,
+    updatedAt: true,
+});
+
+export type AccountClient = z.infer<typeof AccountClientSchema>;

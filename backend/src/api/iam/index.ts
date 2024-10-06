@@ -8,6 +8,7 @@ const app = createHonoApp();
 const router = app
     .openapi(routes.accountSignup, handlers.accountSignup)
     .openapi(routes.activateAccount, handlers.activateAccount)
-    .openapi(routes.accountExists, handlers.accountExists);
+    .openapi(routes.accountExists, handlers.accountExists)
+    .openapi(routes.accountLogin, handlers.accountLogin);
 
 export { router as iamRouter };

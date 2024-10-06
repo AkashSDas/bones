@@ -1,5 +1,6 @@
 import { z } from "@hono/zod-openapi";
 
+import { AccountClientSchema } from "@/db/models/account";
 import { errorSchemas } from "@/utils/http";
 
 // ===========================
@@ -78,3 +79,30 @@ export const AccountExistsQuerySchema = z.object({
 export const AccountExistsBodySchema = z.object({
     exists: z.boolean().openapi({ example: false }),
 });
+
+// ===========================
+// Account Login
+// ===========================
+
+export const LoginRequestBodySchema = z.object({
+    email: z
+        .string()
+        .email()
+        .openapi({
+            example: "akash@gmail.com",
+            description: `Email address for your account. It's used for 
+            account recovery and some administrative functions`,
+        }),
+    password: z.string().min(8).max(255).openapi({ description: "Account password" }),
+});
+
+export const LoginResponseBodySchema = z.object({
+    accessToken: z
+        .string()
+        .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
+});
+
+export const Login400ResponseBodySchema = z.union([
+    errorSchemas.ZodValidationErrorSchema,
+    errorSchemas.BadRequestErrorSchema,
+]);

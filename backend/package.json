@@ -30,6 +30,7 @@
         "argon2": "^0.41.1",
         "bull": "^4.16.3",
         "drizzle-orm": "^0.33.0",
+        "drizzle-zod": "^0.5.1",
         "hono": "^4.6.2",
         "jsonwebtoken": "^9.0.2",
         "nodemailer": "^6.9.15",
