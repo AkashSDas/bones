@@ -4,10 +4,10 @@ import { env } from "./utils/env";
 
 import { createBullBoard } from "@bull-board/api";
 import { HonoAdapter } from "@bull-board/hono";
-import "@bull-board/hono";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { swaggerUI } from "@hono/swagger-ui";
+import { apiReference } from "@scalar/hono-api-reference";
 import { compress } from "hono/compress";
 import { cors } from "hono/cors";
 import { requestId } from "hono/request-id";
@@ -99,6 +99,7 @@ app.doc("/api/doc", {
     },
 });
 app.get("/api/doc/ui", swaggerUI({ url: "/api/doc" }));
+app.get("/api/doc/ref", apiReference({ spec: { url: "/api/doc" } }));
 
 app.route("/api/v1/test", testRouter);
 app.route("/api/v1/iam", iamRouter);
