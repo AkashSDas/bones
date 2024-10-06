@@ -110,22 +110,51 @@ export const activateAccount: routes.ActivateAccountHandler = async (c) => {
     }
 };
 
+export const accountExists: routes.AccountExistsHandler = async (c) => {
+    const accountName = c.req.query("accountName");
+    const email = c.req.query("email");
+
+    if (!accountName && !email) {
+        throw new BadRequestError({
+            message: `At least one of the query parameters must be specified: 'accountName' or 'email'`,
+        });
+    }
+
+    try {
+        if (accountName && !email) {
+            const exists = await dal.account.accountExistsByAccountName(accountName);
+            return c.json({ exists }, status.OK);
+        } else if (!accountName && email) {
+            const exists = await dal.account.accountExistsByEmail(email);
+            return c.json({ exists }, status.OK);
+        } else {
+            const exists = await Promise.all([
+                dal.account.accountExistsByEmail(email!),
+                dal.account.accountExistsByAccountName(accountName!),
+            ]);
+            return c.json({ exists: exists.every(Boolean) }, status.OK);
+        }
+    } catch (e) {
+        log.error(`Failed to check if account exists: ${e}`);
+        throw new InternalServerError({ message: "Failed to check if account exists" });
+    }
+};
+
 // Routes to add
 //
-// - Get email address unique and account name
-// - Login account
-// - Activate account
-// - Forgot password
-// - Reset password
-// - Refresh access token
-// - Change account status
+// TODO: Get email address unique and account name
+// TODO: Login account
+// TODO: Forgot password
+// TODO: Reset password
+// TODO: Refresh access token
+// TODO: Change account status
 //
-// - Create user
-// - Get username unique
-// - Update user
-// - Delete user
-// - Get users
+// TODO: Create user
+// TODO: Get username unique
+// TODO: Update user
+// TODO: Delete user
+// TODO: Get users
 //
-// - Create all of the above routes
-// - Refactor code
-// - Tests
+// TODO: Create all of the above routes
+// TODO: Refactor code
+// TODO: Tests

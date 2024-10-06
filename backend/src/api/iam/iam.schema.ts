@@ -65,3 +65,16 @@ export const ActivateAccountResponseBodySchema = z.object({
         .max(255)
         .openapi({ example: "Account activated successfully" }),
 });
+
+// ===========================
+// Unique Account Info
+// ===========================
+
+export const AccountExistsQuerySchema = z.object({
+    accountName: z.string().min(3).optional().openapi({ default: "AkashBones" }),
+    email: z.string().email().optional().openapi({ default: "akash@gmail.com" }),
+});
+
+export const AccountExistsBodySchema = z.object({
+    exists: z.boolean().openapi({ example: false }),
+});

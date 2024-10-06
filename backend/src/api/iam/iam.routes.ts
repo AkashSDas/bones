@@ -91,5 +91,38 @@ export const activateAccount = createRoute({
     },
 });
 
+export const accountExists = createRoute({
+    method: "get",
+    path: "/account/exists",
+    tags: ["iam", "account"],
+    request: {
+        query: schemas.AccountExistsQuerySchema,
+    },
+    responses: {
+        ...commonOpenApiResponses,
+        200: {
+            description: "Success response",
+            content: {
+                "application/json": {
+                    schema: schemas.AccountExistsBodySchema,
+                },
+            },
+        },
+        400: {
+            description: "Validation Error",
+            content: {
+                "application/json": {
+                    schema: errorSchemas.ZodValidationErrorSchema,
+                },
+            },
+        },
+    },
+});
+
+// ===============================
+// Types
+// ===============================
+
 export type AccountSignupHandler = AppRouteHandler<typeof accountSignup>;
 export type ActivateAccountHandler = AppRouteHandler<typeof activateAccount>;
+export type AccountExistsHandler = AppRouteHandler<typeof accountExists>;

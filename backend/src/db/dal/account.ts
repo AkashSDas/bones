@@ -67,6 +67,26 @@ class AccountDAL {
             throw new Error("DB query to activate account failed");
         }
     }
+
+    async accountExistsByEmail(email: string): Promise<boolean> {
+        const result = await this.db
+            .select({ id: account.id })
+            .from(account)
+            .where(eq(account.email, email))
+            .limit(1);
+
+        return result.length > 0;
+    }
+
+    async accountExistsByAccountName(accountName: string): Promise<boolean> {
+        const result = await this.db
+            .select({ id: account.id })
+            .from(account)
+            .where(eq(account.accountName, accountName))
+            .limit(1);
+
+        return result.length > 0;
+    }
 }
 
 export const accountDAL = new AccountDAL(db);
