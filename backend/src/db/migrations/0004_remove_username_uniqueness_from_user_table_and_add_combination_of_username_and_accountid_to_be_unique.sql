@@ -1,0 +1,2 @@
+ALTER TABLE "users" DROP CONSTRAINT "users_username_unique";--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "users_username_account_id_index" ON "users" USING btree ("username","account_id");

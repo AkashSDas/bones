@@ -1,5 +1,12 @@
 import { relations } from "drizzle-orm";
-import { boolean, index, integer, pgTable, varchar } from "drizzle-orm/pg-core";
+import {
+    boolean,
+    index,
+    integer,
+    pgTable,
+    uniqueIndex,
+    varchar,
+} from "drizzle-orm/pg-core";
 
 import { orm } from "@/utils/db";
 
@@ -10,7 +17,7 @@ export const user = pgTable(
     {
         id: orm.pk(),
         userId: orm.uuid("user_id").unique(),
-        username: varchar("username", { length: 255 }).notNull().unique(),
+        username: varchar("username", { length: 255 }).notNull(),
 
         isBlocked: boolean("is_blocked").notNull().default(false),
 
@@ -30,6 +37,7 @@ export const user = pgTable(
             userId: index().on(table.userId),
             username: index().on(table.username),
             accountId: index().on(table.accountId),
+            usernameAccountIdUnique: uniqueIndex().on(table.username, table.accountId),
         };
     },
 );

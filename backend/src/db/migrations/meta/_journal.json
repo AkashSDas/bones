@@ -29,6 +29,13 @@
             "when": 1728198592116,
             "tag": "0003_remove_password_salt_column_from_accounts",
             "breakpoints": true
+        },
+        {
+            "idx": 4,
+            "version": "7",
+            "when": 1728269350180,
+            "tag": "0004_remove_username_uniqueness_from_user_table_and_add_combination_of_username_and_accountid_to_be_unique",
+            "breakpoints": true
         }
     ]
 }
