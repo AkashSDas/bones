@@ -1,5 +1,11 @@
 import { z } from "@hono/zod-openapi";
 
+// =======================================
+// =======================================
+// Accounts
+// =======================================
+// =======================================
+
 // ===========================
 // Create Account
 // ===========================
@@ -141,4 +147,22 @@ export const RefreshAccessTokenResponseBodySchema = z.object({
     accessToken: z
         .string()
         .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
+});
+
+// =======================================
+// =======================================
+// Users
+// =======================================
+// =======================================
+
+// ===========================
+// Get unique user info
+// ===========================
+
+export const UserExistsQuerySchema = z.object({
+    username: z.string().min(3).optional().openapi({ default: "akash_dev" }),
+});
+
+export const UserExistsBodySchema = z.object({
+    exists: z.boolean().openapi({ example: false }),
 });

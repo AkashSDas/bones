@@ -9,6 +9,8 @@ const AccessTokenPayload = z.object({
     accountId: z.string().uuid(),
 });
 
+export type AccessTokenContent = z.infer<typeof AccessTokenPayload>;
+
 class AuthUtil {
     private generateSalt(size: number = 16): Buffer {
         return crypto.randomBytes(size);
@@ -49,9 +51,7 @@ class AuthUtil {
         });
     }
 
-    async getAccessTokenContent(
-        payload: unknown,
-    ): Promise<z.infer<typeof AccessTokenPayload> | null> {
+    async getAccessTokenContent(payload: unknown): Promise<AccessTokenContent | null> {
         const { success, data } = await AccessTokenPayload.safeParseAsync(payload);
 
         if (success) {
