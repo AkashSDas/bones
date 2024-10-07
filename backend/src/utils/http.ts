@@ -40,6 +40,7 @@ const ZodValidationErrorSchema = z
     .merge(BaseHttpErrorSchema);
 
 const ConflictErrorSchema = z.object({}).merge(BaseHttpErrorSchema);
+const UnauthorizedErrorSchema = z.object({}).merge(BaseHttpErrorSchema);
 
 const InternalServerErrorSchema = z.object({}).merge(BaseHttpErrorSchema);
 
@@ -48,6 +49,7 @@ export const errorSchemas = {
     BadRequestErrorSchema,
     ZodValidationErrorSchema,
     ConflictErrorSchema,
+    UnauthorizedErrorSchema,
     InternalServerErrorSchema,
 
     UserBadRequestScheams: z.union([ZodValidationErrorSchema, BadRequestErrorSchema]),
@@ -147,6 +149,16 @@ export class NotFoundError extends HttpError {
             ...options,
             status: status.INTERNAL_SERVER_ERROR,
             reason: options.reason ?? "Not Found",
+        });
+    }
+}
+
+export class UnauthorizedError extends HttpError {
+    constructor(options: Optional<Omit<HttpErrorOptions, "status">, "reason">) {
+        super({
+            ...options,
+            status: status.UNAUTHORIZED,
+            reason: options.reason ?? "Unauthorized",
         });
     }
 }

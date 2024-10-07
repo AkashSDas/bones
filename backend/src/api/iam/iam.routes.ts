@@ -221,6 +221,42 @@ export const completeResetPassword = createRoute({
     },
 });
 
+export const refreshAccessToken = createRoute({
+    method: "get",
+    path: "/account/login/refresh",
+    tags: ["iam", "account"],
+    request: {
+        cookies: schemas.RefreshAccessTokenCookiesSchema,
+    },
+    responses: {
+        ...commonOpenApiResponses,
+        200: {
+            description: "Successfully password reset",
+            content: {
+                "application/json": {
+                    schema: schemas.RefreshAccessTokenResponseBodySchema,
+                },
+            },
+        },
+        400: {
+            description: "Validation Error",
+            content: {
+                "application/json": {
+                    schema: errorSchemas.UserBadRequestScheams,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: errorSchemas.UnauthorizedErrorSchema,
+                },
+            },
+        },
+    },
+});
+
 // ===============================
 // Types
 // ===============================
@@ -233,3 +269,4 @@ export type ResetPasswordHandler = AppRouteHandler<typeof resetPassword>;
 export type CompleteResetPasswordHandler = AppRouteHandler<
     typeof completeResetPassword
 >;
+export type RefreshAccessTokenHandler = AppRouteHandler<typeof refreshAccessToken>;

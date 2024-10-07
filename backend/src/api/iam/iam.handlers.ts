@@ -1,6 +1,7 @@
 import { env } from "@/utils/env";
 
-import { setCookie } from "hono/cookie";
+import { getCookie, setCookie } from "hono/cookie";
+import jwt from "jsonwebtoken";
 
 import { dal } from "@/db/dal";
 import { log } from "@/lib/logger";
@@ -10,6 +11,7 @@ import {
     ConflictError,
     InternalServerError,
     NotFoundError,
+    UnauthorizedError,
     status,
 } from "@/utils/http";
 import { taskQueue } from "@/utils/task-queue";
@@ -195,6 +197,34 @@ export const resetPassword: routes.ResetPasswordHandler = async (c) => {
     }
 };
 
+export const refreshAccessToken: routes.RefreshAccessTokenHandler = async (c) => {
+    const token = getCookie(c, "refreshToken");
+
+    if (token === undefined) {
+        throw new UnauthorizedError({
+            message: "Unauthorized",
+            reason: "Missing refresh token",
+        });
+    } else {
+        try {
+            const decoded = jwt.verify(token, env.REFRESH_TOKEN_SECRET);
+            const payload = await auth.getAccessTokenContent(decoded);
+
+            if (payload === null) {
+                throw new Error("Payload content is missing");
+            } else {
+                const token = auth.createAccessToken({ accountId: payload.accountId });
+                return c.json({ accessToken: token }, status.OK);
+            }
+        } catch (e) {
+            throw new UnauthorizedError({
+                message: "Unauthorized",
+                reason: "Invalid or expired refresh token",
+            });
+        }
+    }
+};
+
 export const completeResetPassword: routes.CompleteResetPasswordHandler = async (c) => {
     const body = c.req.valid("json");
     const token = c.req.param("resetToken");
@@ -216,9 +246,7 @@ export const completeResetPassword: routes.CompleteResetPasswordHandler = async 
 
 // Routes to add
 //
-// TODO: Reset password
 // TODO: Refresh access token
-// TODO: Change account status
 //
 // TODO: Create user
 // TODO: Get username unique

@@ -3,6 +3,11 @@ import { env } from "./env";
 import argon2 from "argon2";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
+import { z } from "zod";
+
+const AccessTokenPayload = z.object({
+    accountId: z.string().uuid(),
+});
 
 class AuthUtil {
     private generateSalt(size: number = 16): Buffer {
@@ -42,6 +47,18 @@ class AuthUtil {
         return jwt.sign(payload, env.REFRESH_TOKEN_SECRET, {
             expiresIn: env.REFRESH_TOKEN_AGE,
         });
+    }
+
+    async getAccessTokenContent(
+        payload: unknown,
+    ): Promise<z.infer<typeof AccessTokenPayload> | null> {
+        const { success, data } = await AccessTokenPayload.safeParseAsync(payload);
+
+        if (success) {
+            return data;
+        } else {
+            return null;
+        }
     }
 }
 

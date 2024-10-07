@@ -126,3 +126,19 @@ export const CompleteResetPasswordResponseBodySchema = z.object({
         description: "Successfully password reset",
     }),
 });
+
+// ===========================
+// Refresh Access Token
+// ===========================
+
+export const RefreshAccessTokenCookiesSchema = z.object({
+    refreshToken: z
+        .string()
+        .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
+});
+
+export const RefreshAccessTokenResponseBodySchema = z.object({
+    accessToken: z
+        .string()
+        .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
+});
