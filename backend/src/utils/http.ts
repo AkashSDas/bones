@@ -41,6 +41,7 @@ const ZodValidationErrorSchema = z
 
 const ConflictErrorSchema = z.object({}).merge(BaseHttpErrorSchema);
 const UnauthorizedErrorSchema = z.object({}).merge(BaseHttpErrorSchema);
+const NotFoundErrorSchema = z.object({}).merge(BaseHttpErrorSchema);
 
 const InternalServerErrorSchema = z.object({}).merge(BaseHttpErrorSchema);
 
@@ -51,6 +52,7 @@ export const errorSchemas = {
     ConflictErrorSchema,
     UnauthorizedErrorSchema,
     InternalServerErrorSchema,
+    NotFoundErrorSchema,
 
     UserBadRequestScheams: z.union([ZodValidationErrorSchema, BadRequestErrorSchema]),
 };

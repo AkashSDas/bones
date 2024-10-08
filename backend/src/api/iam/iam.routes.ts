@@ -298,6 +298,58 @@ export const createUser = createRoute({
                 },
             },
         },
+        404: {
+            description: "Not Found",
+            content: {
+                "application/json": {
+                    schema: errorSchemas.NotFoundErrorSchema,
+                },
+            },
+        },
+    },
+});
+
+export const updateUser = createRoute({
+    method: "patch",
+    path: "/user/{userId}",
+    tags: ["iam", "user"],
+    middleware: [authenticateMiddleware],
+    request: {
+        params: schemas.UpdateUserParamsSchema,
+        body: {
+            content: {
+                "application/json": {
+                    schema: schemas.UpdateUserRequestBodySchema,
+                },
+            },
+        },
+    },
+    responses: {
+        ...commonOpenApiResponses,
+        200: {
+            description: "Successfully updated user",
+            content: {
+                "application/json": {
+                    schema: schemas.UpdateUserResponseBodySchema,
+                },
+            },
+        },
+        400: {
+            description: "Validation Error",
+            content: {
+                "application/json": {
+                    schema: errorSchemas.UserBadRequestScheams,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: errorSchemas.UnauthorizedErrorSchema,
+                },
+            },
+        },
     },
 });
 
@@ -316,3 +368,4 @@ export type CompleteResetPasswordHandler = AppRouteHandler<
 export type RefreshAccessTokenHandler = AppRouteHandler<typeof refreshAccessToken>;
 
 export type CreateUserHandler = AppRouteHandler<typeof createUser>;
+export type UpdateUserHandler = AppRouteHandler<typeof updateUser>;

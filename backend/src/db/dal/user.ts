@@ -22,6 +22,19 @@ class UserDAL {
         }
     }
 
+    async update(
+        accountId: number,
+        userId: number,
+        newData: Partial<
+            Pick<User, "isBlocked" | "username" | "passwordHash" | "passwordAge">
+        >,
+    ): Promise<void> {
+        await this.db
+            .update(user)
+            .set(newData)
+            .where(and(eq(user.accountId, accountId), eq(user.id, userId)));
+    }
+
     async existsByUsername(
         username: string,
         accountId: string,
@@ -31,6 +44,25 @@ class UserDAL {
             .from(user)
             .innerJoin(account, eq(user.accountId, account.accountId))
             .where(and(eq(user.username, username), eq(account.accountId, accountId)))
+            .limit(1);
+
+        return result.length > 0
+            ? {
+                  accountId: result[0].accuntId,
+                  userId: result[0].userId,
+              }
+            : null;
+    }
+
+    async existsByUserId(
+        userId: string,
+        accountId: string,
+    ): Promise<null | { accountId: Account["id"]; userId: User["id"] }> {
+        const result = await this.db
+            .select({ userId: user.id, accuntId: account.id })
+            .from(user)
+            .innerJoin(account, eq(user.accountId, account.accountId))
+            .where(and(eq(user.userId, userId), eq(account.accountId, accountId)))
             .limit(1);
 
         return result.length > 0

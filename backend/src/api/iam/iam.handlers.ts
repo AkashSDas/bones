@@ -2,6 +2,7 @@ import { env } from "@/utils/env";
 
 import { getCookie, setCookie } from "hono/cookie";
 import jwt from "jsonwebtoken";
+import { z } from "zod";
 
 import { dal } from "@/db/dal";
 import { log } from "@/lib/logger";
@@ -17,6 +18,7 @@ import {
 import { taskQueue } from "@/utils/task-queue";
 
 import * as routes from "./iam.routes";
+import { UpdateUserResponseBodySchema } from "./iam.schema";
 
 export const accountSignup: routes.AccountSignupHandler = async (c) => {
     const body = c.req.valid("json");
@@ -244,12 +246,73 @@ export const refreshAccessToken: routes.RefreshAccessTokenHandler = async (c) =>
     }
 };
 
+export const updateUser: routes.UpdateUserHandler = async (c) => {
+    const update = c.req.valid("json");
+    const userId = c.req.param("userId");
+    const { accountId } = c.get("jwtContent")!;
+
+    const exists = await dal.user.existsByUserId(userId, accountId);
+
+    if (exists === null) {
+        throw new NotFoundError({ message: "User doesn't exists" });
+    } else {
+        let generatedPwd: null | string = null;
+
+        if (update.isBlocked !== undefined) {
+            log.info("Blocking user and ignoring other updates (if present)");
+            await dal.user.update(exists.accountId, exists.userId, {
+                isBlocked: update.isBlocked,
+            });
+        } else {
+            if (update.password || update.generateNewPassword) {
+                let pwd: string | undefined = undefined;
+
+                if (update.generateNewPassword === true) {
+                    pwd = auth.generateRandomPassword(16);
+                    generatedPwd = pwd;
+                } else {
+                    pwd = update.password;
+                }
+
+                if (pwd !== undefined) {
+                    const [hash] = await auth.hashPwd(pwd);
+                    await dal.user.update(exists.accountId, exists.userId, {
+                        passwordHash: hash,
+                        passwordAge: new Date().toUTCString(),
+                    });
+                }
+
+                // REMOVING FIELDS THAT ARE NOT PASSWORD USER TABLE TO UPDATE
+                delete update.password;
+                delete update.generateNewPassword;
+            }
+
+            await dal.user.update(exists.accountId, exists.userId, update);
+        }
+
+        const response: z.infer<typeof UpdateUserResponseBodySchema> = {
+            message: "User updated",
+        };
+
+        if (generatedPwd) {
+            response["generatedPassword"] = generatedPwd;
+        }
+
+        return c.json(response, status.OK);
+    }
+};
+
 export const createUser: routes.CreateUserHandler = async (c) => {
     const { username, password } = c.req.valid("json");
     const { accountId } = c.get("jwtContent")!;
-    const exists = await dal.user.existsByUsername(username, accountId);
+    const [exists, id] = await Promise.all([
+        dal.user.existsByUsername(username, accountId),
+        dal.account.getId(accountId),
+    ]);
 
-    if (exists === null) {
+    if (id === null) {
+        throw new NotFoundError({ message: "Account doesn't exists" });
+    } else if (exists !== null) {
         throw new BadRequestError({
             message: `Username '${username}' is already used by an user in this account`,
         });
@@ -259,7 +322,7 @@ export const createUser: routes.CreateUserHandler = async (c) => {
         const [hash] = await auth.hashPwd(pwd);
 
         const user = await dal.user.create({
-            accountId: exists.accountId,
+            accountId: id,
             username,
             passwordHash: hash,
             passwordAge: new Date().toUTCString(),

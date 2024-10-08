@@ -143,6 +143,16 @@ class AccountDAL {
         return result.length > 0 ? result[0] : null;
     }
 
+    async getId(accountId: string): Promise<number | null> {
+        const result = await this.db
+            .select({ id: account.id })
+            .from(account)
+            .where(eq(account.accountId, accountId))
+            .limit(1);
+
+        return result.length > 0 ? result[0].id : null;
+    }
+
     async setResetToken(
         email: string,
         tokenHash: string,
