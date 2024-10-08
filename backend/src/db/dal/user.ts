@@ -72,6 +72,12 @@ class UserDAL {
               }
             : null;
     }
+
+    async delete(userId: string, accountId: number): Promise<void> {
+        await this.db
+            .delete(user)
+            .where(and(eq(user.userId, userId), eq(user.accountId, accountId)));
+    }
 }
 
 export const userDAL = new UserDAL(db);

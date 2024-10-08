@@ -390,6 +390,38 @@ export const userExists = createRoute({
     },
 });
 
+export const deleteUser = createRoute({
+    method: "delete",
+    path: "/user/{userId}",
+    tags: ["iam", "user"],
+    middleware: [authenticateMiddleware],
+    request: {
+        params: schemas.DeleteUserParamSchema,
+    },
+    responses: {
+        ...commonOpenApiResponses,
+        204: {
+            description: "Successfully deleted",
+        },
+        400: {
+            description: "Validation Error",
+            content: {
+                "application/json": {
+                    schema: errorSchemas.UserBadRequestScheams,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: errorSchemas.UnauthorizedErrorSchema,
+                },
+            },
+        },
+    },
+});
+
 // ===============================
 // Types
 // ===============================
@@ -407,3 +439,4 @@ export type RefreshAccessTokenHandler = AppRouteHandler<typeof refreshAccessToke
 export type CreateUserHandler = AppRouteHandler<typeof createUser>;
 export type UpdateUserHandler = AppRouteHandler<typeof updateUser>;
 export type UserExistsHandler = AppRouteHandler<typeof userExists>;
+export type DeleteUserHandler = AppRouteHandler<typeof deleteUser>;

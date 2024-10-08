@@ -254,3 +254,11 @@ export const UserExistsQuerySchema = z.object({
 export const UserExistsBodySchema = z.object({
     exists: z.boolean().openapi({ example: false }),
 });
+
+// ===========================
+// Delete user
+// ===========================
+
+export const DeleteUserParamSchema = z.object({
+    userId: z.string().uuid().openapi({ description: "User id" }),
+});

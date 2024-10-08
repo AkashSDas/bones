@@ -350,10 +350,22 @@ export const userExists: routes.UserExistsHandler = async (c) => {
     }
 };
 
+export const deleteUser: routes.DeleteUserHandler = async (c) => {
+    const userId = c.req.param("userId");
+    const { accountId } = c.get("jwtContent")!;
+
+    const exists = await dal.account.getId(accountId);
+
+    if (exists === null) {
+        throw new NotFoundError({ message: "Account doesn't exists" });
+    } else {
+        await dal.user.delete(userId, exists);
+        return c.body(null, status.NO_CONTENT);
+    }
+};
+
 // Routes to add
 //
-// TODO: Get username unique
-// TODO: Update user
 // TODO: Delete user
 // TODO: Get users
 //
