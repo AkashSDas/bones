@@ -13,6 +13,7 @@ const router = app
     .openapi(routes.resetPassword, handlers.resetPassword)
     .openapi(routes.completeResetPassword, handlers.completeResetPassword)
     .openapi(routes.refreshAccessToken, handlers.refreshAccessToken)
-    .openapi(routes.createUser, handlers.createUser);
+    .openapi(routes.createUser, handlers.createUser)
+    .openapi(routes.userExists, handlers.userExists);
 
 export { router as iamRouter };

@@ -1,5 +1,4 @@
 import { z } from "@hono/zod-openapi";
-import { ZodError } from "zod";
 
 import { UserClientSchema } from "@/db/models/user";
 
@@ -249,7 +248,7 @@ export const UpdateUserResponseBodySchema = z.object({
 // ===========================
 
 export const UserExistsQuerySchema = z.object({
-    username: z.string().min(3).optional().openapi({ default: "akash_dev" }),
+    username: z.string().min(3).openapi({ default: "akash_dev" }),
 });
 
 export const UserExistsBodySchema = z.object({

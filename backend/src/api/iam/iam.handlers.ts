@@ -246,6 +246,40 @@ export const refreshAccessToken: routes.RefreshAccessTokenHandler = async (c) =>
     }
 };
 
+export const createUser: routes.CreateUserHandler = async (c) => {
+    const { username, password } = c.req.valid("json");
+    const { accountId } = c.get("jwtContent")!;
+    const [exists, id] = await Promise.all([
+        dal.user.existsByUsername(username, accountId),
+        dal.account.getId(accountId),
+    ]);
+
+    if (id === null) {
+        throw new NotFoundError({ message: "Account doesn't exists" });
+    } else if (exists !== null) {
+        throw new BadRequestError({
+            message: `Username '${username}' is already used by an user in this account`,
+        });
+    } else {
+        const pwd = password ?? auth.generateRandomPassword(16);
+        const isGeneratedPwd = password === undefined;
+        const [hash] = await auth.hashPwd(pwd);
+
+        const user = await dal.user.create({
+            accountId: id,
+            username,
+            passwordHash: hash,
+            passwordAge: new Date().toUTCString(),
+            lastLoggedInAt: new Date().toUTCString(),
+        });
+
+        return c.json(
+            { user, generatedPassword: isGeneratedPwd ? pwd : undefined },
+            status.CREATED,
+        );
+    }
+};
+
 export const updateUser: routes.UpdateUserHandler = async (c) => {
     const update = c.req.valid("json");
     const userId = c.req.param("userId");
@@ -302,37 +336,17 @@ export const updateUser: routes.UpdateUserHandler = async (c) => {
     }
 };
 
-export const createUser: routes.CreateUserHandler = async (c) => {
-    const { username, password } = c.req.valid("json");
+export const userExists: routes.UserExistsHandler = async (c) => {
+    const username = c.req.query("username")!;
     const { accountId } = c.get("jwtContent")!;
-    const [exists, id] = await Promise.all([
-        dal.user.existsByUsername(username, accountId),
-        dal.account.getId(accountId),
-    ]);
 
-    if (id === null) {
+    const exists = await dal.account.getId(accountId);
+
+    if (exists === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
-    } else if (exists !== null) {
-        throw new BadRequestError({
-            message: `Username '${username}' is already used by an user in this account`,
-        });
     } else {
-        const pwd = password ?? auth.generateRandomPassword(16);
-        const isGeneratedPwd = password === undefined;
-        const [hash] = await auth.hashPwd(pwd);
-
-        const user = await dal.user.create({
-            accountId: id,
-            username,
-            passwordHash: hash,
-            passwordAge: new Date().toUTCString(),
-            lastLoggedInAt: new Date().toUTCString(),
-        });
-
-        return c.json(
-            { user, generatedPassword: isGeneratedPwd ? pwd : undefined },
-            status.CREATED,
-        );
+        const exists = await dal.user.existsByUsername(username, accountId);
+        return c.json({ exists: exists !== null }, status.OK);
     }
 };
 

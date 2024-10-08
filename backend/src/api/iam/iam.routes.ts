@@ -353,6 +353,43 @@ export const updateUser = createRoute({
     },
 });
 
+export const userExists = createRoute({
+    method: "get",
+    path: "/user/exists",
+    tags: ["iam", "user"],
+    middleware: [authenticateMiddleware],
+    request: {
+        query: schemas.UserExistsQuerySchema,
+    },
+    responses: {
+        ...commonOpenApiResponses,
+        200: {
+            description: "Success response",
+            content: {
+                "application/json": {
+                    schema: schemas.UserExistsBodySchema,
+                },
+            },
+        },
+        400: {
+            description: "Validation Error",
+            content: {
+                "application/json": {
+                    schema: errorSchemas.UserBadRequestScheams,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: errorSchemas.UnauthorizedErrorSchema,
+                },
+            },
+        },
+    },
+});
+
 // ===============================
 // Types
 // ===============================
@@ -369,3 +406,4 @@ export type RefreshAccessTokenHandler = AppRouteHandler<typeof refreshAccessToke
 
 export type CreateUserHandler = AppRouteHandler<typeof createUser>;
 export type UpdateUserHandler = AppRouteHandler<typeof updateUser>;
+export type UserExistsHandler = AppRouteHandler<typeof userExists>;
