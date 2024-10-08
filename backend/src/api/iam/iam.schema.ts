@@ -262,3 +262,18 @@ export const UserExistsBodySchema = z.object({
 export const DeleteUserParamSchema = z.object({
     userId: z.string().uuid().openapi({ description: "User id" }),
 });
+
+// ===========================
+// Get Many Users
+// ===========================
+
+export const GetManyUsersQuerySchema = z.object({
+    page: z.number().int().min(0).default(0).openapi({ description: "Page number" }),
+    limit: z.number().int().min(0).default(20).openapi({ description: "Page size" }),
+    search: z.string().min(3).optional().openapi({ description: "Search query" }),
+});
+
+export const GetManyUserResponseBodySchema = z.object({
+    total: z.number().int().min(0).openapi({ description: "Total number of users" }),
+    users: z.array(UserClientSchema).openapi({ description: "List of users" }),
+});

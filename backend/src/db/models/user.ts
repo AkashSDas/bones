@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
     boolean,
     index,
@@ -40,6 +40,10 @@ export const user = pgTable(
             username: index().on(table.username),
             accountId: index().on(table.accountId),
             usernameAccountIdUnique: uniqueIndex().on(table.username, table.accountId),
+            usernameSearch: index().using(
+                "gin",
+                sql`to_tsvector('english', ${table.username})`,
+            ),
         };
     },
 );

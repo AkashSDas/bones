@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { log } from "@/lib/logger";
 
@@ -77,6 +77,54 @@ class UserDAL {
         await this.db
             .delete(user)
             .where(and(eq(user.userId, userId), eq(user.accountId, accountId)));
+    }
+
+    async getMany(
+        accountId: number,
+        search: string | undefined = undefined,
+        limit: number = 20,
+        offset: number = 0,
+    ): Promise<{ users: User[]; totalCount: number }> {
+        let totalCountQuery;
+        let usersQuery;
+
+        if (search !== undefined) {
+            const searchCondition = sql`to_tsvector('english', ${user.username}) @@ to_tsquery('english', ${search})`;
+
+            totalCountQuery = this.db
+                .select({ count: sql<number>`COUNT(*)` })
+                .from(user)
+                .where(and(eq(user.accountId, accountId), searchCondition));
+
+            usersQuery = this.db
+                .select()
+                .from(user)
+                .where(and(eq(user.accountId, accountId), searchCondition))
+                .limit(limit)
+                .offset(offset);
+        } else {
+            totalCountQuery = this.db
+                .select({ count: sql<number>`COUNT(*)` })
+                .from(user)
+                .where(eq(user.accountId, accountId));
+
+            usersQuery = this.db
+                .select()
+                .from(user)
+                .where(eq(user.accountId, accountId))
+                .limit(limit)
+                .offset(offset);
+        }
+
+        const [totalCountResult, usersResult] = await Promise.all([
+            totalCountQuery,
+            usersQuery,
+        ]);
+
+        return {
+            users: usersResult,
+            totalCount: totalCountResult[0].count,
+        };
     }
 }
 

@@ -364,11 +364,24 @@ export const deleteUser: routes.DeleteUserHandler = async (c) => {
     }
 };
 
-// Routes to add
-//
-// TODO: Delete user
-// TODO: Get users
-//
-// TODO: Create all of the above routes
-// TODO: Refactor code
-// TODO: Tests
+export const getUsers: routes.GetUsersHandler = async (c) => {
+    const { accountId } = c.get("jwtContent")!;
+    const limit = c.req.query("limit") as unknown as number;
+    const offset = c.req.query("offset") as unknown as number;
+    const search = c.req.query("search") as unknown as string | undefined;
+
+    const exists = await dal.account.getId(accountId);
+
+    if (exists === null) {
+        throw new NotFoundError({ message: "Account doesn't exists" });
+    } else {
+        const { users, totalCount } = await dal.user.getMany(
+            exists,
+            search,
+            limit,
+            offset,
+        );
+
+        return c.json({ total: totalCount, users }, status.OK);
+    }
+};
