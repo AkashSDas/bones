@@ -1,13 +1,13 @@
 import { env } from "@/utils/env";
 
-import type { Context, Next } from "hono";
+import { createMiddleware } from "hono/factory";
 import jwt from "jsonwebtoken";
 
 import { auth } from "@/utils/auth";
 import { UnauthorizedError } from "@/utils/http";
 import type { AppBindings } from "@/utils/types";
 
-export async function authenticateMiddleware(c: Context<AppBindings>, next: Next) {
+export const authenticateMiddleware = createMiddleware<AppBindings>(async (c, next) => {
     const authHeader = c.req.header("Authorization");
 
     if (authHeader === undefined) {
@@ -41,7 +41,6 @@ export async function authenticateMiddleware(c: Context<AppBindings>, next: Next
             throw new Error("Payload content is missing");
         } else {
             c.set("jwtContent", payload);
-            await next();
         }
     } catch (e) {
         throw new UnauthorizedError({
@@ -49,4 +48,6 @@ export async function authenticateMiddleware(c: Context<AppBindings>, next: Next
             reason: "Invalid or expired access token",
         });
     }
-}
+
+    await next();
+});
