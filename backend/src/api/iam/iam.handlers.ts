@@ -244,9 +244,37 @@ export const refreshAccessToken: routes.RefreshAccessTokenHandler = async (c) =>
     }
 };
 
+export const createUser: routes.CreateUserHandler = async (c) => {
+    const { username, password } = c.req.valid("json");
+    const { accountId } = c.get("jwtContent")!;
+    const exists = await dal.user.existsByUsername(username, accountId);
+
+    if (exists === null) {
+        throw new BadRequestError({
+            message: `Username '${username}' is already used by an user in this account`,
+        });
+    } else {
+        const pwd = password ?? auth.generateRandomPassword(16);
+        const isGeneratedPwd = password === undefined;
+        const [hash] = await auth.hashPwd(pwd);
+
+        const user = await dal.user.create({
+            accountId: exists.accountId,
+            username,
+            passwordHash: hash,
+            passwordAge: new Date().toUTCString(),
+            lastLoggedInAt: new Date().toUTCString(),
+        });
+
+        return c.json(
+            { user, generatedPassword: isGeneratedPwd ? pwd : undefined },
+            status.CREATED,
+        );
+    }
+};
+
 // Routes to add
 //
-// TODO: Create user
 // TODO: Get username unique
 // TODO: Update user
 // TODO: Delete user

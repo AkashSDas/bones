@@ -1,5 +1,6 @@
 import { createRoute } from "@hono/zod-openapi";
 
+import { authenticateMiddleware } from "@/middlewares/authenticate";
 import { commonOpenApiResponses, errorSchemas } from "@/utils/http";
 import type { AppRouteHandler } from "@/utils/types";
 
@@ -257,6 +258,49 @@ export const refreshAccessToken = createRoute({
     },
 });
 
+export const createUser = createRoute({
+    method: "post",
+    path: "/user",
+    tags: ["iam", "user"],
+    middleware: [authenticateMiddleware],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: schemas.CreateUserRequestBodySchema,
+                },
+            },
+        },
+    },
+    responses: {
+        ...commonOpenApiResponses,
+        201: {
+            description: "Successfully created user",
+            content: {
+                "application/json": {
+                    schema: schemas.CreateUserResponseBodySchema,
+                },
+            },
+        },
+        400: {
+            description: "Validation Error",
+            content: {
+                "application/json": {
+                    schema: errorSchemas.UserBadRequestScheams,
+                },
+            },
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: errorSchemas.UnauthorizedErrorSchema,
+                },
+            },
+        },
+    },
+});
+
 // ===============================
 // Types
 // ===============================
@@ -270,3 +314,5 @@ export type CompleteResetPasswordHandler = AppRouteHandler<
     typeof completeResetPassword
 >;
 export type RefreshAccessTokenHandler = AppRouteHandler<typeof refreshAccessToken>;
+
+export type CreateUserHandler = AppRouteHandler<typeof createUser>;

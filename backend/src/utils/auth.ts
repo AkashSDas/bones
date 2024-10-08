@@ -60,6 +60,41 @@ class AuthUtil {
             return null;
         }
     }
+
+    generateRandomPassword(
+        length: number = 12,
+        options: {
+            includeUppercase?: boolean;
+            includeNumbers?: boolean;
+            includeSymbols?: boolean;
+        } = {
+            includeUppercase: true,
+            includeNumbers: true,
+            includeSymbols: true,
+        },
+    ): string {
+        const lowercaseChars = "abcdefghijklmnopqrstuvwxyz";
+        const uppercaseChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const numberChars = "0123456789";
+        const symbolChars = "!@#$%^&*()_+~`|}{[]:;?><,./-=";
+
+        // Start with lowercase characters
+        let allChars = lowercaseChars;
+
+        // Add options based on input
+        if (options.includeUppercase) allChars += uppercaseChars;
+        if (options.includeNumbers) allChars += numberChars;
+        if (options.includeSymbols) allChars += symbolChars;
+
+        // Generate password
+        let password = "";
+        for (let i = 0; i < length; i++) {
+            const randomIndex = Math.floor(Math.random() * allChars.length);
+            password += allChars[randomIndex];
+        }
+
+        return password;
+    }
 }
 
 export const auth = new AuthUtil();

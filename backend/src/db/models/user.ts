@@ -7,6 +7,8 @@ import {
     uniqueIndex,
     varchar,
 } from "drizzle-orm/pg-core";
+import { createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
 
 import { orm } from "@/utils/db";
 
@@ -50,3 +52,21 @@ export const userRelations = relations(user, function ({ one }) {
         }),
     };
 });
+
+export type NewUser = typeof user.$inferInsert;
+export type User = typeof user.$inferSelect;
+
+export const UserSchema = createSelectSchema(user);
+export const UserClientSchema = UserSchema.pick({
+    id: true,
+    userId: true,
+    username: true,
+    accountId: true,
+    isBlocked: true,
+    passwordAge: true,
+    lastLoggedInAt: true,
+    createdAt: true,
+    updatedAt: true,
+});
+
+export type UserClient = z.infer<typeof UserClientSchema>;
