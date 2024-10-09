@@ -1,5 +1,5 @@
 import { createStream } from "rotating-file-stream";
-import { ulid } from "ulid";
+import { v7 as uuid } from "uuid";
 
 /**
  * Pads a number to ensure it is two digits (e.g., 5 becomes '05').
@@ -13,11 +13,11 @@ function padTime(num) {
 
 /**
  * Log file name generator function.
- * Generates a log file name based on the current date, time, and a unique identifier (ULID).
+ * Generates a log file name based on the current date, time, and a unique identifier (UUID).
  *
  * @param {Date|null} time - The current time. If null, the current date/time will be used.
  * @param {number} _idx - Index of the log rotation (unused).
- * @returns {string} - The generated log file name in the format: DD:MM:YYYYTHH:MMSS-ULID.gz.
+ * @returns {string} - The generated log file name in the format: DD:MM:YYYYTHH:MMSS-UUID.gz.
  */
 function logGenerator(time, _idx) {
     if (!(time instanceof Date)) {
@@ -31,7 +31,7 @@ function logGenerator(time, _idx) {
     const minute = padTime(time.getMinutes()); // MM
     const seconds = padTime(time.getSeconds()); // SS
 
-    const uniqueId = ulid(); // Generate ULID
+    const uniqueId = uuid();
 
     return `${day}:${month}:${year}T${hour}:${minute}${seconds}-${uniqueId}.gz`;
 }

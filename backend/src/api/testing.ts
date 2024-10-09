@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 
-import type { HonoVariables } from "@/utils/types";
+import type { AppBindings } from "@/utils/types";
 
-const app = new Hono<{ Variables: HonoVariables }>();
+const app = new Hono<AppBindings>();
 
 app.get("/", function testingRoute(c) {
     return c.json({ message: "💀 Bones is live" });
