@@ -1,10 +1,8 @@
 import { and, eq, sql } from "drizzle-orm";
 
-import { log } from "@/lib/logger";
-
 import { type DB, db } from "..";
 import { account, user } from "../models";
-import { Account } from "../models/account";
+import { type Account } from "../models/account";
 import { type NewUser, type User } from "../models/user";
 
 class UserDAL {
@@ -12,19 +10,26 @@ class UserDAL {
         this.db = db;
     }
 
+    // ===========================
+    // Insert
+    // ===========================
+
     async create(payload: NewUser): Promise<User> {
-        try {
-            const result = await this.db.insert(user).values(payload).returning();
-            return result[0];
-        } catch (e) {
-            log.error(`Failed to create user: ${e}`);
-            throw Error("Failed to create user", { cause: e });
-        }
+        const result = await this.db.insert(user).values(payload).returning();
+        return result[0];
     }
 
-    async update(
+    // ===========================
+    // Update
+    // ===========================
+
+    /**
+     * @param id Primary key of an user
+     * @param accountId Primary key of an account
+     */
+    async setUserInfo(
+        id: number,
         accountId: number,
-        userId: number,
         newData: Partial<
             Pick<User, "isBlocked" | "username" | "passwordHash" | "passwordAge">
         >,
@@ -32,54 +37,71 @@ class UserDAL {
         await this.db
             .update(user)
             .set(newData)
-            .where(and(eq(user.accountId, accountId), eq(user.id, userId)));
+            .where(and(eq(user.accountId, accountId), eq(user.id, id)));
     }
 
+    // ===========================
+    // Exists
+    // ===========================
+
+    /**
+     * @param accountId Account id (uuid)
+     */
     async existsByUsername(
         username: string,
         accountId: string,
     ): Promise<null | { accountId: Account["id"]; userId: User["id"] }> {
         const result = await this.db
-            .select({ userId: user.id, accuntId: account.id })
+            .select({ userId: user.id, accountId: account.id })
             .from(user)
             .innerJoin(account, eq(user.accountId, account.accountId))
             .where(and(eq(user.username, username), eq(account.accountId, accountId)))
             .limit(1);
 
-        return result.length > 0
-            ? {
-                  accountId: result[0].accuntId,
-                  userId: result[0].userId,
-              }
-            : null;
+        return result.length > 0 ? result[0] : null;
     }
 
+    /**
+     * @param userId User id (uuid)
+     * @param accountId Account id (uuid)
+     */
     async existsByUserId(
         userId: string,
         accountId: string,
     ): Promise<null | { accountId: Account["id"]; userId: User["id"] }> {
         const result = await this.db
-            .select({ userId: user.id, accuntId: account.id })
+            .select({ userId: user.id, accountId: account.id })
             .from(user)
             .innerJoin(account, eq(user.accountId, account.accountId))
             .where(and(eq(user.userId, userId), eq(account.accountId, accountId)))
             .limit(1);
 
-        return result.length > 0
-            ? {
-                  accountId: result[0].accuntId,
-                  userId: result[0].userId,
-              }
-            : null;
+        return result.length > 0 ? result[0] : null;
     }
 
+    // ===========================
+    // Delete
+    // ===========================
+
+    /**
+     * @param userId User id (uuid)
+     * @param accountId Primary key of an account
+     */
     async delete(userId: string, accountId: number): Promise<void> {
         await this.db
             .delete(user)
             .where(and(eq(user.userId, userId), eq(user.accountId, accountId)));
     }
 
-    async getMany(
+    // ===========================
+    // Find
+    // ===========================
+
+    /**
+     * @param accountId Primary key of an account
+     * @param search Username text search
+     */
+    async find(
         accountId: number,
         search: string | undefined = undefined,
         limit: number = 20,

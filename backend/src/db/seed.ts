@@ -12,9 +12,7 @@ if (!env.DB_SEEDING) {
 
 async function resetTable(db: DB, table: Table) {
     return db.execute(
-        sql.raw(
-            `TRUNCATE TABLE ${getTableName(table)} RESTART IDENTITY CASCADE`,
-        ),
+        sql.raw(`TRUNCATE TABLE ${getTableName(table)} RESTART IDENTITY CASCADE`),
     );
 }
 
