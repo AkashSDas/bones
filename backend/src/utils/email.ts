@@ -20,7 +20,7 @@ const transporter = createTransport({
 
 export async function sendEmail(opts: EmailOptions) {
     return await transporter.sendMail({
-        from: process.env.FROM_EMAIL,
+        from: env.FROM_EMAIL,
         to: opts.to,
         subject: opts.subject,
         text: opts.text,

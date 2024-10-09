@@ -1,10 +1,11 @@
 import type { RouteConfig, RouteHandler } from "@hono/zod-openapi";
 
-import { AccessTokenContent } from "./auth";
+import { TokenPayload } from "@/schemas/auth";
 
 type HonoVariables = {
     correlationId?: string;
-    jwtContent?: AccessTokenContent;
+    accountJWTContent?: Extract<TokenPayload, { type: "account" }>;
+    userJWTContent?: Extract<TokenPayload, { type: "user" }>;
 };
 
 export type AppBindings = { Variables: HonoVariables };

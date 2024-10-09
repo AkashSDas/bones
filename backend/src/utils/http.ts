@@ -1,15 +1,18 @@
-import { z } from "@hono/zod-openapi";
 import { type Context } from "hono";
 import { HTTPException } from "hono/http-exception";
+
+import { HttpErrorSchemas } from "@/schemas/http";
 
 import type { AppBindings, Optional } from "./types";
 
 type StatusCode = NonNullable<ConstructorParameters<typeof HTTPException>[0]>;
 
+/** HTTP status code */
 export const status = {
     OK: 200,
     CREATED: 201,
     NO_CONTENT: 204,
+    REDIRECT: 302,
     BAD_REQUEST: 400,
     UNAUTHORIZED: 401,
     FORBIDDEN: 403,
@@ -23,38 +26,80 @@ export const status = {
     GATEWAY_TIMEOUT: 504,
 } as const;
 
-// =====================================
-// Schemas
-// =====================================
-
-const BaseHttpErrorSchema = z.object({
-    reason: z.string().openapi({ description: "Reason for validation error" }),
-    message: z.string().openapi({ description: "Detailed error message" }),
-});
-
-const BadRequestErrorSchema = z.object({}).merge(BaseHttpErrorSchema);
-const ZodValidationErrorSchema = z
-    .object({
-        errors: z.record(z.string()).openapi({ description: "Zod validation errors" }),
-    })
-    .merge(BaseHttpErrorSchema);
-
-const ConflictErrorSchema = z.object({}).merge(BaseHttpErrorSchema);
-const UnauthorizedErrorSchema = z.object({}).merge(BaseHttpErrorSchema);
-const NotFoundErrorSchema = z.object({}).merge(BaseHttpErrorSchema);
-
-const InternalServerErrorSchema = z.object({}).merge(BaseHttpErrorSchema);
-
-export const errorSchemas = {
-    BaseHttpErrorSchema,
-    BadRequestErrorSchema,
-    ZodValidationErrorSchema,
-    ConflictErrorSchema,
-    UnauthorizedErrorSchema,
-    InternalServerErrorSchema,
-    NotFoundErrorSchema,
-
-    UserBadRequestScheams: z.union([ZodValidationErrorSchema, BadRequestErrorSchema]),
+/** Common Zod Open API response utility */
+export const OpenApiResponses = {
+    protectedRoute: {
+        [status.UNAUTHORIZED]: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.UnauthorizedErrorSchema,
+                },
+            },
+        },
+        [status.INTERNAL_SERVER_ERROR]: {
+            description: "Internal server error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.InternalServerErrorSchema,
+                },
+            },
+        },
+    },
+    protectedAndValidationRoute: {
+        [status.UNAUTHORIZED]: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.UnauthorizedErrorSchema,
+                },
+            },
+        },
+        [status.INTERNAL_SERVER_ERROR]: {
+            description: "Internal server error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.InternalServerErrorSchema,
+                },
+            },
+        },
+        [status.BAD_REQUEST]: {
+            description: "Validation error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.UserBadRequestSchemas,
+                },
+            },
+        },
+    },
+    publicRoute: {
+        [status.INTERNAL_SERVER_ERROR]: {
+            description: "Internal server error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.InternalServerErrorSchema,
+                },
+            },
+        },
+    },
+    publicAndValidationRoute: {
+        [status.INTERNAL_SERVER_ERROR]: {
+            description: "Internal server error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.InternalServerErrorSchema,
+                },
+            },
+        },
+        [status.BAD_REQUEST]: {
+            description: "Validation error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.UserBadRequestSchemas,
+                },
+            },
+        },
+    },
 };
 
 // =====================================
@@ -155,6 +200,16 @@ export class NotFoundError extends HttpError {
     }
 }
 
+export class ForbiddenError extends HttpError {
+    constructor(options: Optional<Omit<HttpErrorOptions, "status">, "reason">) {
+        super({
+            ...options,
+            status: status.FORBIDDEN,
+            reason: options.reason ?? "Forbidden",
+        });
+    }
+}
+
 export class UnauthorizedError extends HttpError {
     constructor(options: Optional<Omit<HttpErrorOptions, "status">, "reason">) {
         super({
@@ -164,18 +219,3 @@ export class UnauthorizedError extends HttpError {
         });
     }
 }
-
-// ===================================
-// Common Responses
-// ===================================
-
-export const commonOpenApiResponses = {
-    500: {
-        description: "Internal server error",
-        content: {
-            "application/json": {
-                schema: errorSchemas.InternalServerErrorSchema,
-            },
-        },
-    },
-};
