@@ -1,10 +1,11 @@
 import { createRoute } from "@hono/zod-openapi";
 
-import { authenticateMiddleware } from "@/middlewares/authenticate";
-import { commonOpenApiResponses, errorSchemas } from "@/utils/http";
-import type { AppRouteHandler } from "@/utils/types";
+import { authenticate } from "@/middlewares/authenticate";
+import { HttpErrorSchemas } from "@/schemas/http";
+import { OpenApiResponses, status } from "@/utils/http";
+import type { AppRouteHandler as Handler } from "@/utils/types";
 
-import * as schemas from "./iam.schema";
+import { IAMSchemas } from "./iam.schema";
 
 export const accountSignup = createRoute({
     method: "post",
@@ -14,34 +15,34 @@ export const accountSignup = createRoute({
         body: {
             content: {
                 "application/json": {
-                    schema: schemas.SignupRequestBodySchema,
+                    schema: IAMSchemas.AccountSignupRequestBody,
                 },
             },
         },
     },
     responses: {
-        ...commonOpenApiResponses,
-        201: {
+        ...OpenApiResponses.publicRoute,
+        [status.CREATED]: {
             description: "Success response",
             content: {
                 "application/json": {
-                    schema: schemas.SignupResponseBodySchema,
+                    schema: IAMSchemas.AccountSignupResponseBody,
                 },
             },
         },
-        400: {
+        [status.BAD_REQUEST]: {
             description: "Validation error",
             content: {
                 "application/json": {
-                    schema: errorSchemas.ZodValidationErrorSchema,
+                    schema: HttpErrorSchemas.ZodValidationErrorSchema,
                 },
             },
         },
-        409: {
+        [status.CONFLICT]: {
             description: "Account already exists",
             content: {
                 "application/json": {
-                    schema: errorSchemas.ConflictErrorSchema,
+                    schema: HttpErrorSchemas.ConflictErrorSchema,
                 },
             },
         },
@@ -53,20 +54,20 @@ export const activateAccount = createRoute({
     path: "/account/activate/{activationToken}",
     tags: ["iam", "account"],
     request: {
-        params: schemas.ActivateAccountParamsSchema,
-        query: schemas.ActivateAccountQuerySchema,
+        params: IAMSchemas.ActivateAccountParams,
+        query: IAMSchemas.ActivateAccountQuery,
     },
     responses: {
-        ...commonOpenApiResponses,
-        200: {
+        ...OpenApiResponses.publicAndValidationRoute,
+        [status.OK]: {
             description: "Success response",
             content: {
                 "application/json": {
-                    schema: schemas.ActivateAccountResponseBodySchema,
+                    schema: IAMSchemas.ActivateAccountResponseBody,
                 },
             },
         },
-        302: {
+        [status.REDIRECT]: {
             description: "Redirect after successful/failed account activation",
             headers: {
                 Location: {
@@ -81,14 +82,6 @@ export const activateAccount = createRoute({
                 },
             },
         },
-        400: {
-            description: "Validation Error",
-            content: {
-                "application/json": {
-                    schema: errorSchemas.UserBadRequestScheams,
-                },
-            },
-        },
     },
 });
 
@@ -97,23 +90,23 @@ export const accountExists = createRoute({
     path: "/account/exists",
     tags: ["iam", "account"],
     request: {
-        query: schemas.AccountExistsQuerySchema,
+        query: IAMSchemas.AccountExistsQuery,
     },
     responses: {
-        ...commonOpenApiResponses,
-        200: {
+        ...OpenApiResponses.publicRoute,
+        [status.OK]: {
             description: "Success response",
             content: {
                 "application/json": {
-                    schema: schemas.AccountExistsBodySchema,
+                    schema: IAMSchemas.AccountExistsResponseBody,
                 },
             },
         },
-        400: {
-            description: "Validation Error",
+        [status.BAD_REQUEST]: {
+            description: "Validation error",
             content: {
                 "application/json": {
-                    schema: errorSchemas.ZodValidationErrorSchema,
+                    schema: HttpErrorSchemas.ZodValidationErrorSchema,
                 },
             },
         },
@@ -128,26 +121,26 @@ export const accountLogin = createRoute({
         body: {
             content: {
                 "application/json": {
-                    schema: schemas.LoginRequestBodySchema,
+                    schema: IAMSchemas.AccountLoginRequestBody,
                 },
             },
         },
     },
     responses: {
-        ...commonOpenApiResponses,
-        200: {
+        ...OpenApiResponses.publicAndValidationRoute,
+        [status.OK]: {
             description: "Successfully login",
             content: {
                 "application/json": {
-                    schema: schemas.LoginResponseBodySchema,
+                    schema: IAMSchemas.AccountLoginResponseBody,
                 },
             },
         },
-        400: {
-            description: "Validation Error",
+        [status.NOT_FOUND]: {
+            description: "Not found",
             content: {
                 "application/json": {
-                    schema: errorSchemas.UserBadRequestScheams,
+                    schema: HttpErrorSchemas.NotFoundErrorSchema,
                 },
             },
         },
@@ -162,26 +155,18 @@ export const resetPassword = createRoute({
         body: {
             content: {
                 "application/json": {
-                    schema: schemas.ResetPasswordRequestBodySchema,
+                    schema: IAMSchemas.ResetAccountPasswordRequestBody,
                 },
             },
         },
     },
     responses: {
-        ...commonOpenApiResponses,
-        200: {
+        ...OpenApiResponses.publicAndValidationRoute,
+        [status.OK]: {
             description: "Successfully login",
             content: {
                 "application/json": {
-                    schema: schemas.ResetPasswordResponseBodySchema,
-                },
-            },
-        },
-        400: {
-            description: "Validation Error",
-            content: {
-                "application/json": {
-                    schema: errorSchemas.UserBadRequestScheams,
+                    schema: IAMSchemas.ResetAccountPasswordResponseBody,
                 },
             },
         },
@@ -196,26 +181,18 @@ export const completeResetPassword = createRoute({
         body: {
             content: {
                 "application/json": {
-                    schema: schemas.CompleteResetPasswordRequestBodySchema,
+                    schema: IAMSchemas.CompleteResetAccountPasswordRequestBody,
                 },
             },
         },
     },
     responses: {
-        ...commonOpenApiResponses,
-        200: {
+        ...OpenApiResponses.publicAndValidationRoute,
+        [status.OK]: {
             description: "Successfully password reset",
             content: {
                 "application/json": {
-                    schema: schemas.CompleteResetPasswordResponseBodySchema,
-                },
-            },
-        },
-        400: {
-            description: "Validation Error",
-            content: {
-                "application/json": {
-                    schema: errorSchemas.UserBadRequestScheams,
+                    schema: IAMSchemas.CompleteResetAccountPasswordResponseBody,
                 },
             },
         },
@@ -227,31 +204,15 @@ export const refreshAccessToken = createRoute({
     path: "/account/login/refresh",
     tags: ["iam", "account"],
     request: {
-        cookies: schemas.RefreshAccessTokenCookiesSchema,
+        cookies: IAMSchemas.RefreshAccessTokenCookies,
     },
     responses: {
-        ...commonOpenApiResponses,
-        200: {
+        ...OpenApiResponses.protectedRoute,
+        [status.OK]: {
             description: "Successfully password reset",
             content: {
                 "application/json": {
-                    schema: schemas.RefreshAccessTokenResponseBodySchema,
-                },
-            },
-        },
-        400: {
-            description: "Validation Error",
-            content: {
-                "application/json": {
-                    schema: errorSchemas.UserBadRequestScheams,
-                },
-            },
-        },
-        401: {
-            description: "Unauthorized",
-            content: {
-                "application/json": {
-                    schema: errorSchemas.UnauthorizedErrorSchema,
+                    schema: IAMSchemas.RefreshAccessTokenResponseBody,
                 },
             },
         },
@@ -262,47 +223,39 @@ export const createUser = createRoute({
     method: "post",
     path: "/user",
     tags: ["iam", "user"],
-    middleware: [authenticateMiddleware],
+    middleware: [authenticate],
     request: {
         body: {
             content: {
                 "application/json": {
-                    schema: schemas.CreateUserRequestBodySchema,
+                    schema: IAMSchemas.CreateUserRequestBody,
                 },
             },
         },
     },
     responses: {
-        ...commonOpenApiResponses,
-        201: {
+        ...OpenApiResponses.protectedAndValidationRoute,
+        [status.CREATED]: {
             description: "Successfully created user",
             content: {
                 "application/json": {
-                    schema: schemas.CreateUserResponseBodySchema,
+                    schema: IAMSchemas.CreateUserResponseBody,
                 },
             },
         },
-        400: {
-            description: "Validation Error",
+        [status.NOT_FOUND]: {
+            description: "Not found",
             content: {
                 "application/json": {
-                    schema: errorSchemas.UserBadRequestScheams,
+                    schema: HttpErrorSchemas.NotFoundErrorSchema,
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [status.FORBIDDEN]: {
+            description: "Forbidden",
             content: {
                 "application/json": {
-                    schema: errorSchemas.UnauthorizedErrorSchema,
-                },
-            },
-        },
-        404: {
-            description: "Not Found",
-            content: {
-                "application/json": {
-                    schema: errorSchemas.NotFoundErrorSchema,
+                    schema: HttpErrorSchemas.ForbiddenErrorSchema,
                 },
             },
         },
@@ -313,40 +266,40 @@ export const updateUser = createRoute({
     method: "patch",
     path: "/user/{userId}",
     tags: ["iam", "user"],
-    middleware: [authenticateMiddleware],
+    middleware: [authenticate],
     request: {
-        params: schemas.UpdateUserParamsSchema,
+        params: IAMSchemas.UpdateUserParams,
         body: {
             content: {
                 "application/json": {
-                    schema: schemas.UpdateUserRequestBodySchema,
+                    schema: IAMSchemas.UpdateUserRequestBody,
                 },
             },
         },
     },
     responses: {
-        ...commonOpenApiResponses,
-        200: {
+        ...OpenApiResponses.protectedAndValidationRoute,
+        [status.OK]: {
             description: "Successfully updated user",
             content: {
                 "application/json": {
-                    schema: schemas.UpdateUserResponseBodySchema,
+                    schema: IAMSchemas.UpdateUserResponseBody,
                 },
             },
         },
-        400: {
-            description: "Validation Error",
+        [status.NOT_FOUND]: {
+            description: "Not found",
             content: {
                 "application/json": {
-                    schema: errorSchemas.UserBadRequestScheams,
+                    schema: HttpErrorSchemas.NotFoundErrorSchema,
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [status.FORBIDDEN]: {
+            description: "Forbidden",
             content: {
                 "application/json": {
-                    schema: errorSchemas.UnauthorizedErrorSchema,
+                    schema: HttpErrorSchemas.ForbiddenErrorSchema,
                 },
             },
         },
@@ -357,33 +310,25 @@ export const userExists = createRoute({
     method: "get",
     path: "/user/exists",
     tags: ["iam", "user"],
-    middleware: [authenticateMiddleware],
+    middleware: [authenticate],
     request: {
-        query: schemas.UserExistsQuerySchema,
+        query: IAMSchemas.UserExistsQuery,
     },
     responses: {
-        ...commonOpenApiResponses,
-        200: {
+        ...OpenApiResponses.protectedAndValidationRoute,
+        [status.OK]: {
             description: "Success response",
             content: {
                 "application/json": {
-                    schema: schemas.UserExistsBodySchema,
+                    schema: IAMSchemas.UserExistsResponseBody,
                 },
             },
         },
-        400: {
-            description: "Validation Error",
+        [status.NOT_FOUND]: {
+            description: "Not found",
             content: {
                 "application/json": {
-                    schema: errorSchemas.UserBadRequestScheams,
-                },
-            },
-        },
-        401: {
-            description: "Unauthorized",
-            content: {
-                "application/json": {
-                    schema: errorSchemas.UnauthorizedErrorSchema,
+                    schema: HttpErrorSchemas.NotFoundErrorSchema,
                 },
             },
         },
@@ -394,28 +339,28 @@ export const deleteUser = createRoute({
     method: "delete",
     path: "/user/{userId}",
     tags: ["iam", "user"],
-    middleware: [authenticateMiddleware],
+    middleware: [authenticate],
     request: {
-        params: schemas.DeleteUserParamSchema,
+        params: IAMSchemas.DeleteUserParam,
     },
     responses: {
-        ...commonOpenApiResponses,
-        204: {
+        ...OpenApiResponses.protectedAndValidationRoute,
+        [status.NO_CONTENT]: {
             description: "Successfully deleted",
         },
-        400: {
-            description: "Validation Error",
+        [status.NOT_FOUND]: {
+            description: "Not found",
             content: {
                 "application/json": {
-                    schema: errorSchemas.UserBadRequestScheams,
+                    schema: HttpErrorSchemas.NotFoundErrorSchema,
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [status.FORBIDDEN]: {
+            description: "Forbidden",
             content: {
                 "application/json": {
-                    schema: errorSchemas.UnauthorizedErrorSchema,
+                    schema: HttpErrorSchemas.ForbiddenErrorSchema,
                 },
             },
         },
@@ -426,33 +371,33 @@ export const getUsers = createRoute({
     method: "get",
     path: "/user",
     tags: ["iam", "user"],
-    middleware: [authenticateMiddleware],
+    middleware: [authenticate],
     request: {
-        query: schemas.GetManyUsersQuerySchema,
+        query: IAMSchemas.GetManyUsersQuery,
     },
     responses: {
-        ...commonOpenApiResponses,
-        200: {
+        ...OpenApiResponses.protectedAndValidationRoute,
+        [status.OK]: {
             description: "Success response",
             content: {
                 "application/json": {
-                    schema: schemas.GetManyUserResponseBodySchema,
+                    schema: IAMSchemas.GetManyUserResponseBody,
                 },
             },
         },
-        400: {
-            description: "Validation Error",
+        [status.NOT_FOUND]: {
+            description: "Not found",
             content: {
                 "application/json": {
-                    schema: errorSchemas.UserBadRequestScheams,
+                    schema: HttpErrorSchemas.NotFoundErrorSchema,
                 },
             },
         },
-        401: {
-            description: "Unauthorized",
+        [status.FORBIDDEN]: {
+            description: "Forbidden",
             content: {
                 "application/json": {
-                    schema: errorSchemas.UnauthorizedErrorSchema,
+                    schema: HttpErrorSchemas.ForbiddenErrorSchema,
                 },
             },
         },
@@ -463,18 +408,18 @@ export const getUsers = createRoute({
 // Types
 // ===============================
 
-export type AccountSignupHandler = AppRouteHandler<typeof accountSignup>;
-export type ActivateAccountHandler = AppRouteHandler<typeof activateAccount>;
-export type AccountExistsHandler = AppRouteHandler<typeof accountExists>;
-export type AccountLoginHandler = AppRouteHandler<typeof accountLogin>;
-export type ResetPasswordHandler = AppRouteHandler<typeof resetPassword>;
-export type CompleteResetPasswordHandler = AppRouteHandler<
-    typeof completeResetPassword
->;
-export type RefreshAccessTokenHandler = AppRouteHandler<typeof refreshAccessToken>;
+export type IAMHandler = {
+    AccountSignup: Handler<typeof accountSignup>;
+    ActivateAccount: Handler<typeof activateAccount>;
+    AccountExists: Handler<typeof accountExists>;
+    AccountLogin: Handler<typeof accountLogin>;
+    ResetPassword: Handler<typeof resetPassword>;
+    CompleteResetPassword: Handler<typeof completeResetPassword>;
+    RefreshAccessToken: Handler<typeof refreshAccessToken>;
 
-export type CreateUserHandler = AppRouteHandler<typeof createUser>;
-export type UpdateUserHandler = AppRouteHandler<typeof updateUser>;
-export type UserExistsHandler = AppRouteHandler<typeof userExists>;
-export type DeleteUserHandler = AppRouteHandler<typeof deleteUser>;
-export type GetUsersHandler = AppRouteHandler<typeof getUsers>;
+    CreateUser: Handler<typeof createUser>;
+    UpdateUser: Handler<typeof updateUser>;
+    UserExists: Handler<typeof userExists>;
+    DeleteUser: Handler<typeof deleteUser>;
+    GetUsers: Handler<typeof getUsers>;
+};

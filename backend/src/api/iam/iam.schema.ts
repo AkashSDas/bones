@@ -2,17 +2,11 @@ import { z } from "@hono/zod-openapi";
 
 import { UserClientSchema } from "@/db/models/user";
 
-// =======================================
-// =======================================
-// Accounts
-// =======================================
-// =======================================
+// ===================================
+// Account Signup
+// ===================================
 
-// ===========================
-// Create Account
-// ===========================
-
-export const SignupRequestBodySchema = z.object({
+const AccountSignupRequestBody = z.object({
     email: z
         .string()
         .email()
@@ -27,39 +21,37 @@ export const SignupRequestBodySchema = z.object({
         .max(255)
         .openapi({
             example: "Akash Bones",
-            description: `Unqiue name for your account. You can change this name 
+            description: `Unique name for your account. You can change this name 
             in your account settings after you sign up`,
         }),
     password: z.string().min(8).max(255).openapi({ description: "Account password" }),
 });
 
-export const SignupResponseBodySchema = z.object({
+const AccountSignupResponseBody = z.object({
     message: z
         .string()
         .min(8)
         .max(255)
         .openapi({ example: "Account created successfully" }),
-    accessToken: z
-        .string()
-        .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
+    accessToken: z.string().openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpJ9" }),
 });
 
-// ===========================
+// ===================================
 // Activate Account
-// ===========================
+// ===================================
 
-export const ActivateAccountParamsSchema = z.object({
+const ActivateAccountParams = z.object({
     activationToken: z.string().length(16).openapi({
         example: "9a7ce1f997862565",
         description: "Activation token",
     }),
 });
 
-export const ActivateAccountQuerySchema = z.object({
+const ActivateAccountQuery = z.object({
     redirect: z.enum(["true", "false"]).nullable().default("false"),
 });
 
-export const ActivateAccountResponseBodySchema = z.object({
+const ActivateAccountResponseBody = z.object({
     message: z
         .string()
         .min(8)
@@ -67,24 +59,24 @@ export const ActivateAccountResponseBodySchema = z.object({
         .openapi({ example: "Account activated successfully" }),
 });
 
-// ===========================
-// Unique Account Info
-// ===========================
+// ===================================
+// Account Exists
+// ===================================
 
-export const AccountExistsQuerySchema = z.object({
+const AccountExistsQuery = z.object({
     accountName: z.string().min(3).optional().openapi({ default: "AkashBones" }),
     email: z.string().email().optional().openapi({ default: "akash@gmail.com" }),
 });
 
-export const AccountExistsBodySchema = z.object({
+const AccountExistsResponseBody = z.object({
     exists: z.boolean().openapi({ example: false }),
 });
 
-// ===========================
+// ===================================
 // Account Login
-// ===========================
+// ===================================
 
-export const LoginRequestBodySchema = z.object({
+const AccountLoginRequestBody = z.object({
     email: z
         .string()
         .email()
@@ -96,72 +88,60 @@ export const LoginRequestBodySchema = z.object({
     password: z.string().min(8).max(255).openapi({ description: "Account password" }),
 });
 
-export const LoginResponseBodySchema = z.object({
-    accessToken: z
-        .string()
-        .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
+const AccountLoginResponseBody = z.object({
+    accessToken: z.string().openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpJ9" }),
 });
 
-// ===========================
-// Forgot Password
-// ===========================
+// ===================================
+// Rest Account Password
+// ===================================
 
-export const ResetPasswordRequestBodySchema = z.object({
+const ResetAccountPasswordRequestBody = z.object({
     email: z.string().email().openapi({
         example: "akash@gmail.com",
         description: "Email address for your account",
     }),
 });
 
-export const ResetPasswordResponseBodySchema = z.object({
+const ResetAccountPasswordResponseBody = z.object({
     message: z.string().openapi({
         example: "Password reset email sent to your email",
         description: "Success response message",
     }),
 });
 
-// ===========================
-// Complete Reset Password
-// ===========================
+// ===================================
+// Complete Account Reset Password
+// ===================================
 
-export const CompleteResetPasswordRequestBodySchema = z.object({
+const CompleteResetAccountPasswordRequestBody = z.object({
     password: z.string().min(8).max(255).openapi({ description: "Account password" }),
 });
 
-export const CompleteResetPasswordResponseBodySchema = z.object({
+const CompleteResetAccountPasswordResponseBody = z.object({
     message: z.string().openapi({
         example: "Successfully password reset",
         description: "Successfully password reset",
     }),
 });
 
-// ===========================
+// ===================================
 // Refresh Access Token
-// ===========================
+// ===================================
 
-export const RefreshAccessTokenCookiesSchema = z.object({
-    refreshToken: z
-        .string()
-        .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
+const RefreshAccessTokenCookies = z.object({
+    refreshToken: z.string().openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpJ9" }),
 });
 
-export const RefreshAccessTokenResponseBodySchema = z.object({
-    accessToken: z
-        .string()
-        .openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }),
+const RefreshAccessTokenResponseBody = z.object({
+    accessToken: z.string().openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpJ9" }),
 });
 
-// =======================================
-// =======================================
-// Users
-// =======================================
-// =======================================
+// ===================================
+// Create User
+// ===================================
 
-// ===========================
-// Create user
-// ===========================
-
-export const CreateUserRequestBodySchema = z.object({
+const CreateUserRequestBody = z.object({
     username: z.string().min(3).max(255).openapi({
         description: "Unique username in an account",
         minLength: 3,
@@ -176,22 +156,22 @@ export const CreateUserRequestBodySchema = z.object({
         .optional(),
 });
 
-export const CreateUserResponseBodySchema = z.object({
+const CreateUserResponseBody = z.object({
     user: UserClientSchema.openapi({ description: "Newly created user" }),
     generatedPassword: z.string().optional().openapi({
         description: "This will be present if password is generated by the application",
     }),
 });
 
-// ===========================
-// Update user
-// ===========================
+// ===================================
+// Update User
+// ===================================
 
-export const UpdateUserParamsSchema = z.object({
+const UpdateUserParams = z.object({
     userId: z.string().uuid().openapi({ description: "User id" }),
 });
 
-export const UpdateUserRequestBodySchema = z
+const UpdateUserRequestBody = z
     .object({
         username: z
             .string()
@@ -236,44 +216,88 @@ export const UpdateUserRequestBodySchema = z
         return payload;
     });
 
-export const UpdateUserResponseBodySchema = z.object({
+const UpdateUserResponseBody = z.object({
     message: z.string().openapi({ example: "Successfully updated user" }),
     generatedPassword: z.string().optional().openapi({
         description: "This will be present if password is generated by the application",
     }),
 });
 
-// ===========================
-// Get unique user info
-// ===========================
+// ===================================
+// Get Unique User Info
+// ===================================
 
-export const UserExistsQuerySchema = z.object({
+const UserExistsQuery = z.object({
     username: z.string().min(3).openapi({ default: "akash_dev" }),
 });
 
-export const UserExistsBodySchema = z.object({
+const UserExistsResponseBody = z.object({
     exists: z.boolean().openapi({ example: false }),
 });
 
-// ===========================
-// Delete user
-// ===========================
+// ===================================
+// Delete User
+// ===================================
 
-export const DeleteUserParamSchema = z.object({
+const DeleteUserParam = z.object({
     userId: z.string().uuid().openapi({ description: "User id" }),
 });
 
-// ===========================
+// ===================================
 // Get Many Users
-// ===========================
+// ===================================
 
-export const GetManyUsersQuerySchema = z.object({
+const GetManyUsersQuery = z.object({
     page: z.number().int().min(0).default(0).openapi({ description: "Page number" }),
     limit: z.number().int().min(0).default(20).openapi({ description: "Page size" }),
     search: z.string().min(3).optional().openapi({ description: "Search query" }),
 });
 
-export const GetManyUserResponseBodySchema = z.object({
+const GetManyUserResponseBody = z.object({
     total: z.number().int().min(0).openapi({ description: "Total number of users" }),
     users: z.array(UserClientSchema).openapi({ description: "List of users" }),
 });
+
+// ===================================
+// Exports
+// ===================================
+
+/** IAM Open API Zod Schemas */
+export const IAMSchemas = {
+    AccountSignupRequestBody,
+    AccountSignupResponseBody,
+
+    ActivateAccountParams,
+    ActivateAccountQuery,
+    ActivateAccountResponseBody,
+
+    AccountExistsQuery,
+    AccountExistsResponseBody,
+
+    AccountLoginRequestBody,
+    AccountLoginResponseBody,
+
+    ResetAccountPasswordRequestBody,
+    ResetAccountPasswordResponseBody,
+
+    CompleteResetAccountPasswordRequestBody,
+    CompleteResetAccountPasswordResponseBody,
+
+    RefreshAccessTokenCookies,
+    RefreshAccessTokenResponseBody,
+
+    CreateUserRequestBody,
+    CreateUserResponseBody,
+
+    UpdateUserParams,
+    UpdateUserRequestBody,
+    UpdateUserResponseBody,
+
+    UserExistsQuery,
+    UserExistsResponseBody,
+
+    DeleteUserParam,
+
+    GetManyUsersQuery,
+    GetManyUserResponseBody,
+};

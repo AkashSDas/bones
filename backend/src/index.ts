@@ -1,4 +1,4 @@
-// Update preitter to have this file imported first so that it will
+// Update prettier to have this file imported first so that it will
 // load all of the environment variables
 import { env } from "./utils/env";
 
@@ -16,10 +16,10 @@ import { v7 as uuid } from "uuid";
 import { iamRouter } from "./api/iam";
 import { testRouter } from "./api/testing";
 import { asyncLocalStorage, log } from "./lib/logger";
-import { correlationIdMiddleware } from "./middlewares/correlation-id";
+import { correlationId } from "./middlewares/correlation-id";
 import { createHonoApp } from "./utils/app";
 import { HttpError, InternalServerError, NotFoundError } from "./utils/http";
-import { taskQueue } from "./utils/task-queue";
+import { queue } from "./utils/task-queue";
 
 const app = createHonoApp();
 
@@ -47,7 +47,8 @@ app.use(
         headerName: "X-Request-ID",
     }),
 );
-app.use(correlationIdMiddleware);
+
+app.use(correlationId);
 
 app.use(async function runWithinContext(c, next) {
     const requestId = c.get("requestId") ?? "-";
@@ -69,13 +70,17 @@ app.onError(function handleAppError(err, c) {
     } else {
         log.error(`Unhandled error: ${err}\n${err.stack}`);
         return new InternalServerError({
-            message: "Internal Servier Error (unhandled)",
+            reason: "Internal Server Error (unhandled)",
+            message: "Internal Server Error",
         }).toJSON(c);
     }
 });
 
 app.notFound(function handleNotFound(c) {
-    return new NotFoundError({ message: "Route Not Found" }).toJSON(c);
+    return new NotFoundError({
+        reason: "Route Not Found",
+        message: "Not Found",
+    }).toJSON(c);
 });
 
 // ==========================
@@ -83,7 +88,7 @@ app.notFound(function handleNotFound(c) {
 // ==========================
 
 const serverAdapter = new HonoAdapter(serveStatic);
-createBullBoard({ serverAdapter, queues: taskQueue.queueAdapter });
+createBullBoard({ serverAdapter, queues: queue.queueAdapter });
 
 const basePath = "/api/task-queue/ui";
 serverAdapter.setBasePath(basePath);

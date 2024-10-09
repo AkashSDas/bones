@@ -10,17 +10,24 @@ import { auth } from "@/utils/auth";
 import {
     BadRequestError,
     ConflictError,
+    ForbiddenError,
     InternalServerError,
     NotFoundError,
     UnauthorizedError,
     status,
 } from "@/utils/http";
-import { taskQueue } from "@/utils/task-queue";
+import { queue } from "@/utils/task-queue";
 
-import * as routes from "./iam.routes";
-import { UpdateUserResponseBodySchema } from "./iam.schema";
+import { type IAMHandler } from "./iam.routes";
+import { IAMSchemas } from "./iam.schema";
 
-export const accountSignup: routes.AccountSignupHandler = async (c) => {
+export const REFRESH_COOKIE_KEY = "refreshToken";
+
+// =========================================
+// Account Endpoints
+// =========================================
+
+export const accountSignup: IAMHandler["AccountSignup"] = async (c) => {
     const body = c.req.valid("json");
     const exists = await dal.account.exists(body.email, body.accountName);
 
@@ -46,20 +53,27 @@ export const accountSignup: routes.AccountSignupHandler = async (c) => {
             lastLoggedInAt: new Date().toUTCString(),
         });
 
-        log.debug(`Account created successfully: ${account.accountId}`);
+        log.info(`Account created successfully: ${account.accountId}`);
 
-        const accessToken = auth.createAccessToken({ accountId: account.accountId });
-        const refreshToken = auth.createRefreshToken({ accountId: account.accountId });
+        const accessToken = auth.createAccessToken({
+            type: "account",
+            accountId: account.accountId,
+        });
+        const refreshToken = auth.createRefreshToken({
+            type: "account",
+            accountId: account.accountId,
+        });
 
-        setCookie(c, "refreshToken", refreshToken, {
+        setCookie(c, REFRESH_COOKIE_KEY, refreshToken, {
             expires: env.REFRESH_TOKEN_AGE_IN_DATE,
             httpOnly: true,
             secure: true,
             sameSite: "none",
         });
 
-        log.debug(`Adding send email task: ${account.accountId}`);
-        await taskQueue.addSendAccountActivationEmailTask({
+        log.info(`Adding send email task: ${account.accountId}`);
+        await queue.addSendEmailTask({
+            type: "activateAccount",
             email: body.email,
             activationToken,
             requestId: c.get("requestId") ?? "N/A",
@@ -73,25 +87,28 @@ export const accountSignup: routes.AccountSignupHandler = async (c) => {
     }
 };
 
-export const activateAccount: routes.ActivateAccountHandler = async (c) => {
+export const activateAccount: IAMHandler["ActivateAccount"] = async (c) => {
     const token = c.req.param("activationToken");
     const redirect = c.req.query("redirect");
 
-    const hash = auth.hashToken(token);
-    const accountId = await dal.account.findByAcctivationToken(hash);
+    try {
+        const hash = auth.hashToken(token);
+        const accountId = await dal.account.findByActivationToken(
+            hash,
+            new Date(Date.now() + 10 * 60 * 1000).toUTCString(), // 10 minutes
+        );
 
-    if (accountId === null) {
-        log.error("Invalid or expired token");
+        if (accountId === null) {
+            log.error("Invalid or expired activation token");
 
-        if (redirect === "true") {
-            return c.redirect(`${env.CLIENT_URL}/login?activation=failed`);
+            if (redirect === "true") {
+                return c.redirect(`${env.CLIENT_URL}/login?activation=failed`);
+            } else {
+                throw new BadRequestError({
+                    message: "Activation token is either invalid or expired",
+                });
+            }
         } else {
-            throw new BadRequestError({
-                message: "Activation token is either invalid or expired",
-            });
-        }
-    } else {
-        try {
             await dal.account.activate(accountId);
             log.info("Account activated and verified");
 
@@ -100,7 +117,11 @@ export const activateAccount: routes.ActivateAccountHandler = async (c) => {
             } else {
                 return c.json({ message: "Account activated successfully" });
             }
-        } catch (e) {
+        }
+    } catch (e) {
+        if (e instanceof BadRequestError) {
+            throw e;
+        } else {
             log.error(`Failed to activate account: ${e}`);
 
             if (redirect === "true") {
@@ -108,45 +129,45 @@ export const activateAccount: routes.ActivateAccountHandler = async (c) => {
             } else {
                 throw new InternalServerError({
                     message: "Failed to activate account",
+                    cause: e,
                 });
             }
         }
     }
 };
 
-export const accountExists: routes.AccountExistsHandler = async (c) => {
+export const accountExists: IAMHandler["AccountExists"] = async (c) => {
     const accountName = c.req.query("accountName");
     const email = c.req.query("email");
 
     if (!accountName && !email) {
         throw new BadRequestError({
-            message: `At least one of the query parameters must be specified: 'accountName' or 'email'`,
+            message: `At least one of the query parameters must be specified: 
+            'accountName' or 'email'`,
         });
     }
 
-    try {
-        if (accountName && !email) {
-            const exists = await dal.account.existsByAccountName(accountName);
-            return c.json({ exists }, status.OK);
-        } else if (!accountName && email) {
-            const exists = await dal.account.existsByEmail(email);
-            return c.json({ exists }, status.OK);
-        } else {
-            const exists = await Promise.all([
-                dal.account.existsByEmail(email!),
-                dal.account.existsByAccountName(accountName!),
-            ]);
-            return c.json({ exists: exists.every(Boolean) }, status.OK);
-        }
-    } catch (e) {
-        log.error(`Failed to check if account exists: ${e}`);
-        throw new InternalServerError({ message: "Failed to check if account exists" });
+    if (accountName && !email) {
+        const exists = await dal.account.existsByAccountName(accountName);
+        return c.json({ exists }, status.OK);
     }
+
+    if (!accountName && email) {
+        const exists = await dal.account.existsByEmail(email);
+        return c.json({ exists }, status.OK);
+    }
+
+    const exists = await Promise.all([
+        dal.account.existsByEmail(email!),
+        dal.account.existsByAccountName(accountName!),
+    ]);
+
+    return c.json({ exists: exists.every(Boolean) }, status.OK);
 };
 
-export const accountLogin: routes.AccountLoginHandler = async (c) => {
+export const accountLogin: IAMHandler["AccountLogin"] = async (c) => {
     const body = c.req.valid("json");
-    const info = await dal.account.getHashInfo(body.email);
+    const info = await dal.account.findHashDetails(body.email);
 
     if (info === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
@@ -156,10 +177,16 @@ export const accountLogin: routes.AccountLoginHandler = async (c) => {
         if (!isRightPwd) {
             throw new BadRequestError({ message: "Wrong password" });
         } else {
-            const accessToken = auth.createAccessToken({ accountId: info.accountId });
-            const refreshToken = auth.createRefreshToken({ accountId: info.accountId });
+            const accessToken = auth.createAccessToken({
+                type: "account",
+                accountId: info.accountId,
+            });
+            const refreshToken = auth.createRefreshToken({
+                type: "account",
+                accountId: info.accountId,
+            });
 
-            setCookie(c, "refreshToken", refreshToken, {
+            setCookie(c, REFRESH_COOKIE_KEY, refreshToken, {
                 expires: env.REFRESH_TOKEN_AGE_IN_DATE,
                 httpOnly: true,
                 secure: true,
@@ -171,7 +198,7 @@ export const accountLogin: routes.AccountLoginHandler = async (c) => {
     }
 };
 
-export const resetPassword: routes.ResetPasswordHandler = async (c) => {
+export const resetPassword: IAMHandler["ResetPassword"] = async (c) => {
     const body = c.req.valid("json");
     const exists = await dal.account.existsByEmail(body.email);
 
@@ -184,8 +211,9 @@ export const resetPassword: routes.ResetPasswordHandler = async (c) => {
 
         await dal.account.setResetToken(body.email, resetHashToken, resetTokenAge);
 
-        log.debug("Adding send email task");
-        await taskQueue.addSendResetPasswordEmailTask({
+        log.info("Adding send email task");
+        await queue.addSendEmailTask({
+            type: "resetPassword",
             email: body.email,
             resetToken,
             requestId: c.get("requestId") ?? "N/A",
@@ -199,12 +227,15 @@ export const resetPassword: routes.ResetPasswordHandler = async (c) => {
     }
 };
 
-export const completeResetPassword: routes.CompleteResetPasswordHandler = async (c) => {
+export const completeResetPassword: IAMHandler["CompleteResetPassword"] = async (c) => {
     const body = c.req.valid("json");
     const token = c.req.param("resetToken");
 
     const hash = auth.hashToken(token);
-    const accountId = await dal.account.findByResetPasswordToken(hash);
+    const accountId = await dal.account.findByResetPasswordToken(
+        hash,
+        new Date(Date.now() + 10 * 60 * 1000).toUTCString(), // 10 minutes
+    );
 
     if (accountId === null) {
         throw new BadRequestError({
@@ -213,12 +244,12 @@ export const completeResetPassword: routes.CompleteResetPasswordHandler = async 
     } else {
         const [hash] = await auth.hashPwd(body.password);
         await dal.account.setPassword(accountId, hash);
-
+        log.info("Successfully changed password");
         return c.json({ message: "Successfully password reset" }, status.OK);
     }
 };
 
-export const refreshAccessToken: routes.RefreshAccessTokenHandler = async (c) => {
+export const refreshAccessToken: IAMHandler["RefreshAccessToken"] = async (c) => {
     const token = getCookie(c, "refreshToken");
 
     if (token === undefined) {
@@ -226,32 +257,46 @@ export const refreshAccessToken: routes.RefreshAccessTokenHandler = async (c) =>
             message: "Unauthorized",
             reason: "Missing refresh token",
         });
-    } else {
-        try {
-            const decoded = jwt.verify(token, env.REFRESH_TOKEN_SECRET);
-            const payload = await auth.getAccessTokenContent(decoded);
+    }
 
-            if (payload === null) {
-                throw new Error("Payload content is missing");
-            } else {
-                const token = auth.createAccessToken({ accountId: payload.accountId });
-                return c.json({ accessToken: token }, status.OK);
-            }
-        } catch (e) {
-            throw new UnauthorizedError({
-                message: "Unauthorized",
-                reason: "Invalid or expired refresh token",
+    try {
+        const decoded = jwt.verify(token, env.REFRESH_TOKEN_SECRET);
+        const payload = await auth.extractJWTContent(decoded);
+
+        if (payload === null) {
+            throw new Error("Payload content is missing");
+        } else {
+            const token = auth.createAccessToken({
+                type: "account",
+                accountId: payload.accountId,
             });
+
+            return c.json({ accessToken: token }, status.OK);
         }
+    } catch (e) {
+        throw new UnauthorizedError({
+            message: "Unauthorized",
+            reason: "Invalid or expired refresh token",
+        });
     }
 };
 
-export const createUser: routes.CreateUserHandler = async (c) => {
+// =========================================
+// User Endpoints
+// =========================================
+
+export const createUser: IAMHandler["CreateUser"] = async (c) => {
     const { username, password } = c.req.valid("json");
-    const { accountId } = c.get("jwtContent")!;
+    const content = c.get("accountJWTContent");
+
+    if (content === undefined) {
+        throw new ForbiddenError({ message: "You don't account (admin) privileges" });
+    }
+
+    const { accountId } = content;
     const [exists, id] = await Promise.all([
         dal.user.existsByUsername(username, accountId),
-        dal.account.getId(accountId),
+        dal.account.findById(accountId),
     ]);
 
     if (id === null) {
@@ -273,6 +318,7 @@ export const createUser: routes.CreateUserHandler = async (c) => {
             lastLoggedInAt: new Date().toUTCString(),
         });
 
+        log.info("Create a new user");
         return c.json(
             { user, generatedPassword: isGeneratedPwd ? pwd : undefined },
             status.CREATED,
@@ -280,11 +326,16 @@ export const createUser: routes.CreateUserHandler = async (c) => {
     }
 };
 
-export const updateUser: routes.UpdateUserHandler = async (c) => {
+export const updateUser: IAMHandler["UpdateUser"] = async (c) => {
     const update = c.req.valid("json");
     const userId = c.req.param("userId");
-    const { accountId } = c.get("jwtContent")!;
+    const content = c.get("accountJWTContent");
 
+    if (content === undefined) {
+        throw new ForbiddenError({ message: "You don't account (admin) privileges" });
+    }
+
+    const { accountId } = content;
     const exists = await dal.user.existsByUserId(userId, accountId);
 
     if (exists === null) {
@@ -294,7 +345,7 @@ export const updateUser: routes.UpdateUserHandler = async (c) => {
 
         if (update.isBlocked !== undefined) {
             log.info("Blocking user and ignoring other updates (if present)");
-            await dal.user.update(exists.accountId, exists.userId, {
+            await dal.user.setUserInfo(exists.userId, exists.accountId, {
                 isBlocked: update.isBlocked,
             });
         } else {
@@ -304,16 +355,18 @@ export const updateUser: routes.UpdateUserHandler = async (c) => {
                 if (update.generateNewPassword === true) {
                     pwd = auth.generateRandomPassword(16);
                     generatedPwd = pwd;
+                    log.info("Generated a new password for user");
                 } else {
                     pwd = update.password;
                 }
 
                 if (pwd !== undefined) {
                     const [hash] = await auth.hashPwd(pwd);
-                    await dal.user.update(exists.accountId, exists.userId, {
+                    await dal.user.setUserInfo(exists.userId, exists.accountId, {
                         passwordHash: hash,
                         passwordAge: new Date().toUTCString(),
                     });
+                    log.info("Saved user password");
                 }
 
                 // REMOVING FIELDS THAT ARE NOT PASSWORD USER TABLE TO UPDATE
@@ -321,10 +374,13 @@ export const updateUser: routes.UpdateUserHandler = async (c) => {
                 delete update.generateNewPassword;
             }
 
-            await dal.user.update(exists.accountId, exists.userId, update);
+            if (Object.values(update).length > 0) {
+                await dal.user.setUserInfo(exists.userId, exists.accountId, update);
+                log.info("Updated user details");
+            }
         }
 
-        const response: z.infer<typeof UpdateUserResponseBodySchema> = {
+        const response: z.infer<typeof IAMSchemas.UpdateUserResponseBody> = {
             message: "User updated",
         };
 
@@ -336,11 +392,16 @@ export const updateUser: routes.UpdateUserHandler = async (c) => {
     }
 };
 
-export const userExists: routes.UserExistsHandler = async (c) => {
+export const userExists: IAMHandler["UserExists"] = async (c) => {
     const username = c.req.query("username")!;
-    const { accountId } = c.get("jwtContent")!;
+    const content = c.get("accountJWTContent");
 
-    const exists = await dal.account.getId(accountId);
+    if (content === undefined) {
+        throw new ForbiddenError({ message: "You don't account (admin) privileges" });
+    }
+
+    const { accountId } = content;
+    const exists = await dal.account.findById(accountId);
 
     if (exists === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
@@ -350,32 +411,45 @@ export const userExists: routes.UserExistsHandler = async (c) => {
     }
 };
 
-export const deleteUser: routes.DeleteUserHandler = async (c) => {
+export const deleteUser: IAMHandler["DeleteUser"] = async (c) => {
     const userId = c.req.param("userId");
-    const { accountId } = c.get("jwtContent")!;
+    const content = c.get("accountJWTContent");
 
-    const exists = await dal.account.getId(accountId);
+    if (content === undefined) {
+        throw new ForbiddenError({ message: "You don't account (admin) privileges" });
+    }
+
+    const { accountId } = content;
+    const exists = await dal.account.findById(accountId);
 
     if (exists === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
     } else {
         await dal.user.delete(userId, exists);
+        log.info("User deleted");
         return c.body(null, status.NO_CONTENT);
     }
 };
 
-export const getUsers: routes.GetUsersHandler = async (c) => {
-    const { accountId } = c.get("jwtContent")!;
+export const getUsers: IAMHandler["GetUsers"] = async (c) => {
+    const accountContent = c.get("accountJWTContent");
+    const userContent = c.get("userJWTContent");
+
+    if (!userContent && !accountContent) {
+        throw new ForbiddenError({ message: "You don't account access" });
+    }
+
+    const { accountId } = userContent ?? accountContent!;
     const limit = c.req.query("limit") as unknown as number;
     const offset = c.req.query("offset") as unknown as number;
     const search = c.req.query("search") as unknown as string | undefined;
 
-    const exists = await dal.account.getId(accountId);
+    const exists = await dal.account.findById(accountId);
 
     if (exists === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
     } else {
-        const { users, totalCount } = await dal.user.getMany(
+        const { users, totalCount } = await dal.user.find(
             exists,
             search,
             limit,
