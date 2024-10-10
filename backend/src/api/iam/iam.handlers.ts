@@ -265,10 +265,26 @@ export const refreshAccessToken: IAMHandler["RefreshAccessToken"] = async (c) =>
         if (payload === null) {
             throw new Error("Payload content is missing");
         } else {
-            const token = auth.createAccessToken({
-                type: "account",
-                accountId: payload.accountId,
-            });
+            let token: string;
+
+            switch (payload.type) {
+                case "account":
+                    token = auth.createAccessToken({
+                        type: "account",
+                        accountId: payload.accountId,
+                    });
+                    break;
+                case "user":
+                    token = auth.createAccessToken({
+                        type: "user",
+                        accountId: payload.accountId,
+                        userId: payload.userId,
+                    });
+                    break;
+                default:
+                    log.error("Invalid JWT payload type");
+                    throw new Error("Invalid JWT payload type");
+            }
 
             return c.json({ accessToken: token }, status.OK);
         }
