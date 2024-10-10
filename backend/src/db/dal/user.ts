@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 
 import { type DB, db } from "..";
 import { account, user } from "../models";
@@ -38,6 +38,26 @@ class UserDAL {
             .update(user)
             .set(newData)
             .where(and(eq(user.accountId, accountId), eq(user.id, id)));
+    }
+
+    async setLastLogin(userId: string, accountId: string): Promise<void> {
+        const result = await this.db
+            .select({ accountId: account.id })
+            .from(user)
+            .innerJoin(account, eq(user.accountId, account.id))
+            .where(and(eq(user.userId, userId), eq(account.accountId, accountId)))
+            .limit(1);
+
+        const accountRecord = result.length > 0 ? result[0] : null;
+
+        if (accountRecord === null) {
+            throw new Error("Account doesn't exists");
+        }
+
+        await this.db
+            .update(user)
+            .set({ lastLoggedInAt: new Date().toISOString() })
+            .where(eq(user.accountId, accountRecord.accountId));
     }
 
     // ===========================
@@ -122,6 +142,7 @@ class UserDAL {
                 .select()
                 .from(user)
                 .where(and(eq(user.accountId, accountId), searchCondition))
+                .orderBy(asc(user.username))
                 .limit(limit)
                 .offset(offset);
         } else {
@@ -134,6 +155,7 @@ class UserDAL {
                 .select()
                 .from(user)
                 .where(eq(user.accountId, accountId))
+                .orderBy(asc(user.username))
                 .limit(limit)
                 .offset(offset);
         }
@@ -155,6 +177,21 @@ class UserDAL {
     ): Promise<
         (Pick<User, "passwordHash" | "userId"> & Pick<Account, "accountId">) | null
     > {
+        console.log(
+            await this.db
+                .select({
+                    accountId: account.accountId,
+                    passwordHash: user.passwordHash,
+                    userId: user.userId,
+                    username: user.username,
+                    id: account.id,
+                })
+                .from(user)
+                .innerJoin(account, eq(user.accountId, account.id))
+                // .where(and(eq(user.username, username), eq(account.accountId, accountId)))
+                .limit(1),
+        );
+
         const result = await this.db
             .select({
                 accountId: account.accountId,

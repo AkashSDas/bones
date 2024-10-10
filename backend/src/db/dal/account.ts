@@ -1,4 +1,4 @@
-import { and, eq, lte, or } from "drizzle-orm";
+import { and, eq, gte, lte, or } from "drizzle-orm";
 
 import { type DB, db } from "..";
 import { account } from "../models";
@@ -27,14 +27,14 @@ class AccountDAL {
      * @param hash Activation token
      * @param age Activation token age limit
      */
-    async findByActivationToken(hash: string, age: string): Promise<number | null> {
+    async findByActivationToken(hash: string, age: Date): Promise<number | null> {
         const result = await this.db
-            .select({ id: account.id })
+            .select({ id: account.id, age: account.changeStatusTokenAge })
             .from(account)
             .where(
                 and(
                     eq(account.changeStatusToken, hash),
-                    lte(account.changeStatusTokenAge, age),
+                    gte(account.changeStatusTokenAge, age.toISOString()),
                 ),
             )
             .limit(1);
@@ -46,14 +46,14 @@ class AccountDAL {
      * @param hash Reset password token
      * @param age Reset password token age limit
      */
-    async findByResetPasswordToken(hash: string, age: string): Promise<number | null> {
+    async findByResetPasswordToken(hash: string, age: Date): Promise<number | null> {
         const result = await this.db
             .select({ id: account.id })
             .from(account)
             .where(
                 and(
                     eq(account.forgotPasswordToken, hash),
-                    lte(account.forgotPasswordTokenAge, age),
+                    gte(account.forgotPasswordTokenAge, age.toISOString()),
                 ),
             )
             .limit(1);
@@ -140,7 +140,7 @@ class AccountDAL {
             .update(account)
             .set({
                 forgotPasswordToken: token,
-                forgotPasswordTokenAge: duration.toUTCString(),
+                forgotPasswordTokenAge: duration.toISOString(),
             })
             .where(eq(account.email, email));
     }
@@ -153,9 +153,18 @@ class AccountDAL {
             .update(account)
             .set({
                 passwordHash: pwd,
-                passwordAge: new Date(Date.now()).toUTCString(),
+                passwordAge: new Date().toISOString(),
+                forgotPasswordToken: null,
+                forgotPasswordTokenAge: null,
             })
             .where(eq(account.id, id));
+    }
+
+    async setLastLogin(accountId: string): Promise<void> {
+        await this.db
+            .update(account)
+            .set({ lastLoggedInAt: new Date().toISOString() })
+            .where(eq(account.accountId, accountId));
     }
 
     // ===========================
