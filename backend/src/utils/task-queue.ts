@@ -26,6 +26,10 @@ const sendEmailQueue = new Bull<unknown>("sendEmail", config);
 // Task Queue
 // ================================
 
+/**
+ * Using static methods for processing tasks, if using instance methods then
+ * `this.<method>` is not a function while processing tasks.
+ */
 class TaskQueue {
     public queues: Bull.Queue[];
 
@@ -50,7 +54,7 @@ class TaskQueue {
         });
     }
 
-    async processSendEmailTask(job: Bull.Job): Promise<void> {
+    static async processSendEmailTask(job: Bull.Job): Promise<void> {
         const result = await TaskQueueSchemas.SendEmailTaskSchema.safeParseAsync(
             job.data,
         );
@@ -60,11 +64,11 @@ class TaskQueue {
 
             switch (data.type) {
                 case "activateAccount": {
-                    await this.sendActivateAccountEmail(data);
+                    await TaskQueue.sendActivateAccountEmail(data);
                     return;
                 }
                 case "resetPassword": {
-                    await this.sendResetPasswordEmail(data);
+                    await TaskQueue.sendResetPasswordEmail(data);
                     return;
                 }
             }
@@ -74,7 +78,7 @@ class TaskQueue {
         }
     }
 
-    private async sendActivateAccountEmail(data: QueuePayload["ActivateAccount"]) {
+    static async sendActivateAccountEmail(data: QueuePayload["ActivateAccount"]) {
         const { email, activationToken, correlationId, requestId } = data;
         const logData = { requestId, correlationId };
 
@@ -93,7 +97,7 @@ class TaskQueue {
         }
     }
 
-    private async sendResetPasswordEmail(data: QueuePayload["ResetPassword"]) {
+    static async sendResetPasswordEmail(data: QueuePayload["ResetPassword"]) {
         const { email, resetToken, correlationId, requestId } = data;
         const logData = { requestId, correlationId };
 
@@ -120,4 +124,4 @@ export const queue = new TaskQueue();
 // Process Task Queue
 // ================================
 
-sendEmailQueue.process(queue.processSendEmailTask);
+sendEmailQueue.process(TaskQueue.processSendEmailTask);

@@ -194,7 +194,7 @@ export class NotFoundError extends HttpError {
     constructor(options: Optional<Omit<HttpErrorOptions, "status">, "reason">) {
         super({
             ...options,
-            status: status.INTERNAL_SERVER_ERROR,
+            status: status.NOT_FOUND,
             reason: options.reason ?? "Not Found",
         });
     }
