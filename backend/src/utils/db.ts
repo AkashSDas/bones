@@ -16,10 +16,7 @@ class ORM {
     }
 
     timestamp(columnName: string) {
-        return timestamp(columnName, {
-            withTimezone: true, // convert and stored as UTC
-            mode: "string", // return string instead of Date
-        });
+        return timestamp(columnName, { mode: "string", withTimezone: true });
     }
 }
 

@@ -18,7 +18,7 @@ export const authenticate = createMiddleware<AppBindings>(async (c, next) => {
         });
     }
 
-    if (authHeader.startsWith("Bearer ")) {
+    if (!authHeader.startsWith("Bearer ")) {
         throw new UnauthorizedError({
             message: "Unauthorized",
             reason: "Authorization header missing 'Bearer'",
