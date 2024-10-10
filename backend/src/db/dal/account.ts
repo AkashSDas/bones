@@ -1,4 +1,4 @@
-import { and, eq, lte } from "drizzle-orm";
+import { and, eq, lte, or } from "drizzle-orm";
 
 import { type DB, db } from "..";
 import { account } from "../models";
@@ -167,7 +167,7 @@ class AccountDAL {
         const result = await this.db
             .select({ id: account.id })
             .from(account)
-            .where(and(eq(account.email, email), eq(account.accountName, accountName)))
+            .where(or(eq(account.email, email), eq(account.accountName, accountName)))
             .limit(1);
 
         return result.length > 0;

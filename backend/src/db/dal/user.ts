@@ -54,7 +54,7 @@ class UserDAL {
         const result = await this.db
             .select({ userId: user.id, accountId: account.id })
             .from(user)
-            .innerJoin(account, eq(user.accountId, account.accountId))
+            .innerJoin(account, eq(user.accountId, account.id))
             .where(and(eq(user.username, username), eq(account.accountId, accountId)))
             .limit(1);
 
@@ -72,7 +72,7 @@ class UserDAL {
         const result = await this.db
             .select({ userId: user.id, accountId: account.id })
             .from(user)
-            .innerJoin(account, eq(user.accountId, account.accountId))
+            .innerJoin(account, eq(user.accountId, account.id))
             .where(and(eq(user.userId, userId), eq(account.accountId, accountId)))
             .limit(1);
 
@@ -147,6 +147,26 @@ class UserDAL {
             users: usersResult,
             totalCount: totalCountResult[0].count,
         };
+    }
+
+    async findHashDetails(
+        accountId: string,
+        username: string,
+    ): Promise<
+        (Pick<User, "passwordHash" | "userId"> & Pick<Account, "accountId">) | null
+    > {
+        const result = await this.db
+            .select({
+                accountId: account.accountId,
+                passwordHash: user.passwordHash,
+                userId: user.userId,
+            })
+            .from(user)
+            .innerJoin(account, eq(user.accountId, account.id))
+            .where(and(eq(user.username, username), eq(account.accountId, accountId)))
+            .limit(1);
+
+        return result.length > 0 ? result[0] : null;
     }
 }
 

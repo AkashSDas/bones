@@ -404,6 +404,40 @@ export const getUsers = createRoute({
     },
 });
 
+export const userLogin = createRoute({
+    method: "post",
+    path: "/user/login",
+    tags: ["iam", "user"],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: IAMSchemas.UserLoginRequestBody,
+                },
+            },
+        },
+    },
+    responses: {
+        ...OpenApiResponses.publicAndValidationRoute,
+        [status.OK]: {
+            description: "Successfully login",
+            content: {
+                "application/json": {
+                    schema: IAMSchemas.UserLoginResponseBody,
+                },
+            },
+        },
+        [status.NOT_FOUND]: {
+            description: "Not found",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.NotFoundErrorSchema,
+                },
+            },
+        },
+    },
+});
+
 // ===============================
 // Types
 // ===============================
@@ -422,4 +456,5 @@ export type IAMHandler = {
     UserExists: Handler<typeof userExists>;
     DeleteUser: Handler<typeof deleteUser>;
     GetUsers: Handler<typeof getUsers>;
+    UserLogin: Handler<typeof userLogin>;
 };

@@ -142,8 +142,7 @@ export const accountExists: IAMHandler["AccountExists"] = async (c) => {
 
     if (!accountName && !email) {
         throw new BadRequestError({
-            message: `At least one of the query parameters must be specified: 
-            'accountName' or 'email'`,
+            message: `At least one of the query parameters must be specified: 'accountName' or 'email'`,
         });
     }
 
@@ -457,5 +456,40 @@ export const getUsers: IAMHandler["GetUsers"] = async (c) => {
         );
 
         return c.json({ total: totalCount, users }, status.OK);
+    }
+};
+
+export const userLogin: IAMHandler["UserLogin"] = async (c) => {
+    const body = c.req.valid("json");
+    const info = await dal.user.findHashDetails(body.accountId, body.username);
+
+    if (info === null) {
+        throw new NotFoundError({ message: "User doesn't exists" });
+    } else {
+        const isRightPwd = await auth.verifyPwd(body.password, info.passwordHash);
+
+        if (!isRightPwd) {
+            throw new BadRequestError({ message: "Wrong password" });
+        } else {
+            const accessToken = auth.createAccessToken({
+                type: "user",
+                accountId: info.accountId,
+                userId: info.userId,
+            });
+            const refreshToken = auth.createRefreshToken({
+                type: "user",
+                accountId: info.accountId,
+                userId: info.userId,
+            });
+
+            setCookie(c, REFRESH_COOKIE_KEY, refreshToken, {
+                expires: env.REFRESH_TOKEN_AGE_IN_DATE,
+                httpOnly: true,
+                secure: true,
+                sameSite: "none",
+            });
+
+            return c.json({ accessToken }, status.OK);
+        }
     }
 };

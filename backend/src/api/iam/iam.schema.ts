@@ -259,6 +259,30 @@ const GetManyUserResponseBody = z.object({
 });
 
 // ===================================
+// User Login
+// ===================================
+
+const UserLoginRequestBody = z.object({
+    accountId: z
+        .string()
+        .uuid()
+        .openapi({ example: "123e4567-e89b-12d3-a456-426655440000" }),
+    username: z.string().openapi({
+        example: "akash_dev",
+        description: `Username of the user you want to login to an account`,
+    }),
+    password: z
+        .string()
+        .min(8)
+        .max(255)
+        .openapi({ description: "User account password" }),
+});
+
+const UserLoginResponseBody = z.object({
+    accessToken: z.string().openapi({ example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpJ9" }),
+});
+
+// ===================================
 // Exports
 // ===================================
 
@@ -300,4 +324,7 @@ export const IAMSchemas = {
 
     GetManyUsersQuery,
     GetManyUserResponseBody,
+
+    UserLoginRequestBody,
+    UserLoginResponseBody,
 };
