@@ -1,9 +1,11 @@
 import { env } from "@/utils/env";
 
+import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 import * as schema from "@/db/models";
+import { log } from "@/lib/logger";
 
 export const connection = postgres(env.DB_URL, {
     // We want operations to happen in correct order when migrating/seeding and
@@ -16,3 +18,12 @@ export const connection = postgres(env.DB_URL, {
 
 export const db = drizzle(connection, { schema, logger: true });
 export type DB = typeof db;
+
+db.execute(sql`SET timezone = UTC`)
+    .then(() => {
+        log.info("PostgreSQL timezone set to UTC");
+    })
+    .catch(() => {
+        log.fatal("Failed to set timezone to UTC in PostgreSQL");
+        process.exit(1);
+    });

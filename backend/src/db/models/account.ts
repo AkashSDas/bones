@@ -68,7 +68,6 @@ export type Account = typeof account.$inferSelect;
 
 export const AccountSchema = createSelectSchema(account);
 export const AccountClientSchema = AccountSchema.pick({
-    id: true,
     accountId: true,
     email: true,
     accountName: true,

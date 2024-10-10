@@ -5,36 +5,8 @@
         {
             "idx": 0,
             "version": "7",
-            "when": 1727879843451,
+            "when": 1728584045328,
             "tag": "0000_initial",
-            "breakpoints": true
-        },
-        {
-            "idx": 1,
-            "version": "7",
-            "when": 1727882968101,
-            "tag": "0001_add_change_status_related_columns_in_account_table",
-            "breakpoints": true
-        },
-        {
-            "idx": 2,
-            "version": "7",
-            "when": 1727933670191,
-            "tag": "0002_add_password_column_in_account_table",
-            "breakpoints": true
-        },
-        {
-            "idx": 3,
-            "version": "7",
-            "when": 1728198592116,
-            "tag": "0003_remove_password_salt_column_from_accounts",
-            "breakpoints": true
-        },
-        {
-            "idx": 4,
-            "version": "7",
-            "when": 1728269350180,
-            "tag": "0004_remove_username_uniqueness_from_user_table_and_add_combination_of_username_and_accountid_to_be_unique",
             "breakpoints": true
         }
     ]

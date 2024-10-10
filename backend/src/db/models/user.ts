@@ -40,7 +40,7 @@ export const user = pgTable(
             username: index().on(table.username),
             accountId: index().on(table.accountId),
             usernameAccountIdUnique: uniqueIndex().on(table.username, table.accountId),
-            usernameSearch: index().using(
+            usernameSearch: index("username_search_index").using(
                 "gin",
                 sql`to_tsvector('english', ${table.username})`,
             ),
@@ -62,10 +62,8 @@ export type User = typeof user.$inferSelect;
 
 export const UserSchema = createSelectSchema(user);
 export const UserClientSchema = UserSchema.pick({
-    id: true,
     userId: true,
     username: true,
-    accountId: true,
     isBlocked: true,
     passwordAge: true,
     lastLoggedInAt: true,
