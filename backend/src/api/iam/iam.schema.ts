@@ -248,8 +248,30 @@ const DeleteUserParam = z.object({
 // ===================================
 
 const GetManyUsersQuery = z.object({
-    page: z.number().int().min(0).default(0).openapi({ description: "Page number" }),
-    limit: z.number().int().min(0).default(20).openapi({ description: "Page size" }),
+    offset: z
+        .string()
+        .transform((v) => {
+            const page = parseInt(v, 10);
+            if (isNaN(page) || page < 0) {
+                throw new Error(`Invalid page value: ${v}`);
+            }
+
+            return page;
+        })
+        .default("0")
+        .openapi({ description: "Page number" }),
+    limit: z
+        .string()
+        .transform((v) => {
+            const limit = parseInt(v, 10);
+            if (isNaN(limit) || limit < 0) {
+                throw new Error(`Invalid limit value: ${v}`);
+            }
+
+            return limit;
+        })
+        .default("20")
+        .openapi({ description: "Page size" }),
     search: z.string().min(3).optional().openapi({ description: "Search query" }),
 });
 

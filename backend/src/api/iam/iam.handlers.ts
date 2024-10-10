@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 
 import { dal } from "@/db/dal";
+import { UserClientSchema } from "@/db/models/user";
 import { log } from "@/lib/logger";
 import { auth } from "@/utils/auth";
 import {
@@ -21,7 +22,8 @@ import { queue } from "@/utils/task-queue";
 import { type IAMHandler } from "./iam.routes";
 import { IAMSchemas } from "./iam.schema";
 
-export const REFRESH_COOKIE_KEY = "refreshToken";
+const REFRESH_COOKIE_KEY = "refreshToken";
+const TOKEN_EXPIRY = 10 * 60 * 1000; // 10 mins
 
 // =========================================
 // Account Endpoints
@@ -38,19 +40,19 @@ export const accountSignup: IAMHandler["AccountSignup"] = async (c) => {
 
         const activationToken = auth.createToken();
         const activationHashToken = auth.hashToken(activationToken);
-        const activationTokenAge = new Date(new Date().getTime()).toUTCString();
+        const activationTokenAge = new Date(new Date().getTime() + TOKEN_EXPIRY);
 
         const account = await dal.account.create({
             email: body.email,
             accountName: body.accountName,
 
             passwordHash: hash,
-            passwordAge: new Date().toUTCString(),
+            passwordAge: new Date().toISOString(),
 
             changeStatusToken: activationHashToken,
-            changeStatusTokenAge: activationTokenAge,
+            changeStatusTokenAge: activationTokenAge.toISOString(),
 
-            lastLoggedInAt: new Date().toUTCString(),
+            lastLoggedInAt: new Date().toISOString(),
         });
 
         log.info(`Account created successfully: ${account.accountId}`);
@@ -88,15 +90,12 @@ export const accountSignup: IAMHandler["AccountSignup"] = async (c) => {
 };
 
 export const activateAccount: IAMHandler["ActivateAccount"] = async (c) => {
-    const token = c.req.param("activationToken");
-    const redirect = c.req.query("redirect");
+    const { activationToken: token } = c.req.valid("param");
+    const { redirect } = c.req.valid("query");
 
     try {
         const hash = auth.hashToken(token);
-        const accountId = await dal.account.findByActivationToken(
-            hash,
-            new Date(Date.now() + 10 * 60 * 1000).toUTCString(), // 10 minutes
-        );
+        const accountId = await dal.account.findByActivationToken(hash, new Date());
 
         if (accountId === null) {
             log.error("Invalid or expired activation token");
@@ -137,8 +136,7 @@ export const activateAccount: IAMHandler["ActivateAccount"] = async (c) => {
 };
 
 export const accountExists: IAMHandler["AccountExists"] = async (c) => {
-    const accountName = c.req.query("accountName");
-    const email = c.req.query("email");
+    const { accountName, email } = c.req.valid("query");
 
     if (!accountName && !email) {
         throw new BadRequestError({
@@ -192,6 +190,8 @@ export const accountLogin: IAMHandler["AccountLogin"] = async (c) => {
                 sameSite: "none",
             });
 
+            await dal.account.setLastLogin(info.accountId);
+
             return c.json({ accessToken }, status.OK);
         }
     }
@@ -206,7 +206,7 @@ export const resetPassword: IAMHandler["ResetPassword"] = async (c) => {
     } else {
         const resetToken = auth.createToken();
         const resetHashToken = auth.hashToken(resetToken);
-        const resetTokenAge = new Date(new Date().getTime());
+        const resetTokenAge = new Date(new Date().getTime() + TOKEN_EXPIRY);
 
         await dal.account.setResetToken(body.email, resetHashToken, resetTokenAge);
 
@@ -231,10 +231,7 @@ export const completeResetPassword: IAMHandler["CompleteResetPassword"] = async 
     const token = c.req.param("resetToken");
 
     const hash = auth.hashToken(token);
-    const accountId = await dal.account.findByResetPasswordToken(
-        hash,
-        new Date(Date.now() + 10 * 60 * 1000).toUTCString(), // 10 minutes
-    );
+    const accountId = await dal.account.findByResetPasswordToken(hash, new Date());
 
     if (accountId === null) {
         throw new BadRequestError({
@@ -329,21 +326,27 @@ export const createUser: IAMHandler["CreateUser"] = async (c) => {
             accountId: id,
             username,
             passwordHash: hash,
-            passwordAge: new Date().toUTCString(),
-            lastLoggedInAt: new Date().toUTCString(),
+            passwordAge: new Date().toISOString(),
+            lastLoggedInAt: new Date().toISOString(),
         });
 
         log.info("Create a new user");
         return c.json(
-            { user, generatedPassword: isGeneratedPwd ? pwd : undefined },
+            {
+                user: await UserClientSchema.parseAsync(user),
+                generatedPassword: isGeneratedPwd ? pwd : undefined,
+            },
             status.CREATED,
         );
     }
 };
 
+// TODO: Throw forbidden error when requester (account) doesn't have access to user.
+// Current this request is skipped as DB makes changes based on relationships which
+// doesn't exists
 export const updateUser: IAMHandler["UpdateUser"] = async (c) => {
     const update = c.req.valid("json");
-    const userId = c.req.param("userId");
+    const { userId } = c.req.valid("param");
     const content = c.get("accountJWTContent");
 
     if (content === undefined) {
@@ -379,7 +382,7 @@ export const updateUser: IAMHandler["UpdateUser"] = async (c) => {
                     const [hash] = await auth.hashPwd(pwd);
                     await dal.user.setUserInfo(exists.userId, exists.accountId, {
                         passwordHash: hash,
-                        passwordAge: new Date().toUTCString(),
+                        passwordAge: new Date().toISOString(),
                     });
                     log.info("Saved user password");
                 }
@@ -387,6 +390,19 @@ export const updateUser: IAMHandler["UpdateUser"] = async (c) => {
                 // REMOVING FIELDS THAT ARE NOT PASSWORD USER TABLE TO UPDATE
                 delete update.password;
                 delete update.generateNewPassword;
+            }
+
+            if (update.username) {
+                const exists = await dal.user.existsByUsername(
+                    update.username,
+                    accountId,
+                );
+
+                if (exists !== null) {
+                    throw new BadRequestError({
+                        message: `Username '${update.username}' is already used by an user in this account`,
+                    });
+                }
             }
 
             if (Object.values(update).length > 0) {
@@ -408,7 +424,7 @@ export const updateUser: IAMHandler["UpdateUser"] = async (c) => {
 };
 
 export const userExists: IAMHandler["UserExists"] = async (c) => {
-    const username = c.req.query("username")!;
+    const { username } = c.req.valid("query");
     const content = c.get("accountJWTContent");
 
     if (content === undefined) {
@@ -426,8 +442,11 @@ export const userExists: IAMHandler["UserExists"] = async (c) => {
     }
 };
 
+// TODO: Throw forbidden error when requester (account) doesn't have access to user.
+// Current this request is skipped as DB makes changes based on relationships which
+// doesn't exists
 export const deleteUser: IAMHandler["DeleteUser"] = async (c) => {
-    const userId = c.req.param("userId");
+    const { userId } = c.req.valid("param");
     const content = c.get("accountJWTContent");
 
     if (content === undefined) {
@@ -455,9 +474,7 @@ export const getUsers: IAMHandler["GetUsers"] = async (c) => {
     }
 
     const { accountId } = userContent ?? accountContent!;
-    const limit = c.req.query("limit") as unknown as number;
-    const offset = c.req.query("offset") as unknown as number;
-    const search = c.req.query("search") as unknown as string | undefined;
+    const { limit, offset, search } = c.req.valid("query");
 
     const exists = await dal.account.findById(accountId);
 
@@ -471,7 +488,15 @@ export const getUsers: IAMHandler["GetUsers"] = async (c) => {
             offset,
         );
 
-        return c.json({ total: totalCount, users }, status.OK);
+        return c.json(
+            {
+                total: totalCount,
+                users: await Promise.all(
+                    users.map((u) => UserClientSchema.parseAsync(u)),
+                ),
+            },
+            status.OK,
+        );
     }
 };
 
@@ -504,6 +529,8 @@ export const userLogin: IAMHandler["UserLogin"] = async (c) => {
                 secure: true,
                 sameSite: "none",
             });
+
+            await dal.user.setLastLogin(info.userId, info.accountId);
 
             return c.json({ accessToken }, status.OK);
         }
