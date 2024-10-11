@@ -1,21 +1,27 @@
-// Update preitter to have this file imported first so that it will
+// Update prettier to have this file imported first so that it will
 // load all of the environment variables
 import { env } from "./utils/env";
 
+import { createBullBoard } from "@bull-board/api";
+import { HonoAdapter } from "@bull-board/hono";
 import { serve } from "@hono/node-server";
-import { Hono } from "hono";
+import { serveStatic } from "@hono/node-server/serve-static";
+import { swaggerUI } from "@hono/swagger-ui";
+import { apiReference } from "@scalar/hono-api-reference";
 import { compress } from "hono/compress";
 import { cors } from "hono/cors";
-import { logger } from "hono/logger";
 import { requestId } from "hono/request-id";
-import { ulid } from "ulid";
+import { v7 as uuid } from "uuid";
 
+import { iamRouter } from "./api/iam";
 import { testRouter } from "./api/testing";
-import { log } from "./lib/logger";
-import { correlationIdMiddleware } from "./middlewares/correlation-id";
-import type { HonoVariables } from "./utils/types";
+import { asyncLocalStorage, log } from "./lib/logger";
+import { correlationId } from "./middlewares/correlation-id";
+import { createHonoApp } from "./utils/app";
+import { HttpError, InternalServerError, NotFoundError } from "./utils/http";
+import { queue } from "./utils/task-queue";
 
-const app = new Hono<{ Variables: HonoVariables }>();
+const app = createHonoApp();
 
 // ==========================
 // Middlewares
@@ -36,26 +42,74 @@ app.use(
 app.use(
     requestId({
         generator(_c) {
-            return ulid();
+            return uuid();
         },
         headerName: "X-Request-ID",
     }),
 );
-app.use(correlationIdMiddleware);
-app.use(logger());
-app.use(async function printRequestTrackingInfo(c, next) {
-    log.info(`[X-Request-ID] ${c.get("requestId")}`);
-    log.info(`[X-correlation-ID] ${c.get("correlationId")}`);
-    await next();
+
+app.use(correlationId);
+
+app.use(async function runWithinContext(c, next) {
+    const requestId = c.get("requestId") ?? "-";
+    const correlationId = c.get("correlationId") ?? "-";
+
+    // Run the request inside AsyncLocalStorage context
+    return asyncLocalStorage.run({ correlationId, requestId }, () => next());
 });
 
 app.use(compress({ encoding: "gzip" }));
 
 // ==========================
+// Events
+// ==========================
+
+app.onError(function handleAppError(err, c) {
+    if (err instanceof HttpError) {
+        return err.toJSON(c);
+    } else {
+        log.error(`Unhandled error: ${err}\n${err.stack}`);
+        return new InternalServerError({
+            reason: "Internal Server Error (unhandled)",
+            message: "Internal Server Error",
+        }).toJSON(c);
+    }
+});
+
+app.notFound(function handleNotFound(c) {
+    return new NotFoundError({
+        reason: "Route Not Found",
+        message: "Not Found",
+    }).toJSON(c);
+});
+
+// ==========================
+// Task Queue Setup
+// ==========================
+
+const serverAdapter = new HonoAdapter(serveStatic);
+createBullBoard({ serverAdapter, queues: queue.queueAdapter });
+
+const basePath = "/api/task-queue/ui";
+serverAdapter.setBasePath(basePath);
+app.route(basePath, serverAdapter.registerPlugin());
+
+// ==========================
 // Endpoints
 // ==========================
 
-app.route("/api/test", testRouter);
+app.doc("/api/doc", {
+    openapi: "3.0.0",
+    info: {
+        version: "1.0.0",
+        title: "Bones",
+    },
+});
+app.get("/api/doc/ui", swaggerUI({ url: "/api/doc" }));
+app.get("/api/doc/ref", apiReference({ spec: { url: "/api/doc" } }));
+
+app.route("/api/v1/test", testRouter);
+app.route("/api/v1/iam", iamRouter);
 
 log.info(`Server is running on port ${env.PORT}`);
 
