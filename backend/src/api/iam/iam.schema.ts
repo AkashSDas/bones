@@ -1,5 +1,6 @@
 import { z } from "@hono/zod-openapi";
 
+import { AccountClientSchema } from "@/db/models/account";
 import { UserClientSchema } from "@/db/models/user";
 
 // ===================================
@@ -305,6 +306,16 @@ const UserLoginResponseBody = z.object({
 });
 
 // ===================================
+// Logged In User
+// ===================================
+
+const MyProfileResponseBody = z.object({
+    roles: z.array(z.enum(["admin", "user"])),
+    account: AccountClientSchema,
+    user: UserClientSchema.optional(),
+});
+
+// ===================================
 // Exports
 // ===================================
 
@@ -349,4 +360,6 @@ export const IAMSchemas = {
 
     UserLoginRequestBody,
     UserLoginResponseBody,
+
+    MyProfileResponseBody,
 };

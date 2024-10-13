@@ -444,6 +444,32 @@ export const userLogin = createRoute({
     },
 });
 
+export const myProfile = createRoute({
+    method: "get",
+    path: "/me",
+    tags: [TAGS.IAM, TAGS.USER],
+    middleware: [authenticate],
+    responses: {
+        ...OpenApiResponses.protectedAndValidationRoute,
+        [status.OK]: {
+            description: "Logged in user details",
+            content: {
+                "application/json": {
+                    schema: IAMSchemas.MyProfileResponseBody,
+                },
+            },
+        },
+        [status.NOT_FOUND]: {
+            description: "Not found",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.NotFoundErrorSchema,
+                },
+            },
+        },
+    },
+});
+
 // ===============================
 // Types
 // ===============================
@@ -455,7 +481,6 @@ export type IAMHandler = {
     AccountLogin: Handler<typeof accountLogin>;
     ResetPassword: Handler<typeof resetPassword>;
     CompleteResetPassword: Handler<typeof completeResetPassword>;
-    RefreshAccessToken: Handler<typeof refreshAccessToken>;
 
     CreateUser: Handler<typeof createUser>;
     UpdateUser: Handler<typeof updateUser>;
@@ -463,4 +488,7 @@ export type IAMHandler = {
     DeleteUser: Handler<typeof deleteUser>;
     GetUsers: Handler<typeof getUsers>;
     UserLogin: Handler<typeof userLogin>;
+
+    RefreshAccessToken: Handler<typeof refreshAccessToken>;
+    MyProfile: Handler<typeof myProfile>;
 };

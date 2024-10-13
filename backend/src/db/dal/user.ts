@@ -3,7 +3,7 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { type DB, db } from "..";
 import { account, user } from "../models";
 import { type Account } from "../models/account";
-import { type NewUser, type User } from "../models/user";
+import { type NewUser, type User, type UserClient } from "../models/user";
 
 class UserDAL {
     constructor(private db: DB) {
@@ -201,6 +201,29 @@ class UserDAL {
             .from(user)
             .innerJoin(account, eq(user.accountId, account.id))
             .where(and(eq(user.username, username), eq(account.accountId, accountId)))
+            .limit(1);
+
+        return result.length > 0 ? result[0] : null;
+    }
+
+    /**
+     * @param userId User id (uuid)
+     * @param accountId Account id (uuid)
+     */
+    async findById(userId: string, accountId: string): Promise<null | UserClient> {
+        const result = await this.db
+            .select({
+                userId: user.userId,
+                username: user.username,
+                isBlocked: user.isBlocked,
+                passwordAge: user.passwordAge,
+                lastLoggedInAt: user.lastLoggedInAt,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+            })
+            .from(user)
+            .innerJoin(account, eq(user.accountId, account.id))
+            .where(and(eq(user.userId, userId), eq(account.accountId, accountId)))
             .limit(1);
 
         return result.length > 0 ? result[0] : null;

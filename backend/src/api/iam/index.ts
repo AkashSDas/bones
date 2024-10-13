@@ -18,6 +18,7 @@ const router = app
     .openapi(routes.userExists, handlers.userExists)
     .openapi(routes.deleteUser, handlers.deleteUser)
     .openapi(routes.getUsers, handlers.getUsers)
-    .openapi(routes.userLogin, handlers.userLogin);
+    .openapi(routes.userLogin, handlers.userLogin)
+    .openapi(routes.myProfile, handlers.myProfile);
 
 export { router as iamRouter };
