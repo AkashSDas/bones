@@ -5,7 +5,7 @@ import { type ButtonHTMLAttributes, forwardRef } from "react";
 import { cn } from "@/utils/styles";
 
 const variants = cva(
-    "inline-flex items-center justify-center text-sm md:text-[15px] font-medium transition-colors whitespace-nowrap rounded-btn focus-visible:outline-none focus-visible:ring-1 disabled:pointer-events-none gap-2 [&_svg]:pointer-events-none [&_svg]:size-4 md:[&_svg]:size-[18px] [&_svg]:shrink-0 disabled:opacity-70 shadow",
+    "inline-flex font-body items-center justify-center text-sm md:text-sm font-medium transition-colors whitespace-nowrap rounded-btn focus-visible:outline-none focus-visible:ring-1 disabled:pointer-events-none gap-2 [&_svg]:pointer-events-none [&_svg]:size-4 md:[&_svg]:size-[18px] [&_svg]:shrink-0 disabled:opacity-70 shadow",
     {
         variants: {
             variant: {
@@ -17,8 +17,8 @@ const variants = cva(
                 success: `bg-success-500 hover:bg-success-600 active:bg-success-700 disabled:bg-success-900`,
             },
             size: {
-                default: "h-9 px-[14px] md:h-10 md:px-4",
-                icon: "w-9 h-9 md:h-10 md:w-10",
+                default: "h-9 px-[14px] md:h-9 md:px-4",
+                icon: "w-9 h-9 md:h-9 md:w-9",
             },
         },
         defaultVariants: {
