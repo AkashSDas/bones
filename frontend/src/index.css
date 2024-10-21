@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+    @apply bg-grey-950 text-grey-0;
+}
+
+/* ======================================== */
+/* Fonts */
+/* ======================================== */
+
 @font-face {
     font-family: "GTWalsheimPro";
     src: url("./assets/fonts/gt-walsheim-pro/GTWalsheimPro-UltraLight.ttf")
@@ -212,8 +220,7 @@
 
 @font-face {
     font-family: "GTWalsheimPro";
-    src: url("./assets/fonts/gt-walsheim-pro/GTWalsheimPro-Thin.ttf")
-        format("truetype");
+    src: url("./assets/fonts/gt-walsheim-pro/GTWalsheimPro-Thin.ttf") format("truetype");
     font-weight: 400;
     font-style: normal;
 }
@@ -228,8 +235,7 @@
 
 @font-face {
     font-family: "GTWalsheimPro";
-    src: url("./assets/fonts/gt-walsheim-pro/GTWalsheimPro-Bold.ttf")
-        format("truetype");
+    src: url("./assets/fonts/gt-walsheim-pro/GTWalsheimPro-Bold.ttf") format("truetype");
     font-weight: 700;
     font-style: normal;
 }
