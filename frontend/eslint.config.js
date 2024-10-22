@@ -48,7 +48,10 @@ export default tseslint.config(
             "react/react-in-jsx-scope": "off", // Not needed with React 17+
             "react-hooks/rules-of-hooks": "error",
             "react-hooks/exhaustive-deps": "warn",
-            "react-refresh/only-export-components": "error",
+            "react-refresh/only-export-components": [
+                "warn",
+                { allowConstantExport: true },
+            ],
 
             // TypeScript
             "@typescript-eslint/no-unused-vars": [
