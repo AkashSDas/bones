@@ -27,7 +27,7 @@ export function Navbar(): React.JSX.Element {
                     <Link to="/auth/login">Login</Link>
                 </Button>
 
-                <Button>
+                <Button asChild>
                     <Link to="/auth/signup">Create Account</Link>
                 </Button>
             </div>
