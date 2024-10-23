@@ -184,6 +184,7 @@ export const completeResetPassword = createRoute({
     path: "/account/reset-password/{resetToken}",
     tags: [TAGS.IAM, TAGS.ACCOUNT],
     request: {
+        params: IAMSchemas.ResetAccountPasswordParams,
         body: {
             content: {
                 "application/json": {

@@ -97,6 +97,12 @@ const AccountLoginResponseBody = z.object({
 // Rest Account Password
 // ===================================
 
+const ResetAccountPasswordParams = z.object({
+    resetToken: z.string().openapi({
+        description: "Reset token that user received",
+    }),
+});
+
 const ResetAccountPasswordRequestBody = z.object({
     email: z.string().email().openapi({
         example: "akash@gmail.com",
@@ -334,6 +340,7 @@ export const IAMSchemas = {
     AccountLoginRequestBody,
     AccountLoginResponseBody,
 
+    ResetAccountPasswordParams,
     ResetAccountPasswordRequestBody,
     ResetAccountPasswordResponseBody,
 
