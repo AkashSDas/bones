@@ -1,0 +1,2084 @@
+{
+    "openapi": "3.0.0",
+    "info": { "version": "1.0.0", "title": "Bones" },
+    "components": { "schemas": {}, "parameters": {} },
+    "paths": {
+        "/api/v1/iam/account": {
+            "post": {
+                "tags": ["IAM Account"],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "description": "Unique email address for your account. It's used for \n            account recovery and some administrative functions",
+                                        "example": "akash@gmail.com"
+                                    },
+                                    "accountName": {
+                                        "type": "string",
+                                        "minLength": 6,
+                                        "maxLength": 255,
+                                        "description": "Unique name for your account. You can change this name \n            in your account settings after you sign up",
+                                        "example": "Akash Bones"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "minLength": 8,
+                                        "maxLength": 255,
+                                        "description": "Account password"
+                                    }
+                                },
+                                "required": ["email", "accountName", "password"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Success response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "minLength": 8,
+                                            "maxLength": 255,
+                                            "example": "Account created successfully"
+                                        },
+                                        "accessToken": {
+                                            "type": "string",
+                                            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpJ9"
+                                        }
+                                    },
+                                    "required": ["message", "accessToken"]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            },
+                                            "description": "Zod Validation Errors"
+                                        },
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["errors", "reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Account already exists",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/iam/account/activate/{activationToken}": {
+            "get": {
+                "tags": ["IAM Account"],
+                "parameters": [
+                    {
+                        "schema": {
+                            "type": "string",
+                            "minLength": 16,
+                            "maxLength": 16,
+                            "description": "Activation token",
+                            "example": "9a7ce1f997862565"
+                        },
+                        "required": true,
+                        "name": "activationToken",
+                        "in": "path"
+                    },
+                    {
+                        "schema": {
+                            "type": "string",
+                            "nullable": true,
+                            "enum": ["true", "false"],
+                            "default": "false"
+                        },
+                        "required": false,
+                        "name": "redirect",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "minLength": 8,
+                                            "maxLength": 255,
+                                            "example": "Account activated successfully"
+                                        }
+                                    },
+                                    "required": ["message"]
+                                }
+                            }
+                        }
+                    },
+                    "302": {
+                        "description": "Redirect after successful/failed account activation",
+                        "headers": {
+                            "Location": {
+                                "description": "The URL of the page to redirect to",
+                                "schema": {
+                                    "type": "string",
+                                    "examples": [
+                                        "https://example.com/login?activation=failed",
+                                        "https://example.com/login?activation=success"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": "Zod Validation Errors"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["errors", "reason", "message"]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["reason", "message"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/iam/account/exists": {
+            "get": {
+                "tags": ["IAM Account"],
+                "parameters": [
+                    {
+                        "schema": {
+                            "type": "string",
+                            "minLength": 3,
+                            "default": "AkashBones"
+                        },
+                        "required": false,
+                        "name": "accountName",
+                        "in": "query"
+                    },
+                    {
+                        "schema": {
+                            "type": "string",
+                            "format": "email",
+                            "default": "akash@gmail.com"
+                        },
+                        "required": false,
+                        "name": "email",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exists": {
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    },
+                                    "required": ["exists"]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            },
+                                            "description": "Zod Validation Errors"
+                                        },
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["errors", "reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/iam/account/login": {
+            "post": {
+                "tags": ["IAM Account"],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "description": "Email address for your account. It's used for \n            account recovery and some administrative functions",
+                                        "example": "akash@gmail.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "minLength": 8,
+                                        "maxLength": 255,
+                                        "description": "Account password"
+                                    }
+                                },
+                                "required": ["email", "password"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successfully login",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "accessToken": {
+                                            "type": "string",
+                                            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpJ9"
+                                        }
+                                    },
+                                    "required": ["accessToken"]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": "Zod Validation Errors"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["errors", "reason", "message"]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["reason", "message"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/iam/account/reset-password": {
+            "post": {
+                "tags": ["IAM Account"],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "description": "Email address for your account",
+                                        "example": "akash@gmail.com"
+                                    }
+                                },
+                                "required": ["email"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successfully login",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Success response message",
+                                            "example": "Password reset email sent to your email"
+                                        }
+                                    },
+                                    "required": ["message"]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": "Zod Validation Errors"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["errors", "reason", "message"]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["reason", "message"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/iam/account/reset-password/{resetToken}": {
+            "post": {
+                "tags": ["IAM Account"],
+                "parameters": [
+                    {
+                        "schema": {
+                            "type": "string",
+                            "description": "Reset token that user received"
+                        },
+                        "required": true,
+                        "name": "resetToken",
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "password": {
+                                        "type": "string",
+                                        "minLength": 8,
+                                        "maxLength": 255,
+                                        "description": "Account password"
+                                    }
+                                },
+                                "required": ["password"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successfully password reset",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Successfully password reset",
+                                            "example": "Successfully password reset"
+                                        }
+                                    },
+                                    "required": ["message"]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": "Zod Validation Errors"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["errors", "reason", "message"]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["reason", "message"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/iam/login/refresh": {
+            "get": {
+                "tags": ["IAM"],
+                "parameters": [
+                    {
+                        "schema": {
+                            "type": "string",
+                            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpJ9"
+                        },
+                        "required": true,
+                        "name": "refreshToken",
+                        "in": "cookie"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully password reset",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "accessToken": {
+                                            "type": "string",
+                                            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpJ9"
+                                        }
+                                    },
+                                    "required": ["accessToken"]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/iam/user": {
+            "post": {
+                "tags": ["IAM User"],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "username": {
+                                        "type": "string",
+                                        "minLength": 3,
+                                        "maxLength": 255,
+                                        "description": "Unique username in an account",
+                                        "example": "akash_dev"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "minLength": 8,
+                                        "maxLength": 255,
+                                        "description": "User password",
+                                        "example": "Secure Password"
+                                    }
+                                },
+                                "required": ["username"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successfully created user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user": {
+                                            "type": "object",
+                                            "properties": {
+                                                "userId": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "username": {
+                                                    "type": "string",
+                                                    "maxLength": 255
+                                                },
+                                                "isBlocked": { "type": "boolean" },
+                                                "passwordAge": { "type": "string" },
+                                                "lastLoggedInAt": { "type": "string" },
+                                                "createdAt": { "type": "string" },
+                                                "updatedAt": { "type": "string" }
+                                            },
+                                            "required": [
+                                                "userId",
+                                                "username",
+                                                "isBlocked",
+                                                "passwordAge",
+                                                "lastLoggedInAt",
+                                                "createdAt",
+                                                "updatedAt"
+                                            ],
+                                            "description": "Newly created user"
+                                        },
+                                        "generatedPassword": {
+                                            "type": "string",
+                                            "description": "This will be present if password is generated by the application"
+                                        }
+                                    },
+                                    "required": ["user"]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": "Zod Validation Errors"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["errors", "reason", "message"]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["reason", "message"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": ["IAM User"],
+                "parameters": [
+                    {
+                        "schema": {
+                            "type": "string",
+                            "default": "0",
+                            "description": "Page number"
+                        },
+                        "required": false,
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "schema": {
+                            "type": "string",
+                            "default": "20",
+                            "description": "Page size"
+                        },
+                        "required": false,
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "schema": {
+                            "type": "string",
+                            "minLength": 3,
+                            "description": "Search query"
+                        },
+                        "required": false,
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "total": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "description": "Total number of users"
+                                        },
+                                        "users": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "userId": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "username": {
+                                                        "type": "string",
+                                                        "maxLength": 255
+                                                    },
+                                                    "isBlocked": { "type": "boolean" },
+                                                    "passwordAge": { "type": "string" },
+                                                    "lastLoggedInAt": {
+                                                        "type": "string"
+                                                    },
+                                                    "createdAt": { "type": "string" },
+                                                    "updatedAt": { "type": "string" }
+                                                },
+                                                "required": [
+                                                    "userId",
+                                                    "username",
+                                                    "isBlocked",
+                                                    "passwordAge",
+                                                    "lastLoggedInAt",
+                                                    "createdAt",
+                                                    "updatedAt"
+                                                ]
+                                            },
+                                            "description": "List of users"
+                                        }
+                                    },
+                                    "required": ["total", "users"]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": "Zod Validation Errors"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["errors", "reason", "message"]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["reason", "message"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/iam/user/{userId}": {
+            "patch": {
+                "tags": ["IAM User"],
+                "parameters": [
+                    {
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "User id"
+                        },
+                        "required": true,
+                        "name": "userId",
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "username": {
+                                        "type": "string",
+                                        "minLength": 3,
+                                        "maxLength": 255,
+                                        "description": "Unique username in an account",
+                                        "example": "akash_dev"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "minLength": 8,
+                                        "maxLength": 255,
+                                        "description": "User password",
+                                        "example": "Secure Password"
+                                    },
+                                    "generateNewPassword": {
+                                        "type": "boolean",
+                                        "description": "Whether to generate a new password. Either 'password' \n            is provided or 'generateNewPassword' flag in order to update an user's password",
+                                        "example": true
+                                    },
+                                    "isBlocked": {
+                                        "type": "boolean",
+                                        "description": "Block a user",
+                                        "example": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successfully updated user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successfully updated user"
+                                        },
+                                        "generatedPassword": {
+                                            "type": "string",
+                                            "description": "This will be present if password is generated by the application"
+                                        }
+                                    },
+                                    "required": ["message"]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": "Zod Validation Errors"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["errors", "reason", "message"]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["reason", "message"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["IAM User"],
+                "parameters": [
+                    {
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "User id"
+                        },
+                        "required": true,
+                        "name": "userId",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "204": { "description": "Successfully deleted" },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": "Zod Validation Errors"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["errors", "reason", "message"]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["reason", "message"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/iam/user/exists": {
+            "get": {
+                "tags": ["IAM User"],
+                "parameters": [
+                    {
+                        "schema": {
+                            "type": "string",
+                            "minLength": 3,
+                            "default": "akash_dev"
+                        },
+                        "required": true,
+                        "name": "username",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "exists": {
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    },
+                                    "required": ["exists"]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": "Zod Validation Errors"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["errors", "reason", "message"]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["reason", "message"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/iam/user/login": {
+            "post": {
+                "tags": ["IAM User"],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "accountId": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "example": "123e4567-e89b-12d3-a456-426655440000"
+                                    },
+                                    "username": {
+                                        "type": "string",
+                                        "description": "Username of the user you want to login to an account",
+                                        "example": "akash_dev"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "minLength": 8,
+                                        "maxLength": 255,
+                                        "description": "User account password"
+                                    }
+                                },
+                                "required": ["accountId", "username", "password"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successfully login",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "accessToken": {
+                                            "type": "string",
+                                            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpJ9"
+                                        }
+                                    },
+                                    "required": ["accessToken"]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": "Zod Validation Errors"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["errors", "reason", "message"]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["reason", "message"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/iam/me": {
+            "get": {
+                "tags": ["IAM"],
+                "responses": {
+                    "200": {
+                        "description": "Logged in user details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "roles": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "enum": ["admin", "user"]
+                                            }
+                                        },
+                                        "account": {
+                                            "type": "object",
+                                            "properties": {
+                                                "accountId": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "maxLength": 255
+                                                },
+                                                "accountName": {
+                                                    "type": "string",
+                                                    "maxLength": 255
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "uninitialized",
+                                                        "active",
+                                                        "suspended",
+                                                        "deactive"
+                                                    ]
+                                                },
+                                                "passwordAge": { "type": "string" },
+                                                "isVerified": { "type": "boolean" },
+                                                "lastVerifiedAt": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "lastLoggedInAt": { "type": "string" },
+                                                "createdAt": { "type": "string" },
+                                                "updatedAt": { "type": "string" }
+                                            },
+                                            "required": [
+                                                "accountId",
+                                                "email",
+                                                "accountName",
+                                                "status",
+                                                "passwordAge",
+                                                "isVerified",
+                                                "lastVerifiedAt",
+                                                "lastLoggedInAt",
+                                                "createdAt",
+                                                "updatedAt"
+                                            ]
+                                        },
+                                        "user": {
+                                            "type": "object",
+                                            "properties": {
+                                                "userId": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "username": {
+                                                    "type": "string",
+                                                    "maxLength": 255
+                                                },
+                                                "isBlocked": { "type": "boolean" },
+                                                "passwordAge": { "type": "string" },
+                                                "lastLoggedInAt": { "type": "string" },
+                                                "createdAt": { "type": "string" },
+                                                "updatedAt": { "type": "string" }
+                                            },
+                                            "required": [
+                                                "userId",
+                                                "username",
+                                                "isBlocked",
+                                                "passwordAge",
+                                                "lastLoggedInAt",
+                                                "createdAt",
+                                                "updatedAt"
+                                            ]
+                                        }
+                                    },
+                                    "required": ["roles", "account"]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": "Zod Validation Errors"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["errors", "reason", "message"]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["reason", "message"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

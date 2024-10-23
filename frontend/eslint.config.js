@@ -16,6 +16,7 @@ export default tseslint.config(
             "node_modules",
             "package-lock.json",
             "pnpm-lock.yaml",
+            "src/gen/*",
         ],
     },
     {
