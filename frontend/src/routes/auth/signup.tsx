@@ -14,6 +14,8 @@ import {
     FormMessage,
 } from "@/components/shared/Form";
 import { Input } from "@/components/shared/Input";
+import { PasswordStrengthBar } from "@/components/shared/PasswordStrengthBar";
+import { usePasswordStrength } from "@/hooks/form";
 
 export const Route = createFileRoute("/auth/signup")({
     component: SignupPage,
@@ -35,8 +37,13 @@ function SignupPage() {
         },
     });
 
+    const strength = usePasswordStrength(
+        () => form.getValues().password,
+        form.watch("password"),
+    );
+
     function onSubmit(values: z.infer<typeof FormSchema>) {
-        console.log({ values });
+        console.log({ values, strength });
     }
 
     return (
@@ -115,6 +122,10 @@ function SignupPage() {
                                         {...field}
                                     />
                                 </FormControl>
+
+                                <PasswordStrengthBar
+                                    strengthPercentage={strength.score}
+                                />
                                 <FormMessage />
                             </FormItem>
                         )}

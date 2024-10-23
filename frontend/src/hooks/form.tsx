@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { type FieldPath, type FieldValues, useFormContext } from "react-hook-form";
 
 type FormFieldContextValue<
@@ -41,4 +41,34 @@ export function useFormField() {
         formMessageId: `${id}-form-item-message`,
         ...fieldState,
     };
+}
+
+export function usePasswordStrength(getPassword: () => string, watchPassword: string) {
+    const strength = useMemo(
+        function getPasswordStrength() {
+            const password = getPassword();
+
+            let score = 0;
+            let strength = "Very Weak";
+
+            if (password.length >= 8) score += 20;
+            if (password.length >= 12) score += 10;
+
+            if (/\d/.test(password)) score += 20; // number
+            if (/[a-z]/.test(password)) score += 10; // lowercase
+            if (/[A-Z]/.test(password)) score += 20; // uppercase
+            if (/[\W_]/.test(password)) score += 20; // special characters
+            if (password.length >= 16) score += 10;
+
+            if (score >= 80) strength = "Very Strong";
+            else if (score >= 60) strength = "Strong";
+            else if (score >= 40) strength = "Moderate";
+            else if (score >= 20) strength = "Weak";
+
+            return { score, strength };
+        },
+        [watchPassword],
+    );
+
+    return strength;
 }
