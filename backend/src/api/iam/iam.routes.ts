@@ -9,14 +9,14 @@ import { IAMSchemas } from "./iam.schema";
 
 const TAGS = {
     IAM: "IAM",
-    ACCOUNT: "Account",
-    USER: "User",
+    ACCOUNT: "IAM Account",
+    USER: "IAM User",
 } as const;
 
 export const accountSignup = createRoute({
     method: "post",
     path: "/account",
-    tags: [TAGS.IAM, TAGS.ACCOUNT],
+    tags: [TAGS.ACCOUNT],
     request: {
         body: {
             content: {
@@ -58,7 +58,7 @@ export const accountSignup = createRoute({
 export const activateAccount = createRoute({
     method: "get",
     path: "/account/activate/{activationToken}",
-    tags: [TAGS.IAM, TAGS.ACCOUNT],
+    tags: [TAGS.ACCOUNT],
     request: {
         params: IAMSchemas.ActivateAccountParams,
         query: IAMSchemas.ActivateAccountQuery,
@@ -94,7 +94,7 @@ export const activateAccount = createRoute({
 export const accountExists = createRoute({
     method: "get",
     path: "/account/exists",
-    tags: [TAGS.IAM, TAGS.ACCOUNT],
+    tags: [TAGS.ACCOUNT],
     request: {
         query: IAMSchemas.AccountExistsQuery,
     },
@@ -122,7 +122,7 @@ export const accountExists = createRoute({
 export const accountLogin = createRoute({
     method: "post",
     path: "/account/login",
-    tags: [TAGS.IAM, TAGS.ACCOUNT],
+    tags: [TAGS.ACCOUNT],
     request: {
         body: {
             content: {
@@ -156,7 +156,7 @@ export const accountLogin = createRoute({
 export const resetPassword = createRoute({
     method: "post",
     path: "/account/reset-password",
-    tags: [TAGS.IAM, TAGS.ACCOUNT],
+    tags: [TAGS.ACCOUNT],
     request: {
         body: {
             content: {
@@ -182,7 +182,7 @@ export const resetPassword = createRoute({
 export const completeResetPassword = createRoute({
     method: "post",
     path: "/account/reset-password/{resetToken}",
-    tags: [TAGS.IAM, TAGS.ACCOUNT],
+    tags: [TAGS.ACCOUNT],
     request: {
         params: IAMSchemas.ResetAccountPasswordParams,
         body: {
@@ -208,8 +208,8 @@ export const completeResetPassword = createRoute({
 
 export const refreshAccessToken = createRoute({
     method: "get",
-    path: "/account/login/refresh",
-    tags: [TAGS.IAM, TAGS.ACCOUNT],
+    path: "/login/refresh",
+    tags: [TAGS.IAM],
     request: {
         cookies: IAMSchemas.RefreshAccessTokenCookies,
     },
@@ -229,7 +229,7 @@ export const refreshAccessToken = createRoute({
 export const createUser = createRoute({
     method: "post",
     path: "/user",
-    tags: [TAGS.IAM, TAGS.USER],
+    tags: [TAGS.USER],
     middleware: [authenticate],
     request: {
         body: {
@@ -272,7 +272,7 @@ export const createUser = createRoute({
 export const updateUser = createRoute({
     method: "patch",
     path: "/user/{userId}",
-    tags: [TAGS.IAM, TAGS.USER],
+    tags: [TAGS.USER],
     middleware: [authenticate],
     request: {
         params: IAMSchemas.UpdateUserParams,
@@ -316,7 +316,7 @@ export const updateUser = createRoute({
 export const userExists = createRoute({
     method: "get",
     path: "/user/exists",
-    tags: [TAGS.IAM, TAGS.USER],
+    tags: [TAGS.USER],
     middleware: [authenticate],
     request: {
         query: IAMSchemas.UserExistsQuery,
@@ -345,7 +345,7 @@ export const userExists = createRoute({
 export const deleteUser = createRoute({
     method: "delete",
     path: "/user/{userId}",
-    tags: [TAGS.IAM, TAGS.USER],
+    tags: [TAGS.USER],
     middleware: [authenticate],
     request: {
         params: IAMSchemas.DeleteUserParam,
@@ -377,7 +377,7 @@ export const deleteUser = createRoute({
 export const getUsers = createRoute({
     method: "get",
     path: "/user",
-    tags: [TAGS.IAM, TAGS.USER],
+    tags: [TAGS.USER],
     middleware: [authenticate],
     request: {
         query: IAMSchemas.GetManyUsersQuery,
@@ -414,7 +414,7 @@ export const getUsers = createRoute({
 export const userLogin = createRoute({
     method: "post",
     path: "/user/login",
-    tags: [TAGS.IAM, TAGS.USER],
+    tags: [TAGS.USER],
     request: {
         body: {
             content: {
@@ -448,7 +448,7 @@ export const userLogin = createRoute({
 export const myProfile = createRoute({
     method: "get",
     path: "/me",
-    tags: [TAGS.IAM, TAGS.USER],
+    tags: [TAGS.IAM],
     middleware: [authenticate],
     responses: {
         ...OpenApiResponses.protectedAndValidationRoute,
