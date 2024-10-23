@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, createFileRoute } from "@tanstack/react-router";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -27,7 +28,7 @@ const FormSchema = z.object({
     password: z.string().min(8).max(255),
 });
 
-function SignupPage() {
+function SignupPage(): React.JSX.Element {
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
         defaultValues: {
@@ -48,7 +49,7 @@ function SignupPage() {
 
     return (
         <main className="my-2 md:my-6 px-4 md:py-8 mx-auto w-full max-w-[680px] space-y-4 md:space-y-4">
-            <h1 className="text-[30.5px] md:text-[39.6px] font-bold">Signup</h1>
+            <h1 className="h2">Signup</h1>
 
             <Form {...form}>
                 <form

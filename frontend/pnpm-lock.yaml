@@ -20,6 +20,9 @@ dependencies:
   '@tanstack/react-router':
     specifier: ^1.74.4
     version: 1.74.4(react-dom@18.3.1)(react@18.3.1)
+  '@tanstack/router-zod-adapter':
+    specifier: ^1.76.1
+    version: 1.76.1(@tanstack/react-router@1.74.4)(zod@3.23.8)
   class-variance-authority:
     specifier: ^0.7.0
     version: 0.7.0
@@ -3572,6 +3575,17 @@ packages:
       - supports-color
       - webpack-sources
     dev: true
+
+  /@tanstack/router-zod-adapter@1.76.1(@tanstack/react-router@1.74.4)(zod@3.23.8):
+    resolution: {integrity: sha512-+PYKW7kV91ZATJcMaaCSR5tZUKlBmiVo1cRA7taAJfn/aDmUqzUCp5PVCtlOu0Myp+txmO78oKJyULLH36ovWw==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      '@tanstack/react-router': '>=1.43.2'
+      zod: '>=3'
+    dependencies:
+      '@tanstack/react-router': 1.74.4(react-dom@18.3.1)(react@18.3.1)
+      zod: 3.23.8
+    dev: false
 
   /@tanstack/store@0.5.5:
     resolution: {integrity: sha512-EOSrgdDAJExbvRZEQ/Xhh9iZchXpMN+ga1Bnk8Nmygzs8TfiE6hbzThF+Pr2G19uHL6+DTDTHhJ8VQiOd7l4tA==}

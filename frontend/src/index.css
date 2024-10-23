@@ -6,6 +6,20 @@ body {
     @apply bg-grey-950 font-body text-grey-0;
 }
 
+@layer components {
+    .h1 {
+        @apply text-[30.5px] font-bold md:text-[48.8px];
+    }
+
+    .h2 {
+        @apply text-[24.41px] font-bold md:text-[39.1px];
+    }
+
+    .h3 {
+        @apply text-[19.5px] font-bold md:text-[31.3px];
+    }
+}
+
 /* ======================================== */
 /* Fonts */
 /* ======================================== */
