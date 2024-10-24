@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { fallback, zodSearchValidator } from "@tanstack/router-zod-adapter";
-import React from "react";
+import type React from "react";
 import { z } from "zod";
 
 import Logo from "@/assets/svgs/logo.svg?react";
