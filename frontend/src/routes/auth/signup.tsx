@@ -48,7 +48,7 @@ function SignupPage(): React.JSX.Element {
     }
 
     return (
-        <main className="my-2 md:my-6 px-4 md:py-8 mx-auto w-full max-w-[680px] space-y-4 md:space-y-4">
+        <main className="my-5 md:my-6 px-4 md:py-8 mx-auto w-full max-w-[680px] space-y-4 md:space-y-4">
             <h1 className="h2">Signup</h1>
 
             <Form {...form}>
