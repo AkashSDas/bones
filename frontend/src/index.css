@@ -18,6 +18,10 @@ body {
     .h3 {
         @apply text-[19.5px] font-bold md:text-[31.3px];
     }
+
+    .a {
+        @apply text-sm text-highlight-info;
+    }
 }
 
 /* ======================================== */
