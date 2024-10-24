@@ -19,6 +19,7 @@ export default {
                 btn: "4px",
                 input: "4px",
                 card: "4px",
+                menu: "4px",
             },
             colors: {
                 white: "#ffffff",
