@@ -1,5 +1,5 @@
 import "ldrs/orbit";
-import React from "react";
+import type React from "react";
 
 type Props = {
     sizeInPx?: number;

@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { MenuIcon, SearchIcon } from "lucide-react";
-import React from "react";
+import type React from "react";
 
 import Logo from "@/assets/svgs/logo.svg?react";
 

@@ -10,7 +10,7 @@ const variants = cva(
         variants: {
             variant: {
                 default: `bg-brand-500 hover:bg-brand-600 active:bg-brand-700 disabled:bg-brand-900`,
-                secondary: `border bg-grey-900 border-grey-800 hover:bg-grey-800 hover:border-grey-700 active:bg-grey-700 active:border-grey-600 disabled:bg-brand-900`,
+                secondary: `border bg-grey-900 border-grey-800 hover:bg-grey-800 hover:border-grey-700 active:bg-grey-700 active:border-grey-600 disabled:bg-grey-900 disabled:border-grey-800`,
                 ghost: `hover:bg-grey-800 active:bg-grey-700`,
                 info: `bg-info-500 hover:bg-info-600 active:bg-info-700 disabled:bg-info-900`,
                 error: `bg-error-500 hover:bg-error-600 active:bg-error-700 disabled:bg-error-900`,

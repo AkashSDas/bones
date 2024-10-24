@@ -3,6 +3,7 @@ import { Slot } from "@radix-ui/react-slot";
 import {
     type ComponentPropsWithoutRef,
     type ElementRef,
+    type HTMLAttributes,
     forwardRef,
     useId,
 } from "react";
@@ -33,18 +34,17 @@ export function FormField<
     );
 }
 
-export const FormItem = forwardRef<
-    HTMLDivElement,
-    React.HTMLAttributes<HTMLDivElement>
->(function ({ className, ...props }, ref) {
-    const id = useId();
+export const FormItem = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
+    function ({ className, ...props }, ref) {
+        const id = useId();
 
-    return (
-        <FormItemContext.Provider value={{ id }}>
-            <div ref={ref} className={cn("space-y-1", className)} {...props} />
-        </FormItemContext.Provider>
-    );
-});
+        return (
+            <FormItemContext.Provider value={{ id }}>
+                <div ref={ref} className={cn("space-y-1", className)} {...props} />
+            </FormItemContext.Provider>
+        );
+    },
+);
 
 FormItem.displayName = "FormItem";
 
@@ -91,7 +91,7 @@ FormControl.displayName = "FormControl";
 
 export const FormDescription = forwardRef<
     HTMLParagraphElement,
-    React.HTMLAttributes<HTMLParagraphElement>
+    HTMLAttributes<HTMLParagraphElement>
 >(function ({ className, ...props }, ref) {
     const { formDescriptionId } = useFormField();
 
@@ -109,7 +109,7 @@ FormDescription.displayName = "FormDescription";
 
 export const FormMessage = forwardRef<
     HTMLParagraphElement,
-    React.HTMLAttributes<HTMLParagraphElement>
+    HTMLAttributes<HTMLParagraphElement>
 >(function ({ className, children, ...props }, ref) {
     const { error, formMessageId } = useFormField();
     const body = error ? String(error?.message) : children;
