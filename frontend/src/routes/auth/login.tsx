@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronDownIcon, CircleAlert } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
@@ -27,15 +27,29 @@ import {
     FormMessage,
 } from "@/components/shared/Form";
 import { Input } from "@/components/shared/Input";
-
-export const Route = createFileRoute("/auth/login")({
-    component: LoginPage,
-});
+import { usePostApiV1IamAccountLogin } from "@/gen/endpoints/iam-account/iam-account";
+import { usePostApiV1IamUserLogin } from "@/gen/endpoints/iam-user/iam-user";
+import { useToast } from "@/hooks/toast";
 
 const FormType = {
     ACCOUNT: "Account",
     IAM_USER: "IAM User",
 } as const;
+
+const AccountFormSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(8).max(255),
+});
+
+const IAMUserFormSchema = z.object({
+    accountId: z.string().uuid({ message: "Invalid Account ID" }),
+    iamUsername: z.string().min(3).max(255),
+    password: z.string().min(8).max(255),
+});
+
+export const Route = createFileRoute("/auth/login")({
+    component: LoginPage,
+});
 
 function LoginPage(): React.JSX.Element {
     const [formType, setFormType] = useState<(typeof FormType)[keyof typeof FormType]>(
@@ -82,12 +96,10 @@ function LoginPage(): React.JSX.Element {
     );
 }
 
-const AccountFormSchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(8).max(255),
-});
-
 function AccountLogin(): React.JSX.Element {
+    const { toast } = useToast();
+    const navigate = useNavigate({ from: "/auth/login" });
+
     const form = useForm<z.infer<typeof AccountFormSchema>>({
         resolver: zodResolver(AccountFormSchema),
         defaultValues: {
@@ -96,8 +108,32 @@ function AccountLogin(): React.JSX.Element {
         },
     });
 
-    function onSubmit(values: z.infer<typeof AccountFormSchema>) {
-        console.log({ values });
+    const mutation = usePostApiV1IamAccountLogin({
+        mutation: {
+            onError(e) {
+                toast({
+                    variant: "error",
+                    title: "Login Failed",
+                    description: e.response?.data.message,
+                });
+            },
+            onSuccess(data) {
+                // TODO: login the user using this access token
+                const accessToken = data.data.accessToken;
+
+                toast({
+                    variant: "success",
+                    title: "Logged In",
+                    description: "Logged in as an Admin user",
+                });
+
+                navigate({ to: "/iam" });
+            },
+        },
+    });
+
+    async function onSubmit(values: z.infer<typeof AccountFormSchema>) {
+        await mutation.mutateAsync({ data: values });
     }
 
     return (
@@ -165,7 +201,7 @@ function AccountLogin(): React.JSX.Element {
                 </form>
             </Form>
 
-            <div className="flex items-center py-6 gap-4">
+            <div className="flex items-center gap-4 py-6">
                 <div className="w-full h-[1px] bg-grey-800" />
                 <div className="text-sm font-medium uppercase">OR</div>
                 <div className="w-full h-[1px] bg-grey-800" />
@@ -178,13 +214,10 @@ function AccountLogin(): React.JSX.Element {
     );
 }
 
-const IAMUserFormSchema = z.object({
-    accountId: z.string().uuid({ message: "Invalid Account ID" }),
-    iamUsername: z.string().min(3).max(255),
-    password: z.string().min(8).max(255),
-});
-
 function IAMUserFormLogin(): React.JSX.Element {
+    const { toast } = useToast();
+    const navigate = useNavigate({ from: "/auth/login" });
+
     const [showForgotPwdInstruction, setShowForgotPwdInstruction] = useState(false);
 
     const form = useForm<z.infer<typeof IAMUserFormSchema>>({
@@ -196,8 +229,38 @@ function IAMUserFormLogin(): React.JSX.Element {
         },
     });
 
-    function onSubmit(values: z.infer<typeof IAMUserFormSchema>) {
-        console.log({ values });
+    const mutation = usePostApiV1IamUserLogin({
+        mutation: {
+            onError(e) {
+                toast({
+                    variant: "error",
+                    title: "Login Failed",
+                    description: e.response?.data.message,
+                });
+            },
+            onSuccess(data) {
+                // TODO: login the user using this access token
+                const accessToken = data.data.accessToken;
+
+                toast({
+                    variant: "success",
+                    title: "Logged In",
+                    description: "Logged in as an IAM user",
+                });
+
+                navigate({ to: "/iam" });
+            },
+        },
+    });
+
+    async function onSubmit(values: z.infer<typeof IAMUserFormSchema>) {
+        await mutation.mutateAsync({
+            data: {
+                accountId: values.accountId,
+                username: values.iamUsername,
+                password: values.password,
+            },
+        });
     }
 
     return (
