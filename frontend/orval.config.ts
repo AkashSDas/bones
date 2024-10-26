@@ -14,6 +14,9 @@ export default defineConfig({
             mock: true,
             client: "react-query",
             // httpClient: "fetch",
+            // Using axios instead of fetch because if a request is above 200 (error status)
+            // then fetch is considering it as success and even though types are generated for
+            // react query's error but the values of these errors are received in success data
             httpClient: "axios",
             override: {
                 query: {
