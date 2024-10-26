@@ -2079,6 +2079,56 @@
                     }
                 }
             }
+        },
+        "/api/v1/iam/logout": {
+            "post": {
+                "tags": ["IAM"],
+                "responses": {
+                    "204": { "description": "User logged out" },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

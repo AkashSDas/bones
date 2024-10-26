@@ -5,13 +5,16 @@
  * OpenAPI spec version: 1.0.0
  */
 import * as axios from "axios";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
     DefinedInitialDataOptions,
     DefinedUseQueryResult,
+    MutationFunction,
     QueryFunction,
     QueryKey,
     UndefinedInitialDataOptions,
+    UseMutationOptions,
+    UseMutationResult,
     UseQueryOptions,
     UseQueryResult,
 } from "@tanstack/react-query";
@@ -26,6 +29,8 @@ import type {
     GetApiV1IamMe401,
     GetApiV1IamMe404,
     GetApiV1IamMe500,
+    PostApiV1IamLogout401,
+    PostApiV1IamLogout500,
 } from "../../schemas";
 
 export const getApiV1IamLoginRefresh = (
@@ -267,3 +272,72 @@ export function useGetApiV1IamMe<
 
     return query;
 }
+
+export const postApiV1IamLogout = (
+    options?: AxiosRequestConfig,
+): Promise<AxiosResponse<void>> => {
+    return axios.default.post(
+        `http://localhost:8000/api/v1/iam/logout`,
+        undefined,
+        options,
+    );
+};
+
+export const getPostApiV1IamLogoutMutationOptions = <
+    TError = AxiosError<PostApiV1IamLogout401 | PostApiV1IamLogout500>,
+    TContext = unknown,
+>(options?: {
+    mutation?: UseMutationOptions<
+        Awaited<ReturnType<typeof postApiV1IamLogout>>,
+        TError,
+        void,
+        TContext
+    >;
+    axios?: AxiosRequestConfig;
+}): UseMutationOptions<
+    Awaited<ReturnType<typeof postApiV1IamLogout>>,
+    TError,
+    void,
+    TContext
+> => {
+    const { mutation: mutationOptions, axios: axiosOptions } = options ?? {};
+
+    const mutationFn: MutationFunction<
+        Awaited<ReturnType<typeof postApiV1IamLogout>>,
+        void
+    > = () => {
+        return postApiV1IamLogout(axiosOptions);
+    };
+
+    return { mutationFn, ...mutationOptions };
+};
+
+export type PostApiV1IamLogoutMutationResult = NonNullable<
+    Awaited<ReturnType<typeof postApiV1IamLogout>>
+>;
+
+export type PostApiV1IamLogoutMutationError = AxiosError<
+    PostApiV1IamLogout401 | PostApiV1IamLogout500
+>;
+
+export const usePostApiV1IamLogout = <
+    TError = AxiosError<PostApiV1IamLogout401 | PostApiV1IamLogout500>,
+    TContext = unknown,
+>(options?: {
+    mutation?: UseMutationOptions<
+        Awaited<ReturnType<typeof postApiV1IamLogout>>,
+        TError,
+        void,
+        TContext
+    >;
+    axios?: AxiosRequestConfig;
+}): UseMutationResult<
+    Awaited<ReturnType<typeof postApiV1IamLogout>>,
+    TError,
+    void,
+    TContext
+> => {
+    const mutationOptions = getPostApiV1IamLogoutMutationOptions(options);
+
+    return useMutation(mutationOptions);
+};

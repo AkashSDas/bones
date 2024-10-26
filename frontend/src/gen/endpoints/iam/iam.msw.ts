@@ -97,7 +97,24 @@ export const getGetApiV1IamMeMockHandler = (
         );
     });
 };
+
+export const getPostApiV1IamLogoutMockHandler = (
+    overrideResponse?:
+        | void
+        | ((
+              info: Parameters<Parameters<typeof http.post>[1]>[0],
+          ) => Promise<void> | void),
+) => {
+    return http.post("*/api/v1/iam/logout", async (info) => {
+        await delay(1000);
+        if (typeof overrideResponse === "function") {
+            await overrideResponse(info);
+        }
+        return new HttpResponse(null, { status: 204 });
+    });
+};
 export const getIamMock = () => [
     getGetApiV1IamLoginRefreshMockHandler(),
     getGetApiV1IamMeMockHandler(),
+    getPostApiV1IamLogoutMockHandler(),
 ];
