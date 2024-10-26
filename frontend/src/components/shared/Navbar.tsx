@@ -8,7 +8,7 @@ import { Button } from "./Button";
 
 export function Navbar(): React.JSX.Element {
     return (
-        <nav className="flex items-center justify-between w-full h-12 gap-2 px-4 border-b md:h-14 md:px-8 bg-grey-950 border-b-grey-800">
+        <nav className="flex items-center justify-between w-full h-12 px-4 border-b gap-2 md:h-14 md:px-8 bg-grey-950 border-b-grey-800">
             <Link to="/">
                 <Logo className="h-[23.15px] w-[37.98px] md:h-[30.86px] md:w-[50.64px]" />
             </Link>
