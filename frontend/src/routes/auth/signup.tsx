@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import type React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -16,7 +16,9 @@ import {
 } from "@/components/shared/Form";
 import { Input } from "@/components/shared/Input";
 import { PasswordStrengthBar } from "@/components/shared/PasswordStrengthBar";
+import { usePostApiV1IamAccount } from "@/gen/endpoints/iam-account/iam-account";
 import { usePasswordStrength } from "@/hooks/form";
+import { useToast } from "@/hooks/toast";
 
 export const Route = createFileRoute("/auth/signup")({
     component: SignupPage,
@@ -29,6 +31,9 @@ const FormSchema = z.object({
 });
 
 function SignupPage(): React.JSX.Element {
+    const { toast } = useToast();
+    const navigate = useNavigate({ from: "/auth/signup" });
+
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
         defaultValues: {
@@ -43,8 +48,32 @@ function SignupPage(): React.JSX.Element {
         form.watch("password"),
     );
 
-    function onSubmit(values: z.infer<typeof FormSchema>) {
-        console.log({ values, strength });
+    const mutation = usePostApiV1IamAccount({
+        mutation: {
+            onError(e) {
+                toast({
+                    variant: "error",
+                    title: "Failed",
+                    description: e.response?.data.message,
+                });
+            },
+            onSuccess(data) {
+                // TODO: login the user using this access token
+                const accessToken = data.data.accessToken;
+
+                toast({
+                    variant: "success",
+                    title: "Logged In",
+                    description: data.data.message,
+                });
+
+                navigate({ to: "/iam" });
+            },
+        },
+    });
+
+    async function onSubmit(values: z.infer<typeof FormSchema>) {
+        await mutation.mutateAsync({ data: values });
     }
 
     return (
@@ -141,7 +170,7 @@ function SignupPage(): React.JSX.Element {
                 </form>
             </Form>
 
-            <div className="flex items-center py-6 gap-4">
+            <div className="flex items-center gap-4 py-6">
                 <div className="w-full h-[1px] bg-grey-800" />
                 <div className="text-sm font-medium uppercase">OR</div>
                 <div className="w-full h-[1px] bg-grey-800" />
