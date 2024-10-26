@@ -42,7 +42,18 @@ export const useAuthStore = create(
 );
 
 /** Get logged in user details */
-export function useAuth() {
+export function useAuth(
+    opts:
+        | {
+              redirectToLoginPage?: boolean;
+              /** So if you're on login page and user is logged in then you want to redirect the user */
+              redirectToLoggedInUserHomePage?: boolean;
+          }
+        | undefined = {
+        redirectToLoginPage: false,
+        redirectToLoggedInUserHomePage: false,
+    },
+) {
     const navigate = useNavigate();
     const { toast } = useToast();
     const { pathname } = useLocation();
@@ -50,14 +61,14 @@ export function useAuth() {
     const token = useAuthStore((store) => store.accessToken);
     const authHeader = useAuthStore((store) => store.bearerTokenHeader);
 
-    const { data, isPending, isError } = useGetApiV1IamMe({
+    const { data, isLoading, isError } = useGetApiV1IamMe({
         axios: { headers: { ...authHeader() } },
         query: {
             queryKey: authKeys.me(token !== null),
             enabled: token !== null,
             refetchOnReconnect: true,
             refetchOnWindowFocus: true,
-            staleTime: 4.5 * 60 * 1000, // 4.5 mins
+            refetchInterval: 4.5 * 60 * 1000, // 4.5 mins
         },
     });
 
@@ -67,7 +78,9 @@ export function useAuth() {
 
     useEffect(
         function redirectToLogin() {
-            if (isError || data?.status !== 200) {
+            const shouldLogout = isError || data?.status !== 200;
+
+            if (shouldLogout && opts.redirectToLoginPage) {
                 if (pathname !== "/") {
                     navigate({ to: "/auth/login" });
 
@@ -77,6 +90,8 @@ export function useAuth() {
                         description: "Login to continue",
                     });
                 }
+            } else if (!shouldLogout && opts.redirectToLoggedInUserHomePage) {
+                navigate({ to: "/iam", replace: true });
             }
         },
         [data?.status, isError, pathname],
@@ -89,14 +104,12 @@ export function useAuth() {
         isLoggedIn,
         isAdmin,
         isIAMUser,
-        isPending,
+        isLoading,
     };
 }
 
-export function useLogout(opts: {
-    router: Pick<NonNullable<Parameters<typeof useNavigate>[0]>, "from">;
-}) {
-    const navigate = useNavigate({ from: opts.router.from });
+export function useLogout() {
+    const navigate = useNavigate();
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
@@ -111,11 +124,7 @@ export function useLogout(opts: {
                 await queryClient.cancelQueries({ queryKey: keys });
                 const previousData = queryClient.getQueryData(keys);
 
-                queryClient.setQueryData(keys, () => ({
-                    account: undefined,
-                    user: undefined,
-                    roles: undefined,
-                }));
+                queryClient.setQueryData(keys, () => null);
 
                 return { previousData };
             },

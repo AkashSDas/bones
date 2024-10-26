@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChevronDownIcon, CircleAlert } from "lucide-react";
 import type React from "react";
@@ -27,9 +28,12 @@ import {
     FormMessage,
 } from "@/components/shared/Form";
 import { Input } from "@/components/shared/Input";
+import { Loader } from "@/components/shared/Loader";
 import { usePostApiV1IamAccountLogin } from "@/gen/endpoints/iam-account/iam-account";
 import { usePostApiV1IamUserLogin } from "@/gen/endpoints/iam-user/iam-user";
+import { useAuth, useAuthStore } from "@/hooks/auth";
 import { useToast } from "@/hooks/toast";
+import { authKeys } from "@/utils/react-query";
 
 const FormType = {
     ACCOUNT: "Account",
@@ -52,6 +56,16 @@ export const Route = createFileRoute("/auth/login")({
 });
 
 function LoginPage(): React.JSX.Element {
+    const { isLoading } = useAuth({ redirectToLoggedInUserHomePage: true });
+
+    if (isLoading) {
+        return <Loader variant="page" sizeInPx={30} />;
+    } else {
+        return <Content />;
+    }
+}
+
+function Content(): React.JSX.Element {
     const [formType, setFormType] = useState<(typeof FormType)[keyof typeof FormType]>(
         FormType.ACCOUNT,
     );
@@ -99,6 +113,8 @@ function LoginPage(): React.JSX.Element {
 function AccountLogin(): React.JSX.Element {
     const { toast } = useToast();
     const navigate = useNavigate({ from: "/auth/login" });
+    const login = useAuthStore((s) => s.login);
+    const queryClient = useQueryClient();
 
     const form = useForm<z.infer<typeof AccountFormSchema>>({
         resolver: zodResolver(AccountFormSchema),
@@ -117,9 +133,9 @@ function AccountLogin(): React.JSX.Element {
                     description: e.response?.data.message,
                 });
             },
-            onSuccess(data) {
-                // TODO: login the user using this access token
-                const accessToken = data.data.accessToken;
+            async onSuccess(data) {
+                login(data.data.accessToken);
+                await queryClient.invalidateQueries({ queryKey: authKeys.me(true) });
 
                 toast({
                     variant: "success",
@@ -217,6 +233,8 @@ function AccountLogin(): React.JSX.Element {
 function IAMUserFormLogin(): React.JSX.Element {
     const { toast } = useToast();
     const navigate = useNavigate({ from: "/auth/login" });
+    const login = useAuthStore((s) => s.login);
+    const queryClient = useQueryClient();
 
     const [showForgotPwdInstruction, setShowForgotPwdInstruction] = useState(false);
 
@@ -238,9 +256,9 @@ function IAMUserFormLogin(): React.JSX.Element {
                     description: e.response?.data.message,
                 });
             },
-            onSuccess(data) {
-                // TODO: login the user using this access token
-                const accessToken = data.data.accessToken;
+            async onSuccess(data) {
+                login(data.data.accessToken);
+                await queryClient.invalidateQueries({ queryKey: authKeys.me(true) });
 
                 toast({
                     variant: "success",

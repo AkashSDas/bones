@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import type React from "react";
 import { useForm } from "react-hook-form";
@@ -15,10 +16,13 @@ import {
     FormMessage,
 } from "@/components/shared/Form";
 import { Input } from "@/components/shared/Input";
+import { Loader } from "@/components/shared/Loader";
 import { PasswordStrengthBar } from "@/components/shared/PasswordStrengthBar";
 import { usePostApiV1IamAccount } from "@/gen/endpoints/iam-account/iam-account";
+import { useAuth, useAuthStore } from "@/hooks/auth";
 import { usePasswordStrength } from "@/hooks/form";
 import { useToast } from "@/hooks/toast";
+import { authKeys } from "@/utils/react-query";
 
 export const Route = createFileRoute("/auth/signup")({
     component: SignupPage,
@@ -31,8 +35,20 @@ const FormSchema = z.object({
 });
 
 function SignupPage(): React.JSX.Element {
+    const { isLoading } = useAuth({ redirectToLoggedInUserHomePage: true });
+
+    if (isLoading) {
+        return <Loader variant="page" sizeInPx={30} />;
+    } else {
+        return <Content />;
+    }
+}
+
+function Content(): React.JSX.Element {
     const { toast } = useToast();
     const navigate = useNavigate({ from: "/auth/signup" });
+    const login = useAuthStore((s) => s.login);
+    const queryClient = useQueryClient();
 
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
@@ -57,9 +73,9 @@ function SignupPage(): React.JSX.Element {
                     description: e.response?.data.message,
                 });
             },
-            onSuccess(data) {
-                // TODO: login the user using this access token
-                const accessToken = data.data.accessToken;
+            async onSuccess(data) {
+                login(data.data.accessToken);
+                await queryClient.invalidateQueries({ queryKey: authKeys.me(true) });
 
                 toast({
                     variant: "success",
