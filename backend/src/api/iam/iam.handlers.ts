@@ -101,7 +101,7 @@ export const activateAccount: IAMHandler["ActivateAccount"] = async (c) => {
             log.error("Invalid or expired activation token");
 
             if (redirect === "true") {
-                return c.redirect(`${env.CLIENT_URL}/login?activation=failed`);
+                return c.redirect(`${env.CLIENT_URL}/auth/activate?status=failed`);
             } else {
                 throw new BadRequestError({
                     message: "Activation token is either invalid or expired",
@@ -112,7 +112,7 @@ export const activateAccount: IAMHandler["ActivateAccount"] = async (c) => {
             log.info("Account activated and verified");
 
             if (redirect === "true") {
-                return c.redirect(`${env.CLIENT_URL}/login`);
+                return c.redirect(`${env.CLIENT_URL}/auth/activate?status=success`);
             } else {
                 return c.json({ message: "Account activated successfully" });
             }
@@ -124,7 +124,7 @@ export const activateAccount: IAMHandler["ActivateAccount"] = async (c) => {
             log.error(`Failed to activate account: ${e}`);
 
             if (redirect === "true") {
-                return c.redirect(`${env.CLIENT_URL}/login?activation=failed`);
+                return c.redirect(`${env.CLIENT_URL}/auth/activate?status=failed`);
             } else {
                 throw new InternalServerError({
                     message: "Failed to activate account",
