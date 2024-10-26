@@ -1,11 +1,32 @@
 import "ldrs/lineSpinner";
 import type React from "react";
 
-type Props = {
+export function Loader({
+    sizeInPx = 24,
+    color = "white",
+    variant: type = "alone",
+}: {
     sizeInPx?: number;
     color?: "white";
-};
-
-export function Loader({ sizeInPx = 24, color = "white" }: Props): React.JSX.Element {
-    return <l-line-spinner size={sizeInPx.toString()} color={color}></l-line-spinner>;
+    variant?: "alone" | "page" | "section";
+}): React.JSX.Element {
+    switch (type) {
+        case "page":
+            return (
+                <div className="flex items-center justify-center w-full my-32">
+                    <l-line-spinner
+                        size={sizeInPx.toString()}
+                        color={color}
+                    ></l-line-spinner>
+                </div>
+            );
+        case "section":
+        default:
+            return (
+                <l-line-spinner
+                    size={sizeInPx.toString()}
+                    color={color}
+                ></l-line-spinner>
+            );
+    }
 }
