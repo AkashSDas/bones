@@ -51,17 +51,10 @@ FormItem.displayName = "FormItem";
 export const FormLabel = forwardRef<
     ElementRef<typeof LabelPrimitive.Root>,
     ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
->(function ({ className, ...props }, ref) {
-    const { error, formItemId } = useFormField();
+>(function (props, ref) {
+    const { formItemId } = useFormField();
 
-    return (
-        <Label
-            ref={ref}
-            className={cn(error && "text-highlight-error", className)}
-            htmlFor={formItemId}
-            {...props}
-        />
-    );
+    return <Label ref={ref} htmlFor={formItemId} {...props} />;
 });
 
 FormLabel.displayName = "FormLabel";
@@ -99,7 +92,7 @@ export const FormDescription = forwardRef<
         <p
             ref={ref}
             id={formDescriptionId}
-            className={cn("text-sm text-grey-400 pb-1", className)}
+            className={cn("text-[12.8px] text-grey-400 pb-1", className)}
             {...props}
         />
     );
@@ -122,7 +115,7 @@ export const FormMessage = forwardRef<
         <p
             ref={ref}
             id={formMessageId}
-            className={cn("text-sm font-medium text-highlight-error", className)}
+            className={cn("text-[12.8px] text-highlight-error", className)}
             {...props}
         >
             {body}
