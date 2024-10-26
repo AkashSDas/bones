@@ -61,6 +61,7 @@
         "@storybook/test": "^8.3.2",
         "@storybook/test-runner": "^0.19.1",
         "@tanstack/eslint-plugin-query": "4",
+        "@tanstack/eslint-plugin-router": "^1.74.5",
         "@tanstack/router-cli": "^1.74.2",
         "@tanstack/router-devtools": "^1.74.4",
         "@tanstack/router-plugin": "^1.74.2",
