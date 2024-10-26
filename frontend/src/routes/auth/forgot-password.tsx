@@ -15,6 +15,9 @@ import {
     FormMessage,
 } from "@/components/shared/Form";
 import { Input } from "@/components/shared/Input";
+import { Loader } from "@/components/shared/Loader";
+import { usePostApiV1IamAccountResetPassword } from "@/gen/endpoints/iam-account/iam-account";
+import { useToast } from "@/hooks/toast";
 
 export const Route = createFileRoute("/auth/forgot-password")({
     component: ForgotPasswordPage,
@@ -30,8 +33,29 @@ function ForgotPasswordPage(): React.JSX.Element {
         defaultValues: { email: "" },
     });
 
-    function onSubmit(values: z.infer<typeof FormSchema>) {
-        console.log({ values });
+    const { toast } = useToast();
+
+    const mutation = usePostApiV1IamAccountResetPassword({
+        mutation: {
+            onSuccess(data, _variables, _context) {
+                toast({
+                    variant: "success",
+                    title: "Instructions Sent",
+                    description: data.data.message,
+                });
+            },
+            onError(error, _variables, _context) {
+                toast({
+                    variant: "error",
+                    title: "Failed",
+                    description: error.response?.data.message,
+                });
+            },
+        },
+    });
+
+    async function onSubmit(values: z.infer<typeof FormSchema>) {
+        await mutation.mutateAsync({ data: values });
     }
 
     return (
@@ -69,8 +93,9 @@ function ForgotPasswordPage(): React.JSX.Element {
                     <Button
                         type="submit"
                         className="w-full h-[38px] md:h-[46px] text-sm md:text-base"
+                        disabled={mutation.isPending}
                     >
-                        Send Instructions
+                        {mutation.isPending ? <Loader /> : "Send Instructions"}
                     </Button>
                 </form>
             </Form>
