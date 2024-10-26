@@ -18,7 +18,7 @@ const variants = cva(
             },
             size: {
                 default: "h-9 px-[14px] md:h-9 md:px-4",
-                icon: "w-9 h-9 md:h-9 md:w-9",
+                icon: "w-9 h-9 min-w-9 md:h-9 md:w-9",
             },
         },
         defaultVariants: {
