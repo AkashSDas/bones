@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { useState } from "react";
@@ -17,6 +18,8 @@ function Root(): React.JSX.Element {
                     refetchOnWindowFocus: false,
                     refetchOnMount: false,
                     retry: false,
+                    retryOnMount: false,
+                    staleTime: 10 * 60 * 1000,
                 },
             },
         });
@@ -27,6 +30,7 @@ function Root(): React.JSX.Element {
             <Navbar />
             <Outlet />
             <TanStackRouterDevtools />
+            <ReactQueryDevtools />
         </QueryClientProvider>
     );
 }
