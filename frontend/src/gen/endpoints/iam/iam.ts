@@ -4,6 +4,7 @@
  * Bones
  * OpenAPI spec version: 1.0.0
  */
+import * as axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import type {
     DefinedInitialDataOptions,
@@ -14,6 +15,7 @@ import type {
     UseQueryOptions,
     UseQueryResult,
 } from "@tanstack/react-query";
+import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 
 import type {
     GetApiV1IamLoginRefresh200,
@@ -26,34 +28,19 @@ import type {
     GetApiV1IamMe500,
 } from "../../schemas";
 
-export type getApiV1IamLoginRefreshResponse = {
-    data: GetApiV1IamLoginRefresh200;
-    status: number;
-};
-
-export const getGetApiV1IamLoginRefreshUrl = () => {
-    return `/api/v1/iam/login/refresh`;
-};
-
-export const getApiV1IamLoginRefresh = async (
-    options?: RequestInit,
-): Promise<getApiV1IamLoginRefreshResponse> => {
-    const res = await fetch(getGetApiV1IamLoginRefreshUrl(), {
-        ...options,
-        method: "GET",
-    });
-    const data = await res.json();
-
-    return { status: res.status, data };
+export const getApiV1IamLoginRefresh = (
+    options?: AxiosRequestConfig,
+): Promise<AxiosResponse<GetApiV1IamLoginRefresh200>> => {
+    return axios.default.get(`http://localhost:8000/api/v1/iam/login/refresh`, options);
 };
 
 export const getGetApiV1IamLoginRefreshQueryKey = () => {
-    return [`/api/v1/iam/login/refresh`] as const;
+    return [`http://localhost:8000/api/v1/iam/login/refresh`] as const;
 };
 
 export const getGetApiV1IamLoginRefreshQueryOptions = <
     TData = Awaited<ReturnType<typeof getApiV1IamLoginRefresh>>,
-    TError = GetApiV1IamLoginRefresh401 | GetApiV1IamLoginRefresh500,
+    TError = AxiosError<GetApiV1IamLoginRefresh401 | GetApiV1IamLoginRefresh500>,
 >(options?: {
     query?: Partial<
         UseQueryOptions<
@@ -62,15 +49,15 @@ export const getGetApiV1IamLoginRefreshQueryOptions = <
             TData
         >
     >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }) => {
-    const { query: queryOptions, fetch: fetchOptions } = options ?? {};
+    const { query: queryOptions, axios: axiosOptions } = options ?? {};
 
     const queryKey = queryOptions?.queryKey ?? getGetApiV1IamLoginRefreshQueryKey();
 
     const queryFn: QueryFunction<
         Awaited<ReturnType<typeof getApiV1IamLoginRefresh>>
-    > = ({ signal }) => getApiV1IamLoginRefresh({ signal, ...fetchOptions });
+    > = ({ signal }) => getApiV1IamLoginRefresh({ signal, ...axiosOptions });
 
     return { queryKey, queryFn, staleTime: 10000, ...queryOptions } as UseQueryOptions<
         Awaited<ReturnType<typeof getApiV1IamLoginRefresh>>,
@@ -82,13 +69,13 @@ export const getGetApiV1IamLoginRefreshQueryOptions = <
 export type GetApiV1IamLoginRefreshQueryResult = NonNullable<
     Awaited<ReturnType<typeof getApiV1IamLoginRefresh>>
 >;
-export type GetApiV1IamLoginRefreshQueryError =
-    | GetApiV1IamLoginRefresh401
-    | GetApiV1IamLoginRefresh500;
+export type GetApiV1IamLoginRefreshQueryError = AxiosError<
+    GetApiV1IamLoginRefresh401 | GetApiV1IamLoginRefresh500
+>;
 
 export function useGetApiV1IamLoginRefresh<
     TData = Awaited<ReturnType<typeof getApiV1IamLoginRefresh>>,
-    TError = GetApiV1IamLoginRefresh401 | GetApiV1IamLoginRefresh500,
+    TError = AxiosError<GetApiV1IamLoginRefresh401 | GetApiV1IamLoginRefresh500>,
 >(options: {
     query: Partial<
         UseQueryOptions<
@@ -105,11 +92,11 @@ export function useGetApiV1IamLoginRefresh<
             >,
             "initialData"
         >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): DefinedUseQueryResult<TData, TError> & { queryKey: QueryKey };
 export function useGetApiV1IamLoginRefresh<
     TData = Awaited<ReturnType<typeof getApiV1IamLoginRefresh>>,
-    TError = GetApiV1IamLoginRefresh401 | GetApiV1IamLoginRefresh500,
+    TError = AxiosError<GetApiV1IamLoginRefresh401 | GetApiV1IamLoginRefresh500>,
 >(options?: {
     query?: Partial<
         UseQueryOptions<
@@ -126,11 +113,11 @@ export function useGetApiV1IamLoginRefresh<
             >,
             "initialData"
         >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey };
 export function useGetApiV1IamLoginRefresh<
     TData = Awaited<ReturnType<typeof getApiV1IamLoginRefresh>>,
-    TError = GetApiV1IamLoginRefresh401 | GetApiV1IamLoginRefresh500,
+    TError = AxiosError<GetApiV1IamLoginRefresh401 | GetApiV1IamLoginRefresh500>,
 >(options?: {
     query?: Partial<
         UseQueryOptions<
@@ -139,12 +126,12 @@ export function useGetApiV1IamLoginRefresh<
             TData
         >
     >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
 export function useGetApiV1IamLoginRefresh<
     TData = Awaited<ReturnType<typeof getApiV1IamLoginRefresh>>,
-    TError = GetApiV1IamLoginRefresh401 | GetApiV1IamLoginRefresh500,
+    TError = AxiosError<GetApiV1IamLoginRefresh401 | GetApiV1IamLoginRefresh500>,
 >(options?: {
     query?: Partial<
         UseQueryOptions<
@@ -153,7 +140,7 @@ export function useGetApiV1IamLoginRefresh<
             TData
         >
     >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
     const queryOptions = getGetApiV1IamLoginRefreshQueryOptions(options);
 
@@ -166,47 +153,34 @@ export function useGetApiV1IamLoginRefresh<
     return query;
 }
 
-export type getApiV1IamMeResponse = {
-    data: GetApiV1IamMe200;
-    status: number;
-};
-
-export const getGetApiV1IamMeUrl = () => {
-    return `/api/v1/iam/me`;
-};
-
-export const getApiV1IamMe = async (
-    options?: RequestInit,
-): Promise<getApiV1IamMeResponse> => {
-    const res = await fetch(getGetApiV1IamMeUrl(), {
-        ...options,
-        method: "GET",
-    });
-    const data = await res.json();
-
-    return { status: res.status, data };
+export const getApiV1IamMe = (
+    options?: AxiosRequestConfig,
+): Promise<AxiosResponse<GetApiV1IamMe200>> => {
+    return axios.default.get(`http://localhost:8000/api/v1/iam/me`, options);
 };
 
 export const getGetApiV1IamMeQueryKey = () => {
-    return [`/api/v1/iam/me`] as const;
+    return [`http://localhost:8000/api/v1/iam/me`] as const;
 };
 
 export const getGetApiV1IamMeQueryOptions = <
     TData = Awaited<ReturnType<typeof getApiV1IamMe>>,
-    TError = GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500,
+    TError = AxiosError<
+        GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
+    >,
 >(options?: {
     query?: Partial<
         UseQueryOptions<Awaited<ReturnType<typeof getApiV1IamMe>>, TError, TData>
     >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }) => {
-    const { query: queryOptions, fetch: fetchOptions } = options ?? {};
+    const { query: queryOptions, axios: axiosOptions } = options ?? {};
 
     const queryKey = queryOptions?.queryKey ?? getGetApiV1IamMeQueryKey();
 
     const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1IamMe>>> = ({
         signal,
-    }) => getApiV1IamMe({ signal, ...fetchOptions });
+    }) => getApiV1IamMe({ signal, ...axiosOptions });
 
     return { queryKey, queryFn, staleTime: 10000, ...queryOptions } as UseQueryOptions<
         Awaited<ReturnType<typeof getApiV1IamMe>>,
@@ -218,15 +192,15 @@ export const getGetApiV1IamMeQueryOptions = <
 export type GetApiV1IamMeQueryResult = NonNullable<
     Awaited<ReturnType<typeof getApiV1IamMe>>
 >;
-export type GetApiV1IamMeQueryError =
-    | GetApiV1IamMe400
-    | GetApiV1IamMe401
-    | GetApiV1IamMe404
-    | GetApiV1IamMe500;
+export type GetApiV1IamMeQueryError = AxiosError<
+    GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
+>;
 
 export function useGetApiV1IamMe<
     TData = Awaited<ReturnType<typeof getApiV1IamMe>>,
-    TError = GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500,
+    TError = AxiosError<
+        GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
+    >,
 >(options: {
     query: Partial<
         UseQueryOptions<Awaited<ReturnType<typeof getApiV1IamMe>>, TError, TData>
@@ -239,11 +213,13 @@ export function useGetApiV1IamMe<
             >,
             "initialData"
         >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): DefinedUseQueryResult<TData, TError> & { queryKey: QueryKey };
 export function useGetApiV1IamMe<
     TData = Awaited<ReturnType<typeof getApiV1IamMe>>,
-    TError = GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500,
+    TError = AxiosError<
+        GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
+    >,
 >(options?: {
     query?: Partial<
         UseQueryOptions<Awaited<ReturnType<typeof getApiV1IamMe>>, TError, TData>
@@ -256,26 +232,30 @@ export function useGetApiV1IamMe<
             >,
             "initialData"
         >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey };
 export function useGetApiV1IamMe<
     TData = Awaited<ReturnType<typeof getApiV1IamMe>>,
-    TError = GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500,
+    TError = AxiosError<
+        GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
+    >,
 >(options?: {
     query?: Partial<
         UseQueryOptions<Awaited<ReturnType<typeof getApiV1IamMe>>, TError, TData>
     >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
 export function useGetApiV1IamMe<
     TData = Awaited<ReturnType<typeof getApiV1IamMe>>,
-    TError = GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500,
+    TError = AxiosError<
+        GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
+    >,
 >(options?: {
     query?: Partial<
         UseQueryOptions<Awaited<ReturnType<typeof getApiV1IamMe>>, TError, TData>
     >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
     const queryOptions = getGetApiV1IamMeQueryOptions(options);
 

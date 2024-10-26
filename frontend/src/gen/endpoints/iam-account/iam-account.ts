@@ -4,6 +4,7 @@
  * Bones
  * OpenAPI spec version: 1.0.0
  */
+import * as axios from "axios";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
     DefinedInitialDataOptions,
@@ -17,6 +18,7 @@ import type {
     UseQueryOptions,
     UseQueryResult,
 } from "@tanstack/react-query";
+import type { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 
 import type {
     GetApiV1IamAccountActivateActivationToken200,
@@ -47,32 +49,21 @@ import type {
     PostApiV1IamAccountResetPasswordResetTokenBody,
 } from "../../schemas";
 
-export type postApiV1IamAccountResponse = {
-    data: PostApiV1IamAccount201;
-    status: number;
-};
-
-export const getPostApiV1IamAccountUrl = () => {
-    return `/api/v1/iam/account`;
-};
-
-export const postApiV1IamAccount = async (
+export const postApiV1IamAccount = (
     postApiV1IamAccountBody: PostApiV1IamAccountBody,
-    options?: RequestInit,
-): Promise<postApiV1IamAccountResponse> => {
-    const res = await fetch(getPostApiV1IamAccountUrl(), {
-        ...options,
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...options?.headers },
-        body: JSON.stringify(postApiV1IamAccountBody),
-    });
-    const data = await res.json();
-
-    return { status: res.status, data };
+    options?: AxiosRequestConfig,
+): Promise<AxiosResponse<PostApiV1IamAccount201>> => {
+    return axios.default.post(
+        `http://localhost:8000/api/v1/iam/account`,
+        postApiV1IamAccountBody,
+        options,
+    );
 };
 
 export const getPostApiV1IamAccountMutationOptions = <
-    TError = PostApiV1IamAccount400 | PostApiV1IamAccount409 | PostApiV1IamAccount500,
+    TError = AxiosError<
+        PostApiV1IamAccount400 | PostApiV1IamAccount409 | PostApiV1IamAccount500
+    >,
     TContext = unknown,
 >(options?: {
     mutation?: UseMutationOptions<
@@ -81,14 +72,14 @@ export const getPostApiV1IamAccountMutationOptions = <
         { data: PostApiV1IamAccountBody },
         TContext
     >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): UseMutationOptions<
     Awaited<ReturnType<typeof postApiV1IamAccount>>,
     TError,
     { data: PostApiV1IamAccountBody },
     TContext
 > => {
-    const { mutation: mutationOptions, fetch: fetchOptions } = options ?? {};
+    const { mutation: mutationOptions, axios: axiosOptions } = options ?? {};
 
     const mutationFn: MutationFunction<
         Awaited<ReturnType<typeof postApiV1IamAccount>>,
@@ -96,7 +87,7 @@ export const getPostApiV1IamAccountMutationOptions = <
     > = (props) => {
         const { data } = props ?? {};
 
-        return postApiV1IamAccount(data, fetchOptions);
+        return postApiV1IamAccount(data, axiosOptions);
     };
 
     return { mutationFn, ...mutationOptions };
@@ -106,13 +97,14 @@ export type PostApiV1IamAccountMutationResult = NonNullable<
     Awaited<ReturnType<typeof postApiV1IamAccount>>
 >;
 export type PostApiV1IamAccountMutationBody = PostApiV1IamAccountBody;
-export type PostApiV1IamAccountMutationError =
-    | PostApiV1IamAccount400
-    | PostApiV1IamAccount409
-    | PostApiV1IamAccount500;
+export type PostApiV1IamAccountMutationError = AxiosError<
+    PostApiV1IamAccount400 | PostApiV1IamAccount409 | PostApiV1IamAccount500
+>;
 
 export const usePostApiV1IamAccount = <
-    TError = PostApiV1IamAccount400 | PostApiV1IamAccount409 | PostApiV1IamAccount500,
+    TError = AxiosError<
+        PostApiV1IamAccount400 | PostApiV1IamAccount409 | PostApiV1IamAccount500
+    >,
     TContext = unknown,
 >(options?: {
     mutation?: UseMutationOptions<
@@ -121,7 +113,7 @@ export const usePostApiV1IamAccount = <
         { data: PostApiV1IamAccountBody },
         TContext
     >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): UseMutationResult<
     Awaited<ReturnType<typeof postApiV1IamAccount>>,
     TError,
@@ -132,43 +124,18 @@ export const usePostApiV1IamAccount = <
 
     return useMutation(mutationOptions);
 };
-export type getApiV1IamAccountActivateActivationTokenResponse = {
-    data: GetApiV1IamAccountActivateActivationToken200;
-    status: number;
-};
-
-export const getGetApiV1IamAccountActivateActivationTokenUrl = (
+export const getApiV1IamAccountActivateActivationToken = (
     activationToken: string,
     params?: GetApiV1IamAccountActivateActivationTokenParams,
-) => {
-    const normalizedParams = new URLSearchParams();
-
-    Object.entries(params || {}).forEach(([key, value]) => {
-        if (value !== undefined) {
-            normalizedParams.append(key, value === null ? "null" : value.toString());
-        }
-    });
-
-    return normalizedParams.size
-        ? `/api/v1/iam/account/activate/${activationToken}?${normalizedParams.toString()}`
-        : `/api/v1/iam/account/activate/${activationToken}`;
-};
-
-export const getApiV1IamAccountActivateActivationToken = async (
-    activationToken: string,
-    params?: GetApiV1IamAccountActivateActivationTokenParams,
-    options?: RequestInit,
-): Promise<getApiV1IamAccountActivateActivationTokenResponse> => {
-    const res = await fetch(
-        getGetApiV1IamAccountActivateActivationTokenUrl(activationToken, params),
+    options?: AxiosRequestConfig,
+): Promise<AxiosResponse<GetApiV1IamAccountActivateActivationToken200>> => {
+    return axios.default.get(
+        `http://localhost:8000/api/v1/iam/account/activate/${activationToken}`,
         {
             ...options,
-            method: "GET",
+            params: { ...params, ...options?.params },
         },
     );
-    const data = await res.json();
-
-    return { status: res.status, data };
 };
 
 export const getGetApiV1IamAccountActivateActivationTokenQueryKey = (
@@ -176,17 +143,18 @@ export const getGetApiV1IamAccountActivateActivationTokenQueryKey = (
     params?: GetApiV1IamAccountActivateActivationTokenParams,
 ) => {
     return [
-        `/api/v1/iam/account/activate/${activationToken}`,
+        `http://localhost:8000/api/v1/iam/account/activate/${activationToken}`,
         ...(params ? [params] : []),
     ] as const;
 };
 
 export const getGetApiV1IamAccountActivateActivationTokenQueryOptions = <
     TData = Awaited<ReturnType<typeof getApiV1IamAccountActivateActivationToken>>,
-    TError =
+    TError = AxiosError<
         | void
         | GetApiV1IamAccountActivateActivationToken400
-        | GetApiV1IamAccountActivateActivationToken500,
+        | GetApiV1IamAccountActivateActivationToken500
+    >,
 >(
     activationToken: string,
     params?: GetApiV1IamAccountActivateActivationTokenParams,
@@ -198,10 +166,10 @@ export const getGetApiV1IamAccountActivateActivationTokenQueryOptions = <
                 TData
             >
         >;
-        fetch?: RequestInit;
+        axios?: AxiosRequestConfig;
     },
 ) => {
-    const { query: queryOptions, fetch: fetchOptions } = options ?? {};
+    const { query: queryOptions, axios: axiosOptions } = options ?? {};
 
     const queryKey =
         queryOptions?.queryKey ??
@@ -212,7 +180,7 @@ export const getGetApiV1IamAccountActivateActivationTokenQueryOptions = <
     > = ({ signal }) =>
         getApiV1IamAccountActivateActivationToken(activationToken, params, {
             signal,
-            ...fetchOptions,
+            ...axiosOptions,
         });
 
     return {
@@ -231,17 +199,19 @@ export const getGetApiV1IamAccountActivateActivationTokenQueryOptions = <
 export type GetApiV1IamAccountActivateActivationTokenQueryResult = NonNullable<
     Awaited<ReturnType<typeof getApiV1IamAccountActivateActivationToken>>
 >;
-export type GetApiV1IamAccountActivateActivationTokenQueryError =
+export type GetApiV1IamAccountActivateActivationTokenQueryError = AxiosError<
     | void
     | GetApiV1IamAccountActivateActivationToken400
-    | GetApiV1IamAccountActivateActivationToken500;
+    | GetApiV1IamAccountActivateActivationToken500
+>;
 
 export function useGetApiV1IamAccountActivateActivationToken<
     TData = Awaited<ReturnType<typeof getApiV1IamAccountActivateActivationToken>>,
-    TError =
+    TError = AxiosError<
         | void
         | GetApiV1IamAccountActivateActivationToken400
-        | GetApiV1IamAccountActivateActivationToken500,
+        | GetApiV1IamAccountActivateActivationToken500
+    >,
 >(
     activationToken: string,
     params: undefined | GetApiV1IamAccountActivateActivationTokenParams,
@@ -263,15 +233,16 @@ export function useGetApiV1IamAccountActivateActivationToken<
                 >,
                 "initialData"
             >;
-        fetch?: RequestInit;
+        axios?: AxiosRequestConfig;
     },
 ): DefinedUseQueryResult<TData, TError> & { queryKey: QueryKey };
 export function useGetApiV1IamAccountActivateActivationToken<
     TData = Awaited<ReturnType<typeof getApiV1IamAccountActivateActivationToken>>,
-    TError =
+    TError = AxiosError<
         | void
         | GetApiV1IamAccountActivateActivationToken400
-        | GetApiV1IamAccountActivateActivationToken500,
+        | GetApiV1IamAccountActivateActivationToken500
+    >,
 >(
     activationToken: string,
     params?: GetApiV1IamAccountActivateActivationTokenParams,
@@ -293,15 +264,16 @@ export function useGetApiV1IamAccountActivateActivationToken<
                 >,
                 "initialData"
             >;
-        fetch?: RequestInit;
+        axios?: AxiosRequestConfig;
     },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey };
 export function useGetApiV1IamAccountActivateActivationToken<
     TData = Awaited<ReturnType<typeof getApiV1IamAccountActivateActivationToken>>,
-    TError =
+    TError = AxiosError<
         | void
         | GetApiV1IamAccountActivateActivationToken400
-        | GetApiV1IamAccountActivateActivationToken500,
+        | GetApiV1IamAccountActivateActivationToken500
+    >,
 >(
     activationToken: string,
     params?: GetApiV1IamAccountActivateActivationTokenParams,
@@ -313,16 +285,17 @@ export function useGetApiV1IamAccountActivateActivationToken<
                 TData
             >
         >;
-        fetch?: RequestInit;
+        axios?: AxiosRequestConfig;
     },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
 export function useGetApiV1IamAccountActivateActivationToken<
     TData = Awaited<ReturnType<typeof getApiV1IamAccountActivateActivationToken>>,
-    TError =
+    TError = AxiosError<
         | void
         | GetApiV1IamAccountActivateActivationToken400
-        | GetApiV1IamAccountActivateActivationToken500,
+        | GetApiV1IamAccountActivateActivationToken500
+    >,
 >(
     activationToken: string,
     params?: GetApiV1IamAccountActivateActivationTokenParams,
@@ -334,7 +307,7 @@ export function useGetApiV1IamAccountActivateActivationToken<
                 TData
             >
         >;
-        fetch?: RequestInit;
+        axios?: AxiosRequestConfig;
     },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
     const queryOptions = getGetApiV1IamAccountActivateActivationTokenQueryOptions(
@@ -352,49 +325,28 @@ export function useGetApiV1IamAccountActivateActivationToken<
     return query;
 }
 
-export type getApiV1IamAccountExistsResponse = {
-    data: GetApiV1IamAccountExists200;
-    status: number;
-};
-
-export const getGetApiV1IamAccountExistsUrl = (
+export const getApiV1IamAccountExists = (
     params?: GetApiV1IamAccountExistsParams,
-) => {
-    const normalizedParams = new URLSearchParams();
-
-    Object.entries(params || {}).forEach(([key, value]) => {
-        if (value !== undefined) {
-            normalizedParams.append(key, value === null ? "null" : value.toString());
-        }
-    });
-
-    return normalizedParams.size
-        ? `/api/v1/iam/account/exists?${normalizedParams.toString()}`
-        : `/api/v1/iam/account/exists`;
-};
-
-export const getApiV1IamAccountExists = async (
-    params?: GetApiV1IamAccountExistsParams,
-    options?: RequestInit,
-): Promise<getApiV1IamAccountExistsResponse> => {
-    const res = await fetch(getGetApiV1IamAccountExistsUrl(params), {
+    options?: AxiosRequestConfig,
+): Promise<AxiosResponse<GetApiV1IamAccountExists200>> => {
+    return axios.default.get(`http://localhost:8000/api/v1/iam/account/exists`, {
         ...options,
-        method: "GET",
+        params: { ...params, ...options?.params },
     });
-    const data = await res.json();
-
-    return { status: res.status, data };
 };
 
 export const getGetApiV1IamAccountExistsQueryKey = (
     params?: GetApiV1IamAccountExistsParams,
 ) => {
-    return [`/api/v1/iam/account/exists`, ...(params ? [params] : [])] as const;
+    return [
+        `http://localhost:8000/api/v1/iam/account/exists`,
+        ...(params ? [params] : []),
+    ] as const;
 };
 
 export const getGetApiV1IamAccountExistsQueryOptions = <
     TData = Awaited<ReturnType<typeof getApiV1IamAccountExists>>,
-    TError = GetApiV1IamAccountExists400 | GetApiV1IamAccountExists500,
+    TError = AxiosError<GetApiV1IamAccountExists400 | GetApiV1IamAccountExists500>,
 >(
     params?: GetApiV1IamAccountExistsParams,
     options?: {
@@ -405,17 +357,17 @@ export const getGetApiV1IamAccountExistsQueryOptions = <
                 TData
             >
         >;
-        fetch?: RequestInit;
+        axios?: AxiosRequestConfig;
     },
 ) => {
-    const { query: queryOptions, fetch: fetchOptions } = options ?? {};
+    const { query: queryOptions, axios: axiosOptions } = options ?? {};
 
     const queryKey =
         queryOptions?.queryKey ?? getGetApiV1IamAccountExistsQueryKey(params);
 
     const queryFn: QueryFunction<
         Awaited<ReturnType<typeof getApiV1IamAccountExists>>
-    > = ({ signal }) => getApiV1IamAccountExists(params, { signal, ...fetchOptions });
+    > = ({ signal }) => getApiV1IamAccountExists(params, { signal, ...axiosOptions });
 
     return { queryKey, queryFn, staleTime: 10000, ...queryOptions } as UseQueryOptions<
         Awaited<ReturnType<typeof getApiV1IamAccountExists>>,
@@ -427,13 +379,13 @@ export const getGetApiV1IamAccountExistsQueryOptions = <
 export type GetApiV1IamAccountExistsQueryResult = NonNullable<
     Awaited<ReturnType<typeof getApiV1IamAccountExists>>
 >;
-export type GetApiV1IamAccountExistsQueryError =
-    | GetApiV1IamAccountExists400
-    | GetApiV1IamAccountExists500;
+export type GetApiV1IamAccountExistsQueryError = AxiosError<
+    GetApiV1IamAccountExists400 | GetApiV1IamAccountExists500
+>;
 
 export function useGetApiV1IamAccountExists<
     TData = Awaited<ReturnType<typeof getApiV1IamAccountExists>>,
-    TError = GetApiV1IamAccountExists400 | GetApiV1IamAccountExists500,
+    TError = AxiosError<GetApiV1IamAccountExists400 | GetApiV1IamAccountExists500>,
 >(
     params: undefined | GetApiV1IamAccountExistsParams,
     options: {
@@ -452,12 +404,12 @@ export function useGetApiV1IamAccountExists<
                 >,
                 "initialData"
             >;
-        fetch?: RequestInit;
+        axios?: AxiosRequestConfig;
     },
 ): DefinedUseQueryResult<TData, TError> & { queryKey: QueryKey };
 export function useGetApiV1IamAccountExists<
     TData = Awaited<ReturnType<typeof getApiV1IamAccountExists>>,
-    TError = GetApiV1IamAccountExists400 | GetApiV1IamAccountExists500,
+    TError = AxiosError<GetApiV1IamAccountExists400 | GetApiV1IamAccountExists500>,
 >(
     params?: GetApiV1IamAccountExistsParams,
     options?: {
@@ -476,12 +428,12 @@ export function useGetApiV1IamAccountExists<
                 >,
                 "initialData"
             >;
-        fetch?: RequestInit;
+        axios?: AxiosRequestConfig;
     },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey };
 export function useGetApiV1IamAccountExists<
     TData = Awaited<ReturnType<typeof getApiV1IamAccountExists>>,
-    TError = GetApiV1IamAccountExists400 | GetApiV1IamAccountExists500,
+    TError = AxiosError<GetApiV1IamAccountExists400 | GetApiV1IamAccountExists500>,
 >(
     params?: GetApiV1IamAccountExistsParams,
     options?: {
@@ -492,13 +444,13 @@ export function useGetApiV1IamAccountExists<
                 TData
             >
         >;
-        fetch?: RequestInit;
+        axios?: AxiosRequestConfig;
     },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
 export function useGetApiV1IamAccountExists<
     TData = Awaited<ReturnType<typeof getApiV1IamAccountExists>>,
-    TError = GetApiV1IamAccountExists400 | GetApiV1IamAccountExists500,
+    TError = AxiosError<GetApiV1IamAccountExists400 | GetApiV1IamAccountExists500>,
 >(
     params?: GetApiV1IamAccountExistsParams,
     options?: {
@@ -509,7 +461,7 @@ export function useGetApiV1IamAccountExists<
                 TData
             >
         >;
-        fetch?: RequestInit;
+        axios?: AxiosRequestConfig;
     },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
     const queryOptions = getGetApiV1IamAccountExistsQueryOptions(params, options);
@@ -523,35 +475,23 @@ export function useGetApiV1IamAccountExists<
     return query;
 }
 
-export type postApiV1IamAccountLoginResponse = {
-    data: PostApiV1IamAccountLogin200;
-    status: number;
-};
-
-export const getPostApiV1IamAccountLoginUrl = () => {
-    return `/api/v1/iam/account/login`;
-};
-
-export const postApiV1IamAccountLogin = async (
+export const postApiV1IamAccountLogin = (
     postApiV1IamAccountLoginBody: PostApiV1IamAccountLoginBody,
-    options?: RequestInit,
-): Promise<postApiV1IamAccountLoginResponse> => {
-    const res = await fetch(getPostApiV1IamAccountLoginUrl(), {
-        ...options,
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...options?.headers },
-        body: JSON.stringify(postApiV1IamAccountLoginBody),
-    });
-    const data = await res.json();
-
-    return { status: res.status, data };
+    options?: AxiosRequestConfig,
+): Promise<AxiosResponse<PostApiV1IamAccountLogin200>> => {
+    return axios.default.post(
+        `http://localhost:8000/api/v1/iam/account/login`,
+        postApiV1IamAccountLoginBody,
+        options,
+    );
 };
 
 export const getPostApiV1IamAccountLoginMutationOptions = <
-    TError =
+    TError = AxiosError<
         | PostApiV1IamAccountLogin400
         | PostApiV1IamAccountLogin404
-        | PostApiV1IamAccountLogin500,
+        | PostApiV1IamAccountLogin500
+    >,
     TContext = unknown,
 >(options?: {
     mutation?: UseMutationOptions<
@@ -560,14 +500,14 @@ export const getPostApiV1IamAccountLoginMutationOptions = <
         { data: PostApiV1IamAccountLoginBody },
         TContext
     >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): UseMutationOptions<
     Awaited<ReturnType<typeof postApiV1IamAccountLogin>>,
     TError,
     { data: PostApiV1IamAccountLoginBody },
     TContext
 > => {
-    const { mutation: mutationOptions, fetch: fetchOptions } = options ?? {};
+    const { mutation: mutationOptions, axios: axiosOptions } = options ?? {};
 
     const mutationFn: MutationFunction<
         Awaited<ReturnType<typeof postApiV1IamAccountLogin>>,
@@ -575,7 +515,7 @@ export const getPostApiV1IamAccountLoginMutationOptions = <
     > = (props) => {
         const { data } = props ?? {};
 
-        return postApiV1IamAccountLogin(data, fetchOptions);
+        return postApiV1IamAccountLogin(data, axiosOptions);
     };
 
     return { mutationFn, ...mutationOptions };
@@ -585,16 +525,18 @@ export type PostApiV1IamAccountLoginMutationResult = NonNullable<
     Awaited<ReturnType<typeof postApiV1IamAccountLogin>>
 >;
 export type PostApiV1IamAccountLoginMutationBody = PostApiV1IamAccountLoginBody;
-export type PostApiV1IamAccountLoginMutationError =
+export type PostApiV1IamAccountLoginMutationError = AxiosError<
     | PostApiV1IamAccountLogin400
     | PostApiV1IamAccountLogin404
-    | PostApiV1IamAccountLogin500;
+    | PostApiV1IamAccountLogin500
+>;
 
 export const usePostApiV1IamAccountLogin = <
-    TError =
+    TError = AxiosError<
         | PostApiV1IamAccountLogin400
         | PostApiV1IamAccountLogin404
-        | PostApiV1IamAccountLogin500,
+        | PostApiV1IamAccountLogin500
+    >,
     TContext = unknown,
 >(options?: {
     mutation?: UseMutationOptions<
@@ -603,7 +545,7 @@ export const usePostApiV1IamAccountLogin = <
         { data: PostApiV1IamAccountLoginBody },
         TContext
     >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): UseMutationResult<
     Awaited<ReturnType<typeof postApiV1IamAccountLogin>>,
     TError,
@@ -614,32 +556,21 @@ export const usePostApiV1IamAccountLogin = <
 
     return useMutation(mutationOptions);
 };
-export type postApiV1IamAccountResetPasswordResponse = {
-    data: PostApiV1IamAccountResetPassword200;
-    status: number;
-};
-
-export const getPostApiV1IamAccountResetPasswordUrl = () => {
-    return `/api/v1/iam/account/reset-password`;
-};
-
-export const postApiV1IamAccountResetPassword = async (
+export const postApiV1IamAccountResetPassword = (
     postApiV1IamAccountResetPasswordBody: PostApiV1IamAccountResetPasswordBody,
-    options?: RequestInit,
-): Promise<postApiV1IamAccountResetPasswordResponse> => {
-    const res = await fetch(getPostApiV1IamAccountResetPasswordUrl(), {
-        ...options,
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...options?.headers },
-        body: JSON.stringify(postApiV1IamAccountResetPasswordBody),
-    });
-    const data = await res.json();
-
-    return { status: res.status, data };
+    options?: AxiosRequestConfig,
+): Promise<AxiosResponse<PostApiV1IamAccountResetPassword200>> => {
+    return axios.default.post(
+        `http://localhost:8000/api/v1/iam/account/reset-password`,
+        postApiV1IamAccountResetPasswordBody,
+        options,
+    );
 };
 
 export const getPostApiV1IamAccountResetPasswordMutationOptions = <
-    TError = PostApiV1IamAccountResetPassword400 | PostApiV1IamAccountResetPassword500,
+    TError = AxiosError<
+        PostApiV1IamAccountResetPassword400 | PostApiV1IamAccountResetPassword500
+    >,
     TContext = unknown,
 >(options?: {
     mutation?: UseMutationOptions<
@@ -648,14 +579,14 @@ export const getPostApiV1IamAccountResetPasswordMutationOptions = <
         { data: PostApiV1IamAccountResetPasswordBody },
         TContext
     >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): UseMutationOptions<
     Awaited<ReturnType<typeof postApiV1IamAccountResetPassword>>,
     TError,
     { data: PostApiV1IamAccountResetPasswordBody },
     TContext
 > => {
-    const { mutation: mutationOptions, fetch: fetchOptions } = options ?? {};
+    const { mutation: mutationOptions, axios: axiosOptions } = options ?? {};
 
     const mutationFn: MutationFunction<
         Awaited<ReturnType<typeof postApiV1IamAccountResetPassword>>,
@@ -663,7 +594,7 @@ export const getPostApiV1IamAccountResetPasswordMutationOptions = <
     > = (props) => {
         const { data } = props ?? {};
 
-        return postApiV1IamAccountResetPassword(data, fetchOptions);
+        return postApiV1IamAccountResetPassword(data, axiosOptions);
     };
 
     return { mutationFn, ...mutationOptions };
@@ -674,12 +605,14 @@ export type PostApiV1IamAccountResetPasswordMutationResult = NonNullable<
 >;
 export type PostApiV1IamAccountResetPasswordMutationBody =
     PostApiV1IamAccountResetPasswordBody;
-export type PostApiV1IamAccountResetPasswordMutationError =
-    | PostApiV1IamAccountResetPassword400
-    | PostApiV1IamAccountResetPassword500;
+export type PostApiV1IamAccountResetPasswordMutationError = AxiosError<
+    PostApiV1IamAccountResetPassword400 | PostApiV1IamAccountResetPassword500
+>;
 
 export const usePostApiV1IamAccountResetPassword = <
-    TError = PostApiV1IamAccountResetPassword400 | PostApiV1IamAccountResetPassword500,
+    TError = AxiosError<
+        PostApiV1IamAccountResetPassword400 | PostApiV1IamAccountResetPassword500
+    >,
     TContext = unknown,
 >(options?: {
     mutation?: UseMutationOptions<
@@ -688,7 +621,7 @@ export const usePostApiV1IamAccountResetPassword = <
         { data: PostApiV1IamAccountResetPasswordBody },
         TContext
     >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): UseMutationResult<
     Awaited<ReturnType<typeof postApiV1IamAccountResetPassword>>,
     TError,
@@ -699,40 +632,23 @@ export const usePostApiV1IamAccountResetPassword = <
 
     return useMutation(mutationOptions);
 };
-export type postApiV1IamAccountResetPasswordResetTokenResponse = {
-    data: PostApiV1IamAccountResetPasswordResetToken200;
-    status: number;
-};
-
-export const getPostApiV1IamAccountResetPasswordResetTokenUrl = (
-    resetToken: string,
-) => {
-    return `/api/v1/iam/account/reset-password/${resetToken}`;
-};
-
-export const postApiV1IamAccountResetPasswordResetToken = async (
+export const postApiV1IamAccountResetPasswordResetToken = (
     resetToken: string,
     postApiV1IamAccountResetPasswordResetTokenBody: PostApiV1IamAccountResetPasswordResetTokenBody,
-    options?: RequestInit,
-): Promise<postApiV1IamAccountResetPasswordResetTokenResponse> => {
-    const res = await fetch(
-        getPostApiV1IamAccountResetPasswordResetTokenUrl(resetToken),
-        {
-            ...options,
-            method: "POST",
-            headers: { "Content-Type": "application/json", ...options?.headers },
-            body: JSON.stringify(postApiV1IamAccountResetPasswordResetTokenBody),
-        },
+    options?: AxiosRequestConfig,
+): Promise<AxiosResponse<PostApiV1IamAccountResetPasswordResetToken200>> => {
+    return axios.default.post(
+        `http://localhost:8000/api/v1/iam/account/reset-password/${resetToken}`,
+        postApiV1IamAccountResetPasswordResetTokenBody,
+        options,
     );
-    const data = await res.json();
-
-    return { status: res.status, data };
 };
 
 export const getPostApiV1IamAccountResetPasswordResetTokenMutationOptions = <
-    TError =
+    TError = AxiosError<
         | PostApiV1IamAccountResetPasswordResetToken400
-        | PostApiV1IamAccountResetPasswordResetToken500,
+        | PostApiV1IamAccountResetPasswordResetToken500
+    >,
     TContext = unknown,
 >(options?: {
     mutation?: UseMutationOptions<
@@ -741,14 +657,14 @@ export const getPostApiV1IamAccountResetPasswordResetTokenMutationOptions = <
         { resetToken: string; data: PostApiV1IamAccountResetPasswordResetTokenBody },
         TContext
     >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): UseMutationOptions<
     Awaited<ReturnType<typeof postApiV1IamAccountResetPasswordResetToken>>,
     TError,
     { resetToken: string; data: PostApiV1IamAccountResetPasswordResetTokenBody },
     TContext
 > => {
-    const { mutation: mutationOptions, fetch: fetchOptions } = options ?? {};
+    const { mutation: mutationOptions, axios: axiosOptions } = options ?? {};
 
     const mutationFn: MutationFunction<
         Awaited<ReturnType<typeof postApiV1IamAccountResetPasswordResetToken>>,
@@ -759,7 +675,7 @@ export const getPostApiV1IamAccountResetPasswordResetTokenMutationOptions = <
         return postApiV1IamAccountResetPasswordResetToken(
             resetToken,
             data,
-            fetchOptions,
+            axiosOptions,
         );
     };
 
@@ -771,14 +687,16 @@ export type PostApiV1IamAccountResetPasswordResetTokenMutationResult = NonNullab
 >;
 export type PostApiV1IamAccountResetPasswordResetTokenMutationBody =
     PostApiV1IamAccountResetPasswordResetTokenBody;
-export type PostApiV1IamAccountResetPasswordResetTokenMutationError =
+export type PostApiV1IamAccountResetPasswordResetTokenMutationError = AxiosError<
     | PostApiV1IamAccountResetPasswordResetToken400
-    | PostApiV1IamAccountResetPasswordResetToken500;
+    | PostApiV1IamAccountResetPasswordResetToken500
+>;
 
 export const usePostApiV1IamAccountResetPasswordResetToken = <
-    TError =
+    TError = AxiosError<
         | PostApiV1IamAccountResetPasswordResetToken400
-        | PostApiV1IamAccountResetPasswordResetToken500,
+        | PostApiV1IamAccountResetPasswordResetToken500
+    >,
     TContext = unknown,
 >(options?: {
     mutation?: UseMutationOptions<
@@ -787,7 +705,7 @@ export const usePostApiV1IamAccountResetPasswordResetToken = <
         { resetToken: string; data: PostApiV1IamAccountResetPasswordResetTokenBody },
         TContext
     >;
-    fetch?: RequestInit;
+    axios?: AxiosRequestConfig;
 }): UseMutationResult<
     Awaited<ReturnType<typeof postApiV1IamAccountResetPasswordResetToken>>,
     TError,
