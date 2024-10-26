@@ -102,7 +102,7 @@ class TaskQueue {
         const logData = { requestId, correlationId };
 
         try {
-            const url = `${env.CLIENT_URL}/reset-password?token=${resetToken}`;
+            const url = `${env.CLIENT_URL}/auth/reset-password?token=${resetToken}`;
             log.debug("Send reset password email", logData);
 
             await sendEmail({
