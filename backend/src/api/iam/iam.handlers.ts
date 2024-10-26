@@ -1,6 +1,6 @@
 import { env } from "@/utils/env";
 
-import { getCookie, setCookie } from "hono/cookie";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 
@@ -567,4 +567,15 @@ export const myProfile: IAMHandler["MyProfile"] = async (c) => {
     }
 
     throw new UnauthorizedError({ message: "Unauthorized" });
+};
+
+export const logout: IAMHandler["Logout"] = async (c) => {
+    deleteCookie(c, REFRESH_COOKIE_KEY, {
+        expires: env.REFRESH_TOKEN_AGE_IN_DATE,
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+    });
+
+    return c.body(null, status.NO_CONTENT);
 };

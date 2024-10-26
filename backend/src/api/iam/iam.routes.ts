@@ -471,6 +471,19 @@ export const myProfile = createRoute({
     },
 });
 
+export const logout = createRoute({
+    method: "post",
+    path: "/logout",
+    tags: [TAGS.IAM],
+    middleware: [authenticate],
+    responses: {
+        ...OpenApiResponses.protectedRoute,
+        [status.NO_CONTENT]: {
+            description: "User logged out",
+        },
+    },
+});
+
 // ===============================
 // Types
 // ===============================
@@ -492,4 +505,5 @@ export type IAMHandler = {
 
     RefreshAccessToken: Handler<typeof refreshAccessToken>;
     MyProfile: Handler<typeof myProfile>;
+    Logout: Handler<typeof logout>;
 };
