@@ -1,4 +1,4 @@
-import "ldrs/orbit";
+import "ldrs/lineSpinner";
 import type React from "react";
 
 type Props = {
@@ -7,9 +7,5 @@ type Props = {
 };
 
 export function Loader({ sizeInPx = 24, color = "white" }: Props): React.JSX.Element {
-    return (
-        <div>
-            <l-orbit size={sizeInPx.toString()} color={color}></l-orbit>
-        </div>
-    );
+    return <l-line-spinner size={sizeInPx.toString()} color={color}></l-line-spinner>;
 }

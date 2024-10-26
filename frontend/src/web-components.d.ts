@@ -7,7 +7,11 @@ export {}; // This makes this file an external module
 declare global {
     namespace JSX {
         interface IntrinsicElements {
-            "l-orbit": DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> & {
+            // Only keep loader that's being used (if LDRS pkg loader is used)
+            "l-line-spinner": DetailedHTMLProps<
+                HTMLAttributes<HTMLElement>,
+                HTMLElement
+            > & {
                 color?: string;
                 size?: string;
                 stroke?: string;
