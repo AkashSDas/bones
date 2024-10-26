@@ -165,7 +165,7 @@ function AccountLogin(): React.JSX.Element {
                 </form>
             </Form>
 
-            <div className="flex items-center gap-4 py-6">
+            <div className="flex items-center py-6 gap-4">
                 <div className="w-full h-[1px] bg-grey-800" />
                 <div className="text-sm font-medium uppercase">OR</div>
                 <div className="w-full h-[1px] bg-grey-800" />
