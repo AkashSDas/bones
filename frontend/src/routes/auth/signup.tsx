@@ -1,6 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import type React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -22,7 +21,6 @@ import { usePostApiV1IamAccount } from "@/gen/endpoints/iam-account/iam-account"
 import { useAuth, useAuthStore } from "@/hooks/auth";
 import { usePasswordStrength } from "@/hooks/form";
 import { useToast } from "@/hooks/toast";
-import { authKeys } from "@/utils/react-query";
 
 export const Route = createFileRoute("/auth/signup")({
     component: SignupPage,
@@ -46,9 +44,7 @@ function SignupPage(): React.JSX.Element {
 
 function Content(): React.JSX.Element {
     const { toast } = useToast();
-    const navigate = useNavigate({ from: "/auth/signup" });
     const login = useAuthStore((s) => s.login);
-    const queryClient = useQueryClient();
 
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
@@ -75,15 +71,12 @@ function Content(): React.JSX.Element {
             },
             async onSuccess(data) {
                 login(data.data.accessToken);
-                await queryClient.invalidateQueries({ queryKey: authKeys.me(true) });
 
                 toast({
                     variant: "success",
                     title: "Logged In",
                     description: data.data.message,
                 });
-
-                navigate({ to: "/" });
             },
         },
     });
