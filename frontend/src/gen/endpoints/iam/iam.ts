@@ -64,7 +64,7 @@ export const getGetApiV1IamLoginRefreshQueryOptions = <
         Awaited<ReturnType<typeof getApiV1IamLoginRefresh>>
     > = ({ signal }) => getApiV1IamLoginRefresh({ signal, ...axiosOptions });
 
-    return { queryKey, queryFn, staleTime: 10000, ...queryOptions } as UseQueryOptions<
+    return { queryKey, queryFn, staleTime: 600000, ...queryOptions } as UseQueryOptions<
         Awaited<ReturnType<typeof getApiV1IamLoginRefresh>>,
         TError,
         TData
@@ -187,7 +187,7 @@ export const getGetApiV1IamMeQueryOptions = <
         signal,
     }) => getApiV1IamMe({ signal, ...axiosOptions });
 
-    return { queryKey, queryFn, staleTime: 10000, ...queryOptions } as UseQueryOptions<
+    return { queryKey, queryFn, staleTime: 600000, ...queryOptions } as UseQueryOptions<
         Awaited<ReturnType<typeof getApiV1IamMe>>,
         TError,
         TData

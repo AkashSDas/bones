@@ -30,7 +30,7 @@ export default defineConfig({
                     // useInfiniteQueryParam: "offset",
 
                     options: {
-                        staleTime: 10 * 1000,
+                        staleTime: 10 * 60 * 1000,
                     },
                 },
             },

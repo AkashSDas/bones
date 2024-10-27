@@ -187,7 +187,7 @@ export const getGetApiV1IamAccountActivateActivationTokenQueryOptions = <
         queryKey,
         queryFn,
         enabled: !!activationToken,
-        staleTime: 10000,
+        staleTime: 600000,
         ...queryOptions,
     } as UseQueryOptions<
         Awaited<ReturnType<typeof getApiV1IamAccountActivateActivationToken>>,
@@ -369,7 +369,7 @@ export const getGetApiV1IamAccountExistsQueryOptions = <
         Awaited<ReturnType<typeof getApiV1IamAccountExists>>
     > = ({ signal }) => getApiV1IamAccountExists(params, { signal, ...axiosOptions });
 
-    return { queryKey, queryFn, staleTime: 10000, ...queryOptions } as UseQueryOptions<
+    return { queryKey, queryFn, staleTime: 600000, ...queryOptions } as UseQueryOptions<
         Awaited<ReturnType<typeof getApiV1IamAccountExists>>,
         TError,
         TData

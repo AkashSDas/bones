@@ -190,7 +190,7 @@ export const getGetApiV1IamUserQueryOptions = <
         signal,
     }) => getApiV1IamUser(params, { signal, ...axiosOptions });
 
-    return { queryKey, queryFn, staleTime: 10000, ...queryOptions } as UseQueryOptions<
+    return { queryKey, queryFn, staleTime: 600000, ...queryOptions } as UseQueryOptions<
         Awaited<ReturnType<typeof getApiV1IamUser>>,
         TError,
         TData
@@ -530,7 +530,7 @@ export const getGetApiV1IamUserExistsQueryOptions = <
         signal,
     }) => getApiV1IamUserExists(params, { signal, ...axiosOptions });
 
-    return { queryKey, queryFn, staleTime: 10000, ...queryOptions } as UseQueryOptions<
+    return { queryKey, queryFn, staleTime: 600000, ...queryOptions } as UseQueryOptions<
         Awaited<ReturnType<typeof getApiV1IamUserExists>>,
         TError,
         TData
