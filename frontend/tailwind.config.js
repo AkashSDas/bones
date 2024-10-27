@@ -14,6 +14,10 @@ export default {
             ],
         },
         extend: {
+            transitionProperty: {
+                height: "height",
+                spacing: "margin, padding",
+            },
             borderRadius: {
                 base: "4px",
                 btn: "4px",
