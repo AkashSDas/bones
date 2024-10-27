@@ -210,9 +210,6 @@ export const refreshAccessToken = createRoute({
     method: "get",
     path: "/login/refresh",
     tags: [TAGS.IAM],
-    request: {
-        cookies: IAMSchemas.RefreshAccessTokenCookies,
-    },
     responses: {
         ...OpenApiResponses.protectedRoute,
         [status.OK]: {
