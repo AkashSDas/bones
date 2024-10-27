@@ -5,4 +5,7 @@ export const authKeys = {
     me: (isAccessTokenPresent: boolean) => {
         return ["loggedInUser", isAccessTokenPresent] as const;
     },
+    refreshAccessToken: (hasAccessTokenFailed: boolean) => {
+        return ["refreshAccessToken", hasAccessTokenFailed] as const;
+    },
 };

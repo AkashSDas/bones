@@ -4,7 +4,11 @@ import { useEffect } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { useGetApiV1IamMe, usePostApiV1IamLogout } from "@/gen/endpoints/iam/iam";
+import {
+    useGetApiV1IamLoginRefresh,
+    useGetApiV1IamMe,
+    usePostApiV1IamLogout,
+} from "@/gen/endpoints/iam/iam";
 import { authKeys } from "@/utils/react-query";
 
 import { useToast } from "./toast";
@@ -60,12 +64,21 @@ export function useAuth(
 
     const token = useAuthStore((store) => store.accessToken);
     const authHeader = useAuthStore((store) => store.bearerTokenHeader);
+    const login = useAuthStore((store) => store.login);
 
     const { data, isLoading, isError } = useGetApiV1IamMe({
         axios: { headers: { ...authHeader() } },
         query: {
             queryKey: authKeys.me(token !== null),
             enabled: token !== null,
+        },
+    });
+
+    const refreshAccessTokenQuery = useGetApiV1IamLoginRefresh({
+        axios: { withCredentials: true },
+        query: {
+            queryKey: authKeys.refreshAccessToken(isError !== undefined),
+            enabled: isError,
             refetchOnReconnect: true,
             refetchOnWindowFocus: true,
             refetchInterval: 4.5 * 60 * 1000, // 4.5 mins
@@ -78,7 +91,9 @@ export function useAuth(
 
     useEffect(
         function redirectToLogin() {
-            const shouldLogout = isError || data?.status !== 200;
+            const shouldLogout =
+                refreshAccessTokenQuery.isError ||
+                refreshAccessTokenQuery.data?.status !== 200;
 
             if (shouldLogout && opts.redirectToLoginPage) {
                 if (pathname !== "/") {
@@ -94,7 +109,18 @@ export function useAuth(
                 navigate({ to: "/iam", replace: true });
             }
         },
-        [data?.status, isError, pathname],
+        [refreshAccessTokenQuery, pathname],
+    );
+
+    useEffect(
+        function syncNewAccessToken() {
+            const { data, isPending } = refreshAccessTokenQuery;
+
+            if (!isPending && data?.data.accessToken) {
+                login(data.data.accessToken);
+            }
+        },
+        [refreshAccessTokenQuery.isPending],
     );
 
     return {
@@ -112,36 +138,31 @@ export function useLogout() {
     const navigate = useNavigate();
     const { toast } = useToast();
     const queryClient = useQueryClient();
+    const logout = useAuthStore((s) => s.logout);
 
     const authHeader = useAuthStore((store) => store.bearerTokenHeader);
 
     const mutation = usePostApiV1IamLogout({
-        axios: { headers: { ...authHeader() } },
-        mutation: {
-            async onMutate(_variables) {
-                const keys = authKeys.me(true);
-
-                await queryClient.cancelQueries({ queryKey: keys });
-                const previousData = queryClient.getQueryData(keys);
-
-                queryClient.setQueryData(keys, () => null);
-
-                return { previousData };
-            },
-        },
+        axios: { headers: { ...authHeader() }, withCredentials: true },
     });
 
     return {
         isPending: mutation.isPending,
         async logout() {
+            // Due to race condition between login out in the server and remove
+            // access token from store (also saved in local storage) not doing
+            // optimistic logout because the access token from store is used
+            // in the request that's sent and if I remove the access token
+            // not request can be made to logout (as it's protected)
+            await mutation.mutateAsync();
+            logout();
+
             navigate({ to: "/auth/login" });
             toast({
                 variant: "success",
                 title: "Logged Out",
                 description: "Session is closed",
             });
-
-            await mutation.mutateAsync();
         },
     };
 }
