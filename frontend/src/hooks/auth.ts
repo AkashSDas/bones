@@ -66,6 +66,7 @@ export function useAuth(
     const authHeader = useAuthStore((store) => store.bearerTokenHeader);
     const login = useAuthStore((store) => store.login);
 
+    console.log({ token });
     const { data, isLoading, isError } = useGetApiV1IamMe({
         axios: { headers: { ...authHeader() } },
         query: {
@@ -85,31 +86,61 @@ export function useAuth(
         },
     });
 
-    const isAdmin = (data?.data.roles ?? []).filter((v) => v !== "admin").length > 0;
-    const isIAMUser = (data?.data.roles ?? []).filter((v) => v !== "user").length > 0;
+    const isAdmin = (data?.data.roles ?? []).filter((v) => v === "admin").length > 0;
+    const isIAMUser = (data?.data.roles ?? []).filter((v) => v === "user").length > 0;
     const isLoggedIn = data?.data.roles !== undefined;
 
     useEffect(
         function redirectToLogin() {
-            const shouldLogout =
-                refreshAccessTokenQuery.isError ||
-                refreshAccessTokenQuery.data?.status !== 200;
+            const notFetchingProfile = isLoading === false;
+            const notFetchingRefreshToken = refreshAccessTokenQuery.isLoading == false;
 
-            if (shouldLogout && opts.redirectToLoginPage) {
-                if (pathname !== "/") {
-                    navigate({ to: "/auth/login" });
+            if (
+                notFetchingProfile &&
+                notFetchingRefreshToken &&
+                !isLoggedIn &&
+                pathname !== "/" &&
+                opts.redirectToLoginPage
+            ) {
+                navigate({ to: "/auth/login" });
 
-                    toast({
-                        variant: "error",
-                        title: "Session Expired",
-                        description: "Login to continue",
-                    });
-                }
-            } else if (!shouldLogout && opts.redirectToLoggedInUserHomePage) {
-                navigate({ to: "/iam", replace: true });
+                toast({
+                    variant: "error",
+                    title: "Session Expired",
+                    description: "Login to continue",
+                });
             }
         },
-        [refreshAccessTokenQuery, pathname],
+        [
+            refreshAccessTokenQuery.isLoading,
+            isLoading,
+            pathname,
+            opts.redirectToLoginPage,
+            isLoggedIn,
+        ],
+    );
+
+    useEffect(
+        function redirectToHomePage() {
+            // Pages like login and all should be visited by a logged in user
+            const notFetchingProfile = isLoading === false;
+            const notFetchingRefreshToken = refreshAccessTokenQuery.isLoading == false;
+
+            if (
+                notFetchingProfile &&
+                notFetchingRefreshToken &&
+                isLoggedIn &&
+                opts.redirectToLoggedInUserHomePage
+            ) {
+                navigate({ to: "/" });
+            }
+        },
+        [
+            refreshAccessTokenQuery.isLoading,
+            isLoading,
+            opts.redirectToLoggedInUserHomePage,
+            isLoggedIn,
+        ],
     );
 
     useEffect(
@@ -137,7 +168,6 @@ export function useAuth(
 export function useLogout() {
     const navigate = useNavigate();
     const { toast } = useToast();
-    const queryClient = useQueryClient();
     const logout = useAuthStore((s) => s.logout);
 
     const authHeader = useAuthStore((store) => store.bearerTokenHeader);
