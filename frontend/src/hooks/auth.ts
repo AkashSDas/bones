@@ -70,7 +70,7 @@ export function useAuth(
     const { data, isLoading, isError } = useGetApiV1IamMe({
         axios: { headers: { ...authHeader() } },
         query: {
-            queryKey: authKeys.me(token !== null),
+            queryKey: authKeys.me(token),
             enabled: token !== null,
         },
     });

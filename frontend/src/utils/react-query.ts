@@ -2,10 +2,10 @@
 
 /** Auth related react query keys */
 export const authKeys = {
-    me: (isAccessTokenPresent: boolean) => {
-        return ["loggedInUser", isAccessTokenPresent] as const;
+    me: (accessToken: string | null) => {
+        return ["loggedInUser", accessToken] as const;
     },
-    refreshAccessToken: (hasAccessTokenFailed: boolean) => {
-        return ["refreshAccessToken", hasAccessTokenFailed] as const;
+    refreshAccessToken: (failedAccessToken: boolean) => {
+        return ["refreshAccessToken", failedAccessToken] as const;
     },
 };
