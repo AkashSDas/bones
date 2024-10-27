@@ -68,11 +68,12 @@ function MobileSideMenu(): React.JSX.Element {
                     {isLoading ? (
                         <Skeleton className="w-full h-9 min-w-32" />
                     ) : isLoggedIn ? (
-                        <SheetClose>
+                        <SheetClose asChild>
                             <Button
                                 variant="secondary"
                                 onClick={logout}
                                 disabled={isPending}
+                                className="w-full"
                             >
                                 {isPending ? <Loader sizeInPx={18} /> : null}
                                 {isPending ? "Logging Out" : "Logout"}
