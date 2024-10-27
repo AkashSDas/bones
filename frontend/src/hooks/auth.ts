@@ -9,7 +9,7 @@ import {
     useGetApiV1IamMe,
     usePostApiV1IamLogout,
 } from "@/gen/endpoints/iam/iam";
-import { authKeys } from "@/utils/react-query";
+import { iamKeys } from "@/utils/react-query";
 
 import { useToast } from "./toast";
 
@@ -70,7 +70,7 @@ export function useAuth(
     const { data, isLoading, isError } = useGetApiV1IamMe({
         axios: { headers: { ...authHeader() } },
         query: {
-            queryKey: authKeys.me(token),
+            queryKey: iamKeys.me(token),
             enabled: token !== null,
         },
     });
@@ -78,7 +78,7 @@ export function useAuth(
     const refreshAccessTokenQuery = useGetApiV1IamLoginRefresh({
         axios: { withCredentials: true },
         query: {
-            queryKey: authKeys.refreshAccessToken(isError !== undefined),
+            queryKey: iamKeys.refreshAccessToken(isError !== undefined),
             enabled: isError,
             refetchOnReconnect: true,
             refetchOnWindowFocus: true,
