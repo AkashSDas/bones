@@ -83,7 +83,7 @@ function Content(): React.JSX.Element {
                     description: data.data.message,
                 });
 
-                navigate({ to: "/iam" });
+                navigate({ to: "/" });
             },
         },
     });

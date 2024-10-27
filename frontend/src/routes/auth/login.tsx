@@ -143,7 +143,7 @@ function AccountLogin(): React.JSX.Element {
                     description: "Logged in as an Admin user",
                 });
 
-                navigate({ to: "/iam" });
+                navigate({ to: "/" });
             },
         },
     });
@@ -266,7 +266,7 @@ function IAMUserFormLogin(): React.JSX.Element {
                     description: "Logged in as an IAM user",
                 });
 
-                navigate({ to: "/iam" });
+                navigate({ to: "/" });
             },
         },
     });
