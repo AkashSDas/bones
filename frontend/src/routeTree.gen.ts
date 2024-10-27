@@ -18,6 +18,9 @@ import { Route as AuthResetPasswordImport } from "./routes/auth/reset-password"
 import { Route as AuthLoginImport } from "./routes/auth/login"
 import { Route as AuthForgotPasswordImport } from "./routes/auth/forgot-password"
 import { Route as AuthActivateImport } from "./routes/auth/activate"
+import { Route as IamUsersIndexImport } from "./routes/iam/users/index"
+import { Route as IamUsersNewImport } from "./routes/iam/users/new"
+import { Route as IamUsersUserIdImport } from "./routes/iam/users/$userId"
 
 // Create/Update Routes
 
@@ -60,6 +63,24 @@ const AuthForgotPasswordRoute = AuthForgotPasswordImport.update({
 const AuthActivateRoute = AuthActivateImport.update({
   id: "/auth/activate",
   path: "/auth/activate",
+  getParentRoute: () => rootRoute,
+} as any)
+
+const IamUsersIndexRoute = IamUsersIndexImport.update({
+  id: "/iam/users/",
+  path: "/iam/users/",
+  getParentRoute: () => rootRoute,
+} as any)
+
+const IamUsersNewRoute = IamUsersNewImport.update({
+  id: "/iam/users/new",
+  path: "/iam/users/new",
+  getParentRoute: () => rootRoute,
+} as any)
+
+const IamUsersUserIdRoute = IamUsersUserIdImport.update({
+  id: "/iam/users/$userId",
+  path: "/iam/users/$userId",
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -116,6 +137,27 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof IamIndexImport
       parentRoute: typeof rootRoute
     }
+    "/iam/users/$userId": {
+      id: "/iam/users/$userId"
+      path: "/iam/users/$userId"
+      fullPath: "/iam/users/$userId"
+      preLoaderRoute: typeof IamUsersUserIdImport
+      parentRoute: typeof rootRoute
+    }
+    "/iam/users/new": {
+      id: "/iam/users/new"
+      path: "/iam/users/new"
+      fullPath: "/iam/users/new"
+      preLoaderRoute: typeof IamUsersNewImport
+      parentRoute: typeof rootRoute
+    }
+    "/iam/users/": {
+      id: "/iam/users/"
+      path: "/iam/users"
+      fullPath: "/iam/users"
+      preLoaderRoute: typeof IamUsersIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -129,6 +171,9 @@ export interface FileRoutesByFullPath {
   "/auth/reset-password": typeof AuthResetPasswordRoute
   "/auth/signup": typeof AuthSignupRoute
   "/iam": typeof IamIndexRoute
+  "/iam/users/$userId": typeof IamUsersUserIdRoute
+  "/iam/users/new": typeof IamUsersNewRoute
+  "/iam/users": typeof IamUsersIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -139,6 +184,9 @@ export interface FileRoutesByTo {
   "/auth/reset-password": typeof AuthResetPasswordRoute
   "/auth/signup": typeof AuthSignupRoute
   "/iam": typeof IamIndexRoute
+  "/iam/users/$userId": typeof IamUsersUserIdRoute
+  "/iam/users/new": typeof IamUsersNewRoute
+  "/iam/users": typeof IamUsersIndexRoute
 }
 
 export interface FileRoutesById {
@@ -150,6 +198,9 @@ export interface FileRoutesById {
   "/auth/reset-password": typeof AuthResetPasswordRoute
   "/auth/signup": typeof AuthSignupRoute
   "/iam/": typeof IamIndexRoute
+  "/iam/users/$userId": typeof IamUsersUserIdRoute
+  "/iam/users/new": typeof IamUsersNewRoute
+  "/iam/users/": typeof IamUsersIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -162,6 +213,9 @@ export interface FileRouteTypes {
     | "/auth/reset-password"
     | "/auth/signup"
     | "/iam"
+    | "/iam/users/$userId"
+    | "/iam/users/new"
+    | "/iam/users"
   fileRoutesByTo: FileRoutesByTo
   to:
     | "/"
@@ -171,6 +225,9 @@ export interface FileRouteTypes {
     | "/auth/reset-password"
     | "/auth/signup"
     | "/iam"
+    | "/iam/users/$userId"
+    | "/iam/users/new"
+    | "/iam/users"
   id:
     | "__root__"
     | "/"
@@ -180,6 +237,9 @@ export interface FileRouteTypes {
     | "/auth/reset-password"
     | "/auth/signup"
     | "/iam/"
+    | "/iam/users/$userId"
+    | "/iam/users/new"
+    | "/iam/users/"
   fileRoutesById: FileRoutesById
 }
 
@@ -191,6 +251,9 @@ export interface RootRouteChildren {
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSignupRoute: typeof AuthSignupRoute
   IamIndexRoute: typeof IamIndexRoute
+  IamUsersUserIdRoute: typeof IamUsersUserIdRoute
+  IamUsersNewRoute: typeof IamUsersNewRoute
+  IamUsersIndexRoute: typeof IamUsersIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -201,6 +264,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSignupRoute: AuthSignupRoute,
   IamIndexRoute: IamIndexRoute,
+  IamUsersUserIdRoute: IamUsersUserIdRoute,
+  IamUsersNewRoute: IamUsersNewRoute,
+  IamUsersIndexRoute: IamUsersIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -221,7 +287,10 @@ export const routeTree = rootRoute
         "/auth/login",
         "/auth/reset-password",
         "/auth/signup",
-        "/iam/"
+        "/iam/",
+        "/iam/users/$userId",
+        "/iam/users/new",
+        "/iam/users/"
       ]
     },
     "/": {
@@ -244,6 +313,15 @@ export const routeTree = rootRoute
     },
     "/iam/": {
       "filePath": "iam/index.tsx"
+    },
+    "/iam/users/$userId": {
+      "filePath": "iam/users/$userId.tsx"
+    },
+    "/iam/users/new": {
+      "filePath": "iam/users/new.tsx"
+    },
+    "/iam/users/": {
+      "filePath": "iam/users/index.tsx"
     }
   }
 }
