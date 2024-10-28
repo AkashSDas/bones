@@ -1,6 +1,5 @@
 import { env } from "@/utils/env";
 
-import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 
@@ -22,7 +21,6 @@ import { queue } from "@/utils/task-queue";
 import { type IAMHandler } from "./iam.routes";
 import { IAMSchemas } from "./iam.schema";
 
-const REFRESH_COOKIE_KEY = "refreshToken";
 const TOKEN_EXPIRY = 10 * 60 * 1000; // 10 mins
 
 // =========================================
@@ -66,12 +64,7 @@ export const accountSignup: IAMHandler["AccountSignup"] = async (c) => {
             accountId: account.accountId,
         });
 
-        setCookie(c, REFRESH_COOKIE_KEY, refreshToken, {
-            expires: env.REFRESH_TOKEN_AGE_IN_DATE,
-            httpOnly: true,
-            secure: true,
-            sameSite: "none",
-        });
+        c.get("session").set("refreshToken", refreshToken);
 
         log.info(`Adding send email task: ${account.accountId}`);
         await queue.addSendEmailTask({
@@ -183,12 +176,7 @@ export const accountLogin: IAMHandler["AccountLogin"] = async (c) => {
                 accountId: info.accountId,
             });
 
-            setCookie(c, REFRESH_COOKIE_KEY, refreshToken, {
-                expires: env.REFRESH_TOKEN_AGE_IN_DATE,
-                httpOnly: true,
-                secure: true,
-                sameSite: "none",
-            });
+            c.get("session").set("refreshToken", refreshToken);
 
             await dal.account.setLastLogin(info.accountId);
 
@@ -246,9 +234,9 @@ export const completeResetPassword: IAMHandler["CompleteResetPassword"] = async 
 };
 
 export const refreshAccessToken: IAMHandler["RefreshAccessToken"] = async (c) => {
-    const token = getCookie(c, "refreshToken");
+    const token = c.get("session").get("refreshToken");
 
-    if (token === undefined) {
+    if (token === null) {
         throw new UnauthorizedError({
             message: "Unauthorized",
             reason: "Missing refresh token",
@@ -523,12 +511,7 @@ export const userLogin: IAMHandler["UserLogin"] = async (c) => {
                 userId: info.userId,
             });
 
-            setCookie(c, REFRESH_COOKIE_KEY, refreshToken, {
-                expires: env.REFRESH_TOKEN_AGE_IN_DATE,
-                httpOnly: true,
-                secure: true,
-                sameSite: "none",
-            });
+            c.get("session").set("refreshToken", refreshToken);
 
             await dal.user.setLastLogin(info.userId, info.accountId);
 
@@ -570,12 +553,7 @@ export const myProfile: IAMHandler["MyProfile"] = async (c) => {
 };
 
 export const logout: IAMHandler["Logout"] = async (c) => {
-    deleteCookie(c, REFRESH_COOKIE_KEY, {
-        expires: env.REFRESH_TOKEN_AGE_IN_DATE,
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-    });
+    c.get("session").deleteSession();
 
     return c.body(null, status.NO_CONTENT);
 };
