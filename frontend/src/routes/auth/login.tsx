@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ChevronDownIcon, CircleAlert } from "lucide-react";
 import type React from "react";
@@ -30,8 +31,9 @@ import { Input } from "@/components/shared/Input";
 import { Loader } from "@/components/shared/Loader";
 import { usePostApiV1IamAccountLogin } from "@/gen/endpoints/iam-account/iam-account";
 import { usePostApiV1IamUserLogin } from "@/gen/endpoints/iam-user/iam-user";
-import { useAuth, useAuthStore } from "@/hooks/auth";
+import { useAuth, useOnLogin } from "@/hooks/auth";
 import { useToast } from "@/hooks/toast";
+import { iamKeys } from "@/utils/react-query";
 
 const FormType = {
     ACCOUNT: "Account",
@@ -54,7 +56,7 @@ export const Route = createFileRoute("/auth/login")({
 });
 
 function LoginPage(): React.JSX.Element {
-    const { isLoading } = useAuth({ redirectToLoggedInUserHomePage: true });
+    const { isLoading } = useAuth({ preventPageAccessWhenLoggedIn: true });
 
     if (isLoading) {
         return <Loader variant="page" sizeInPx={30} />;
@@ -110,7 +112,6 @@ function Content(): React.JSX.Element {
 
 function AccountLogin(): React.JSX.Element {
     const { toast } = useToast();
-    const login = useAuthStore((s) => s.login);
 
     const form = useForm<z.infer<typeof AccountFormSchema>>({
         resolver: zodResolver(AccountFormSchema),
@@ -120,7 +121,10 @@ function AccountLogin(): React.JSX.Element {
         },
     });
 
+    const { onSuccess } = useOnLogin();
+
     const mutation = usePostApiV1IamAccountLogin({
+        axios: { withCredentials: true },
         mutation: {
             onError(e) {
                 toast({
@@ -129,15 +133,7 @@ function AccountLogin(): React.JSX.Element {
                     description: e.response?.data.message,
                 });
             },
-            async onSuccess(data) {
-                login(data.data.accessToken);
-
-                toast({
-                    variant: "success",
-                    title: "Logged In",
-                    description: "Logged in as an Admin user",
-                });
-            },
+            onSuccess: () => onSuccess("Logged in as an Admin user"),
         },
     });
 
@@ -225,7 +221,6 @@ function AccountLogin(): React.JSX.Element {
 
 function IAMUserFormLogin(): React.JSX.Element {
     const { toast } = useToast();
-    const login = useAuthStore((s) => s.login);
 
     const [showForgotPwdInstruction, setShowForgotPwdInstruction] = useState(false);
 
@@ -238,7 +233,10 @@ function IAMUserFormLogin(): React.JSX.Element {
         },
     });
 
+    const { onSuccess } = useOnLogin();
+
     const mutation = usePostApiV1IamUserLogin({
+        axios: { withCredentials: true },
         mutation: {
             onError(e) {
                 toast({
@@ -247,15 +245,7 @@ function IAMUserFormLogin(): React.JSX.Element {
                     description: e.response?.data.message,
                 });
             },
-            async onSuccess(data) {
-                login(data.data.accessToken);
-
-                toast({
-                    variant: "success",
-                    title: "Logged In",
-                    description: "Logged in as an IAM user",
-                });
-            },
+            onSuccess: () => onSuccess("Logged in as an IAM user"),
         },
     });
 

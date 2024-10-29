@@ -50,6 +50,7 @@ function ResetPasswordPage(): React.JSX.Element {
     );
 
     const mutation = usePostApiV1IamAccountResetPasswordResetToken({
+        axios: { withCredentials: true },
         mutation: {
             onError(e) {
                 toast({

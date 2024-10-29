@@ -3,21 +3,21 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/shared/Button";
 import { Loader } from "@/components/shared/Loader";
 import { useGetApiV1IamUser } from "@/gen/endpoints/iam-user/iam-user";
-import { useAuth, useAuthStore } from "@/hooks/auth";
+import { useAuth } from "@/hooks/auth";
 import { iamKeys } from "@/utils/react-query";
 
 import { Card } from "./Card";
 
 export function IAMUsersDetails() {
-    const authHeader = useAuthStore((s) => s.bearerTokenHeader);
-    const { account } = useAuth();
+    const { authHeader } = useAuth();
+
     const query = useGetApiV1IamUser(
         { limit: "1" },
         {
-            axios: { headers: { ...authHeader() } },
+            axios: { headers: authHeader, withCredentials: true },
             query: {
                 initialData: undefined,
-                queryKey: iamKeys.iamUsers(account!.accountId, "1", "0", undefined),
+                queryKey: iamKeys.iamUsers("1", "0", undefined),
             },
         },
     );

@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import type React from "react";
 import { useForm } from "react-hook-form";
@@ -18,9 +19,10 @@ import { Input } from "@/components/shared/Input";
 import { Loader } from "@/components/shared/Loader";
 import { PasswordStrengthBar } from "@/components/shared/PasswordStrengthBar";
 import { usePostApiV1IamAccount } from "@/gen/endpoints/iam-account/iam-account";
-import { useAuth, useAuthStore } from "@/hooks/auth";
+import { useAuth, useOnLogin } from "@/hooks/auth";
 import { usePasswordStrength } from "@/hooks/form";
 import { useToast } from "@/hooks/toast";
+import { iamKeys } from "@/utils/react-query";
 
 export const Route = createFileRoute("/auth/signup")({
     component: SignupPage,
@@ -33,7 +35,7 @@ const FormSchema = z.object({
 });
 
 function SignupPage(): React.JSX.Element {
-    const { isLoading } = useAuth({ redirectToLoggedInUserHomePage: true });
+    const { isLoading } = useAuth({ preventPageAccessWhenLoggedIn: true });
 
     if (isLoading) {
         return <Loader variant="page" sizeInPx={30} />;
@@ -44,7 +46,6 @@ function SignupPage(): React.JSX.Element {
 
 function Content(): React.JSX.Element {
     const { toast } = useToast();
-    const login = useAuthStore((s) => s.login);
 
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
@@ -60,7 +61,10 @@ function Content(): React.JSX.Element {
         form.watch("password"),
     );
 
+    const { onSuccess } = useOnLogin();
+
     const mutation = usePostApiV1IamAccount({
+        axios: { withCredentials: true },
         mutation: {
             onError(e) {
                 toast({
@@ -69,15 +73,7 @@ function Content(): React.JSX.Element {
                     description: e.response?.data.message,
                 });
             },
-            async onSuccess(data) {
-                login(data.data.accessToken);
-
-                toast({
-                    variant: "success",
-                    title: "Logged In",
-                    description: data.data.message,
-                });
-            },
+            onSuccess: () => onSuccess("Successfully created account"),
         },
     });
 

@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/auth";
 import { Loader } from "./Loader";
 
 export function AuthProtected(props: PropsWithChildren<unknown>): React.ReactNode {
-    const { isLoggedIn, isLoading } = useAuth({ redirectToLoginPage: true });
+    const { isLoggedIn, isLoading } = useAuth({ onAuthFailRedirectToLogin: true });
 
     if (isLoggedIn && !isLoading) {
         return props.children;
