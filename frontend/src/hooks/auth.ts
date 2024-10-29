@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo } from "react";
+import { create } from "zustand";
 
 import {
     useGetApiV1IamLoginRefresh,
@@ -11,7 +12,23 @@ import { iamKeys } from "@/utils/react-query";
 
 import { useToast } from "./toast";
 
-const LOGIN_TOAST_MSG_KEY = "showLoggedOutToast";
+export const useAuthStore = create<{
+    showLoggedOutToast: boolean;
+    refreshTokenHasFailed: boolean;
+    setShowLoggedOutToast: (v: boolean) => void;
+    setRefreshTokenHasFailed: (v: boolean) => void;
+}>(function (set) {
+    return {
+        showLoggedOutToast: true,
+        refreshTokenHasFailed: false,
+        setShowLoggedOutToast(v) {
+            set(() => ({ showLoggedOutToast: v }));
+        },
+        setRefreshTokenHasFailed(v) {
+            set(() => ({ refreshTokenHasFailed: v }));
+        },
+    };
+});
 
 type AuthOptions = {
     onAuthFailRedirectToLogin?: boolean;
@@ -21,15 +38,19 @@ type AuthOptions = {
 };
 
 function useAccessToken() {
-    const { data, isPending, isError } = useGetApiV1IamLoginRefresh({
-        axios: { withCredentials: true },
-        query: {
-            queryKey: iamKeys.refreshAccessToken(),
-            refetchOnReconnect: true,
-            refetchOnWindowFocus: true,
-            refetchInterval: 8 * 1000, // 4.5 mins
-        },
-    });
+    const refreshTokenHasFailed = useAuthStore((s) => s.refreshTokenHasFailed);
+
+    const { data, isLoading, isLoadingError, isRefetchError } =
+        useGetApiV1IamLoginRefresh({
+            axios: { withCredentials: true },
+            query: {
+                queryKey: iamKeys.refreshAccessToken(),
+                refetchOnReconnect: true,
+                refetchOnWindowFocus: true,
+                refetchInterval: 4.5 * 1000, // 4.5 mins
+                enabled: !refreshTokenHasFailed,
+            },
+        });
 
     const accessToken = data?.data.accessToken;
 
@@ -46,7 +67,12 @@ function useAccessToken() {
         [accessToken],
     );
 
-    return { authHeader, isPending, accessToken, isError };
+    return {
+        authHeader,
+        isPending: isLoading,
+        accessToken,
+        isError: isLoadingError || isRefetchError,
+    };
 }
 
 export function useAuth(opts: AuthOptions | undefined = undefined) {
@@ -57,23 +83,30 @@ export function useAuth(opts: AuthOptions | undefined = undefined) {
 
     const { isPending, accessToken, authHeader, isError } = useAccessToken();
 
+    const showLoggedOutToast = useAuthStore((s) => s.showLoggedOutToast);
+    const setShowLoggedOutToast = useAuthStore((s) => s.setShowLoggedOutToast);
+    const setRefreshTokenHasFailed = useAuthStore((s) => s.setRefreshTokenHasFailed);
+    const refreshTokenHasFailed = useAuthStore((s) => s.refreshTokenHasFailed);
+
     const profileQuery = useGetApiV1IamMe({
         axios: { headers: authHeader, withCredentials: true },
         query: {
             queryKey: iamKeys.me(),
-            enabled: accessToken !== undefined,
+            enabled: accessToken !== undefined && !refreshTokenHasFailed,
         },
     });
 
     const isLoggedIn = useMemo(
         function () {
-            if (isError) return false;
-            return !!accessToken && profileQuery.data?.data !== undefined;
+            if (isError) {
+                setRefreshTokenHasFailed(true);
+                return false;
+            } else {
+                return !!accessToken && profileQuery.data?.data !== undefined;
+            }
         },
         [!!accessToken, profileQuery.data?.data !== undefined, isError],
     );
-
-    console.log({ isLoggedIn, accessToken });
 
     const isAdmin = useMemo(
         function () {
@@ -98,14 +131,18 @@ export function useAuth(opts: AuthOptions | undefined = undefined) {
             if (!isLoggedIn) {
                 queryClient.removeQueries({ queryKey: iamKeys.me() });
 
-                if (!localStorage.getItem(LOGIN_TOAST_MSG_KEY)) {
+                if (showLoggedOutToast) {
+                    queryClient.removeQueries({
+                        queryKey: iamKeys.refreshAccessToken(),
+                    });
+
                     toast({
                         variant: "error",
                         title: "Session Expired",
                         description: "Login to continue",
                     });
 
-                    localStorage.setItem(LOGIN_TOAST_MSG_KEY, "toast-displayed");
+                    setShowLoggedOutToast(false);
                 }
 
                 if (pathname !== "/" && opts?.onAuthFailRedirectToLogin) {
@@ -175,12 +212,15 @@ export function useOnLogin() {
     const queryClient = useQueryClient();
     const { toast } = useToast();
 
-    const onSuccess = useCallback(function (msg: string) {
-        queryClient.invalidateQueries({
-            queryKey: iamKeys.refreshAccessToken(),
-        });
+    const setShowLoggedOutToast = useAuthStore((s) => s.setShowLoggedOutToast);
+    const setRefreshTokenHasFailed = useAuthStore((s) => s.setRefreshTokenHasFailed);
 
-        localStorage.removeItem(LOGIN_TOAST_MSG_KEY);
+    const onSuccess = useCallback(async function (msg: string) {
+        await queryClient.invalidateQueries({ queryKey: iamKeys.refreshAccessToken() });
+        await queryClient.invalidateQueries({ queryKey: iamKeys.me() });
+
+        setShowLoggedOutToast(true);
+        setRefreshTokenHasFailed(false);
 
         toast({
             variant: "success",

@@ -95,7 +95,7 @@ function IAMUsersView() {
             search: username !== "" ? username : undefined,
         },
         {
-            axios: { headers: { ...authHeader() }, withCredentials: true },
+            axios: { headers: authHeader, withCredentials: true },
             query: {
                 initialData: undefined,
                 queryKey: iamKeys.iamUsers(
