@@ -2,18 +2,16 @@
 
 /** IAM related react query keys */
 export const iamKeys = {
-    me: (accessToken: string | null) => {
-        return ["loggedInUser", accessToken] as const;
+    /** Logged in user details */
+    me() {
+        return ["loggedInUser"] as const;
     },
-    refreshAccessToken: (failedAccessToken: boolean) => {
-        return ["refreshAccessToken", failedAccessToken] as const;
+    /** Refresh's access token */
+    refreshAccessToken() {
+        return ["refreshAccessToken"] as const;
     },
-    iamUsers: (
-        accountId: string,
-        limit: string,
-        offset: string,
-        search: string | undefined,
-    ) => {
-        return ["iamUsers", accountId, limit, offset, search];
+    /** List of IAM users in an account */
+    iamUsers(limit: string, offset: string, search: string | undefined) {
+        return ["iamUsers", limit, offset, search] as const;
     },
 };
