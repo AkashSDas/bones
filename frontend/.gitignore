@@ -30,3 +30,5 @@ coverage
 /playwright/.cache/
 
 *storybook.log
+
+stats.html
