@@ -453,6 +453,33 @@ export const deleteUser: IAMHandler["DeleteUser"] = async (c) => {
     }
 };
 
+// TODO: Throw forbidden error when requester (account) doesn't have access to user.
+// Current this request is skipped as DB makes changes based on relationships which
+// doesn't exists
+export const getUser: IAMHandler["GetUser"] = async (c) => {
+    const { userId } = c.req.valid("param");
+    const content = c.get("accountJWTContent");
+
+    if (content === undefined) {
+        throw new ForbiddenError({ message: "You don't account (admin) privileges" });
+    }
+
+    const { accountId } = content;
+    const exists = await dal.account.findAccountById(accountId);
+
+    if (exists === null) {
+        throw new NotFoundError({ message: "Account doesn't exists" });
+    } else {
+        const user = await dal.user.findById(userId, accountId);
+
+        if (user === null) {
+            throw new NotFoundError({ message: "User not found" });
+        }
+
+        return c.json({ user }, status.OK);
+    }
+};
+
 export const getUsers: IAMHandler["GetUsers"] = async (c) => {
     const accountContent = c.get("accountJWTContent");
     const userContent = c.get("userJWTContent");

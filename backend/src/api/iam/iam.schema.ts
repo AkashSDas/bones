@@ -251,6 +251,18 @@ const DeleteUserParam = z.object({
 });
 
 // ===================================
+// Get Single User
+// ===================================
+
+const GetSingleUserParam = z.object({
+    userId: z.string().uuid().openapi({ description: "User id" }),
+});
+
+const GetSingleUserResponseBody = z.object({
+    user: UserClientSchema.openapi({ description: "IAM user" }),
+});
+
+// ===================================
 // Get Many Users
 // ===================================
 
@@ -361,6 +373,9 @@ export const IAMSchemas = {
     UserExistsResponseBody,
 
     DeleteUserParam,
+
+    GetSingleUserParam,
+    GetSingleUserResponseBody,
 
     GetManyUsersQuery,
     GetManyUserResponseBody,

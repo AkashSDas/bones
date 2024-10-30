@@ -371,6 +371,43 @@ export const deleteUser = createRoute({
     },
 });
 
+export const getUser = createRoute({
+    method: "get",
+    path: "/user/{userId}",
+    tags: [TAGS.USER],
+    middleware: [authenticate],
+    request: {
+        params: IAMSchemas.GetSingleUserParam,
+    },
+    responses: {
+        ...OpenApiResponses.protectedAndValidationRoute,
+        [status.OK]: {
+            description: "User found",
+            content: {
+                "application/json": {
+                    schema: IAMSchemas.GetSingleUserResponseBody,
+                },
+            },
+        },
+        [status.NOT_FOUND]: {
+            description: "Not found",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.NotFoundErrorSchema,
+                },
+            },
+        },
+        [status.FORBIDDEN]: {
+            description: "Forbidden",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.ForbiddenErrorSchema,
+                },
+            },
+        },
+    },
+});
+
 export const getUsers = createRoute({
     method: "get",
     path: "/user",
@@ -497,6 +534,7 @@ export type IAMHandler = {
     UpdateUser: Handler<typeof updateUser>;
     UserExists: Handler<typeof userExists>;
     DeleteUser: Handler<typeof deleteUser>;
+    GetUser: Handler<typeof getUser>;
     GetUsers: Handler<typeof getUsers>;
     UserLogin: Handler<typeof userLogin>;
 
