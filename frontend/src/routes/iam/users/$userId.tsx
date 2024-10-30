@@ -100,7 +100,7 @@ function UserDetails({ user }: { user: GetApiV1IamUserUserId200["user"] }) {
     const isBlocked = watch("isBlocked");
 
     const [newPwd, setNewPwd] = useState({ show: false, pwd: "" });
-    const [copiedText, copy] = useCopyToClipboard();
+    const [_, copy] = useCopyToClipboard();
 
     const strength = usePasswordStrength(
         () => getValues().password ?? "",
