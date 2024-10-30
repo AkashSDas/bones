@@ -1,5 +1,5 @@
 import { keepPreviousData } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
     createColumnHelper,
     flexRender,
@@ -14,13 +14,20 @@ import {
     ExternalLinkIcon,
     IdCardIcon,
     LockIcon,
+    MoveLeftIcon,
+    MoveRightIcon,
+    PlusIcon,
+    RotateCwIcon,
+    SearchIcon,
     SignatureIcon,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useMediaQuery } from "usehooks-ts";
 import { z } from "zod";
 
 import { AuthProtected } from "@/components/shared/AuthProtected";
 import { Button } from "@/components/shared/Button";
+import { Input } from "@/components/shared/Input";
 import { Loader } from "@/components/shared/Loader";
 import { useGetApiV1IamUser } from "@/gen/endpoints/iam-user/iam-user";
 import { useAuth } from "@/hooks/auth";
@@ -29,7 +36,7 @@ import { iamKeys } from "@/utils/react-query";
 import { cn } from "@/utils/styles";
 
 const SearchSchema = z.object({
-    limit: fallback(z.number().max(100).min(20), 20).default(20),
+    limit: fallback(z.number().max(100).min(2), 2).default(2),
     offset: fallback(z.number().min(0), 0).default(0),
     username: fallback(z.string().min(3), "").default(""),
 });
@@ -75,7 +82,7 @@ const columns = [
                             className="absolute right-0 !px-2 text-xs font-normal tracking-wide -translate-y-1/2 shadow-lg md:hidden md:group-hover:flex max-h-7 text-grey-500 top-1/2"
                         >
                             <ExternalLinkIcon />
-                            OPEN
+                            <span className="hidden md:block">OPEN</span>
                         </Button>
                     </Link>
                 </div>
@@ -143,6 +150,7 @@ const columns = [
 
 function IAMUsersView() {
     const { offset, username, limit } = Route.useSearch();
+    const navigate = useNavigate();
 
     const { authHeader } = useAuth();
 
@@ -190,13 +198,127 @@ function IAMUsersView() {
         columnResizeMode: "onChange",
     });
 
+    const [showSearchInput, setShowSearchInput] = useState(false);
+    const matches = useMediaQuery("(max-width: 768px)");
+
     return (
         <main className="my-5 md:my-6 px-8 md:py-8 mx-auto w-full max-w-[1440px] space-y-4 md:space-y-12">
-            <h2 className="mb-4 h3">IAM Users</h2>
+            <div className="flex flex-col items-start justify-between w-full gap-1 mb-2 md:items-center md:flex-row">
+                <h2 className="h3">IAM Users</h2>
+
+                <div
+                    className={cn(
+                        "flex items-center self-end gap-2",
+                        matches ? "!w-full md:w-60" : null,
+                    )}
+                >
+                    <div
+                        className={cn(
+                            "flex items-center gap-1",
+                            matches ? "w-full md:w-60" : null,
+                        )}
+                    >
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="!h-8 !w-8 hidden md:flex"
+                            onClick={() => {
+                                setShowSearchInput((v) => !v);
+                            }}
+                            disabled={query.isFetching}
+                        >
+                            <SearchIcon />
+                        </Button>
+
+                        {showSearchInput || matches ? (
+                            <Input
+                                autoFocus
+                                className={cn(
+                                    "!h-8 transition-width",
+                                    showSearchInput || matches
+                                        ? "w-full md:w-60"
+                                        : "w-0",
+                                )}
+                                disabled={query.isFetching}
+                                placeholder="Search by username"
+                                onChange={(e) => {
+                                    const v = e.target.value;
+
+                                    if (v === "") {
+                                        navigate({
+                                            to: ".",
+                                            search: { username: "", limit, offset: 0 },
+                                        });
+                                    } else if (v.length > 3) {
+                                        navigate({
+                                            to: ".",
+                                            search: { username: v, limit, offset: 0 },
+                                        });
+                                    }
+                                }}
+                            />
+                        ) : null}
+                    </div>
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="!h-8 !w-8"
+                        disabled={query.isFetching}
+                        onClick={async () => {
+                            await query.refetch();
+                        }}
+                    >
+                        {query.isFetching ? <Loader /> : <RotateCwIcon />}
+                    </Button>
+
+                    <Button
+                        variant="secondary"
+                        className="!px-3 text-sm !h-8"
+                        disabled={offset === 0 || query.isFetching}
+                        onClick={() => {
+                            navigate({
+                                to: ".",
+                                search: { offset: offset - 1, username, limit },
+                            });
+                        }}
+                    >
+                        <MoveLeftIcon />{" "}
+                        <span className="hidden md:block">Previous</span>
+                    </Button>
+
+                    <Button
+                        variant="secondary"
+                        className="!px-3 text-sm !h-8"
+                        disabled={
+                            (query.data?.data.users.length ?? 0) < limit ||
+                            query.isFetching
+                        }
+                        onClick={() => {
+                            navigate({
+                                to: ".",
+                                search: { offset: offset + 1, username, limit },
+                            });
+                        }}
+                    >
+                        <span className="hidden md:block">Next</span> <MoveRightIcon />
+                    </Button>
+
+                    <Link to="/iam/users/new">
+                        <Button
+                            size="icon"
+                            className="!h-8 !w-8"
+                            aria-label="Create New IAM User"
+                        >
+                            <PlusIcon />
+                        </Button>
+                    </Link>
+                </div>
+            </div>
 
             {query.isLoading ? <Loader variant="page" /> : null}
 
-            <section className="overflow-x-auto">
+            <section className="overflow-x-auto !mt-0 no-scrollbar">
                 <table className="p-1 table-auto w-full !mt-0 border rounded-card border-grey-800">
                     <thead className="border-b border-b-grey-800">
                         {table.getHeaderGroups().map(function (headerGroup) {
@@ -210,7 +332,7 @@ function IAMUsersView() {
                                             <th
                                                 key={header.id}
                                                 className={cn(
-                                                    "text-nowrap relative px-2 text-sm font-medium text-grey-500 text-start group",
+                                                    "text-nowrap relative px-2 text-sm font-normal text-grey-500 text-start group",
                                                 )}
                                                 style={{
                                                     width: `${header.getSize()}px`,

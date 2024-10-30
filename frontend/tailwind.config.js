@@ -16,6 +16,7 @@ export default {
         extend: {
             transitionProperty: {
                 height: "height",
+                width: "width",
                 spacing: "margin, padding",
             },
             borderRadius: {
