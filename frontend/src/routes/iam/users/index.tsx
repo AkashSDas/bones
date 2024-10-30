@@ -21,8 +21,8 @@ import {
     SearchIcon,
     SignatureIcon,
 } from "lucide-react";
-import { useMemo, useState } from "react";
-import { useMediaQuery } from "usehooks-ts";
+import { ChangeEvent, useMemo, useState } from "react";
+import { useDebounceCallback, useMediaQuery } from "usehooks-ts";
 import { z } from "zod";
 
 import { AuthProtected } from "@/components/shared/AuthProtected";
@@ -36,7 +36,7 @@ import { iamKeys } from "@/utils/react-query";
 import { cn } from "@/utils/styles";
 
 const SearchSchema = z.object({
-    limit: fallback(z.number().max(100).min(2), 2).default(2),
+    limit: fallback(z.number().max(100).min(20), 20).default(20),
     offset: fallback(z.number().min(0), 0).default(0),
     username: fallback(z.string().min(3), "").default(""),
 });
@@ -104,7 +104,7 @@ const columns = [
         header: () => (
             <span className="flex items-center gap-2">
                 <LockIcon size="16px" />
-                Username
+                Password Age
             </span>
         ),
         cell: (info) => timeAgo(info.getValue()),
@@ -198,8 +198,25 @@ function IAMUsersView() {
         columnResizeMode: "onChange",
     });
 
+    function searchByName(e: ChangeEvent<HTMLInputElement>): void {
+        const v = e.target.value;
+
+        if (v === "") {
+            navigate({
+                to: ".",
+                search: { username: "", limit, offset: 0 },
+            });
+        } else if (v.length > 3) {
+            navigate({
+                to: ".",
+                search: { username: v, limit, offset: 0 },
+            });
+        }
+    }
+
     const [showSearchInput, setShowSearchInput] = useState(false);
     const matches = useMediaQuery("(max-width: 768px)");
+    const searchByNameDebounced = useDebounceCallback(searchByName, 300);
 
     return (
         <main className="my-5 md:my-6 px-8 md:py-8 mx-auto w-full max-w-[1440px] space-y-4 md:space-y-12">
@@ -239,23 +256,8 @@ function IAMUsersView() {
                                         ? "w-full md:w-60"
                                         : "w-0",
                                 )}
-                                disabled={query.isFetching}
                                 placeholder="Search by username"
-                                onChange={(e) => {
-                                    const v = e.target.value;
-
-                                    if (v === "") {
-                                        navigate({
-                                            to: ".",
-                                            search: { username: "", limit, offset: 0 },
-                                        });
-                                    } else if (v.length > 3) {
-                                        navigate({
-                                            to: ".",
-                                            search: { username: v, limit, offset: 0 },
-                                        });
-                                    }
-                                }}
+                                onChange={searchByNameDebounced}
                             />
                         ) : null}
                     </div>
@@ -315,8 +317,6 @@ function IAMUsersView() {
                     </Link>
                 </div>
             </div>
-
-            {query.isLoading ? <Loader variant="page" /> : null}
 
             <section className="overflow-x-auto !mt-0 no-scrollbar">
                 <table className="p-1 table-auto w-full !mt-0 border rounded-card border-grey-800">
