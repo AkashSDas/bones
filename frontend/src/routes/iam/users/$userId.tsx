@@ -33,7 +33,7 @@ import { iamKeys } from "@/utils/react-query";
 
 export const Route = createFileRoute("/iam/users/$userId")({
     component: () => (
-        <AuthProtected>
+        <AuthProtected forRoles={["admin"]}>
             <IAMUserDetails />
         </AuthProtected>
     ),
