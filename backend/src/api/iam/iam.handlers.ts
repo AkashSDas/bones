@@ -349,7 +349,7 @@ export const updateUser: IAMHandler["UpdateUser"] = async (c) => {
     } else {
         let generatedPwd: null | string = null;
 
-        if (update.isBlocked !== undefined) {
+        if (update.isBlocked) {
             log.info("Blocking user and ignoring other updates (if present)");
             await dal.user.setUserInfo(exists.userId, exists.accountId, {
                 isBlocked: update.isBlocked,
