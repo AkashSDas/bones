@@ -47,7 +47,7 @@ function useAccessToken() {
                 queryKey: iamKeys.refreshAccessToken(),
                 refetchOnReconnect: true,
                 refetchOnWindowFocus: true,
-                refetchInterval: 4.5 * 1000, // 4.5 mins
+                refetchInterval: 4.5 * 60 * 1000, // 4.5 mins
                 enabled: !refreshTokenHasFailed,
             },
         });
