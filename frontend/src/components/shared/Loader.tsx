@@ -1,19 +1,28 @@
 import "ldrs/lineSpinner";
 import type React from "react";
 
+import { cn } from "@/utils/styles";
+
 export function Loader({
     sizeInPx = 24,
     color = "white",
-    variant: type = "alone",
+    variant = "alone",
+    className = "",
 }: {
     sizeInPx?: number;
     color?: "white";
     variant?: "alone" | "page" | "section";
+    className?: string;
 }): React.JSX.Element {
-    switch (type) {
+    switch (variant) {
         case "page":
             return (
-                <div className="flex items-center justify-center w-full my-32">
+                <div
+                    className={cn(
+                        "flex items-center justify-center w-full my-32",
+                        className,
+                    )}
+                >
                     <l-line-spinner
                         size={sizeInPx.toString()}
                         color={color}
@@ -22,7 +31,12 @@ export function Loader({
             );
         case "section":
             return (
-                <div className="flex items-center justify-center w-full my-12">
+                <div
+                    className={cn(
+                        "flex items-center justify-center w-full my-12",
+                        className,
+                    )}
+                >
                     <l-line-spinner
                         size={sizeInPx.toString()}
                         color={color}
