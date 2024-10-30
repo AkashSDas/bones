@@ -10,6 +10,7 @@ import { HttpResponse, delay, http } from "msw";
 import type {
     GetApiV1IamUser200,
     GetApiV1IamUserExists200,
+    GetApiV1IamUserUserId200,
     PatchApiV1IamUserUserId200,
     PostApiV1IamUser201,
     PostApiV1IamUserLogin200,
@@ -55,6 +56,21 @@ export const getPatchApiV1IamUserUserIdResponseMock = (
 ): PatchApiV1IamUserUserId200 => ({
     generatedPassword: faker.helpers.arrayElement([faker.word.sample(), undefined]),
     message: faker.word.sample(),
+    ...overrideResponse,
+});
+
+export const getGetApiV1IamUserUserIdResponseMock = (
+    overrideResponse: Partial<GetApiV1IamUserUserId200> = {},
+): GetApiV1IamUserUserId200 => ({
+    user: {
+        createdAt: faker.word.sample(),
+        isBlocked: faker.datatype.boolean(),
+        lastLoggedInAt: faker.word.sample(),
+        passwordAge: faker.word.sample(),
+        updatedAt: faker.word.sample(),
+        userId: faker.string.uuid(),
+        username: faker.word.sample(),
+    },
     ...overrideResponse,
 });
 
@@ -157,6 +173,29 @@ export const getDeleteApiV1IamUserUserIdMockHandler = (
     });
 };
 
+export const getGetApiV1IamUserUserIdMockHandler = (
+    overrideResponse?:
+        | GetApiV1IamUserUserId200
+        | ((
+              info: Parameters<Parameters<typeof http.get>[1]>[0],
+          ) => Promise<GetApiV1IamUserUserId200> | GetApiV1IamUserUserId200),
+) => {
+    return http.get("*/api/v1/iam/user/:userId", async (info) => {
+        await delay(1000);
+
+        return new HttpResponse(
+            JSON.stringify(
+                overrideResponse !== undefined
+                    ? typeof overrideResponse === "function"
+                        ? await overrideResponse(info)
+                        : overrideResponse
+                    : getGetApiV1IamUserUserIdResponseMock(),
+            ),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+    });
+};
+
 export const getGetApiV1IamUserExistsMockHandler = (
     overrideResponse?:
         | GetApiV1IamUserExists200
@@ -207,6 +246,7 @@ export const getIamUserMock = () => [
     getGetApiV1IamUserMockHandler(),
     getPatchApiV1IamUserUserIdMockHandler(),
     getDeleteApiV1IamUserUserIdMockHandler(),
+    getGetApiV1IamUserUserIdMockHandler(),
     getGetApiV1IamUserExistsMockHandler(),
     getPostApiV1IamUserLoginMockHandler(),
 ];

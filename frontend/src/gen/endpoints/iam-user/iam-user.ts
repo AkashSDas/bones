@@ -39,6 +39,12 @@ import type {
     GetApiV1IamUserExists500,
     GetApiV1IamUserExistsParams,
     GetApiV1IamUserParams,
+    GetApiV1IamUserUserId200,
+    GetApiV1IamUserUserId400,
+    GetApiV1IamUserUserId401,
+    GetApiV1IamUserUserId403,
+    GetApiV1IamUserUserId404,
+    GetApiV1IamUserUserId500,
     PatchApiV1IamUserUserId200,
     PatchApiV1IamUserUserId400,
     PatchApiV1IamUserUserId401,
@@ -482,6 +488,190 @@ export const useDeleteApiV1IamUserUserId = <
 
     return useMutation(mutationOptions);
 };
+export const getApiV1IamUserUserId = (
+    userId: string,
+    options?: AxiosRequestConfig,
+): Promise<AxiosResponse<GetApiV1IamUserUserId200>> => {
+    return axios.default.get(
+        `http://localhost:8000/api/v1/iam/user/${userId}`,
+        options,
+    );
+};
+
+export const getGetApiV1IamUserUserIdQueryKey = (userId: string) => {
+    return [`http://localhost:8000/api/v1/iam/user/${userId}`] as const;
+};
+
+export const getGetApiV1IamUserUserIdQueryOptions = <
+    TData = Awaited<ReturnType<typeof getApiV1IamUserUserId>>,
+    TError = AxiosError<
+        | GetApiV1IamUserUserId400
+        | GetApiV1IamUserUserId401
+        | GetApiV1IamUserUserId403
+        | GetApiV1IamUserUserId404
+        | GetApiV1IamUserUserId500
+    >,
+>(
+    userId: string,
+    options?: {
+        query?: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiV1IamUserUserId>>,
+                TError,
+                TData
+            >
+        >;
+        axios?: AxiosRequestConfig;
+    },
+) => {
+    const { query: queryOptions, axios: axiosOptions } = options ?? {};
+
+    const queryKey = queryOptions?.queryKey ?? getGetApiV1IamUserUserIdQueryKey(userId);
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV1IamUserUserId>>> = ({
+        signal,
+    }) => getApiV1IamUserUserId(userId, { signal, ...axiosOptions });
+
+    return {
+        queryKey,
+        queryFn,
+        enabled: !!userId,
+        staleTime: 600000,
+        ...queryOptions,
+    } as UseQueryOptions<
+        Awaited<ReturnType<typeof getApiV1IamUserUserId>>,
+        TError,
+        TData
+    > & { queryKey: QueryKey };
+};
+
+export type GetApiV1IamUserUserIdQueryResult = NonNullable<
+    Awaited<ReturnType<typeof getApiV1IamUserUserId>>
+>;
+export type GetApiV1IamUserUserIdQueryError = AxiosError<
+    | GetApiV1IamUserUserId400
+    | GetApiV1IamUserUserId401
+    | GetApiV1IamUserUserId403
+    | GetApiV1IamUserUserId404
+    | GetApiV1IamUserUserId500
+>;
+
+export function useGetApiV1IamUserUserId<
+    TData = Awaited<ReturnType<typeof getApiV1IamUserUserId>>,
+    TError = AxiosError<
+        | GetApiV1IamUserUserId400
+        | GetApiV1IamUserUserId401
+        | GetApiV1IamUserUserId403
+        | GetApiV1IamUserUserId404
+        | GetApiV1IamUserUserId500
+    >,
+>(
+    userId: string,
+    options: {
+        query: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiV1IamUserUserId>>,
+                TError,
+                TData
+            >
+        > &
+            Pick<
+                DefinedInitialDataOptions<
+                    Awaited<ReturnType<typeof getApiV1IamUserUserId>>,
+                    TError,
+                    TData
+                >,
+                "initialData"
+            >;
+        axios?: AxiosRequestConfig;
+    },
+): DefinedUseQueryResult<TData, TError> & { queryKey: QueryKey };
+export function useGetApiV1IamUserUserId<
+    TData = Awaited<ReturnType<typeof getApiV1IamUserUserId>>,
+    TError = AxiosError<
+        | GetApiV1IamUserUserId400
+        | GetApiV1IamUserUserId401
+        | GetApiV1IamUserUserId403
+        | GetApiV1IamUserUserId404
+        | GetApiV1IamUserUserId500
+    >,
+>(
+    userId: string,
+    options?: {
+        query?: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiV1IamUserUserId>>,
+                TError,
+                TData
+            >
+        > &
+            Pick<
+                UndefinedInitialDataOptions<
+                    Awaited<ReturnType<typeof getApiV1IamUserUserId>>,
+                    TError,
+                    TData
+                >,
+                "initialData"
+            >;
+        axios?: AxiosRequestConfig;
+    },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey };
+export function useGetApiV1IamUserUserId<
+    TData = Awaited<ReturnType<typeof getApiV1IamUserUserId>>,
+    TError = AxiosError<
+        | GetApiV1IamUserUserId400
+        | GetApiV1IamUserUserId401
+        | GetApiV1IamUserUserId403
+        | GetApiV1IamUserUserId404
+        | GetApiV1IamUserUserId500
+    >,
+>(
+    userId: string,
+    options?: {
+        query?: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiV1IamUserUserId>>,
+                TError,
+                TData
+            >
+        >;
+        axios?: AxiosRequestConfig;
+    },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+export function useGetApiV1IamUserUserId<
+    TData = Awaited<ReturnType<typeof getApiV1IamUserUserId>>,
+    TError = AxiosError<
+        | GetApiV1IamUserUserId400
+        | GetApiV1IamUserUserId401
+        | GetApiV1IamUserUserId403
+        | GetApiV1IamUserUserId404
+        | GetApiV1IamUserUserId500
+    >,
+>(
+    userId: string,
+    options?: {
+        query?: Partial<
+            UseQueryOptions<
+                Awaited<ReturnType<typeof getApiV1IamUserUserId>>,
+                TError,
+                TData
+            >
+        >;
+        axios?: AxiosRequestConfig;
+    },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+    const queryOptions = getGetApiV1IamUserUserIdQueryOptions(userId, options);
+
+    const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+        queryKey: QueryKey;
+    };
+
+    query.queryKey = queryOptions.queryKey;
+
+    return query;
+}
+
 export const getApiV1IamUserExists = (
     params: GetApiV1IamUserExistsParams,
     options?: AxiosRequestConfig,

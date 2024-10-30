@@ -732,17 +732,6 @@
         "/api/v1/iam/login/refresh": {
             "get": {
                 "tags": ["IAM"],
-                "parameters": [
-                    {
-                        "schema": {
-                            "type": "string",
-                            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpJ9"
-                        },
-                        "required": true,
-                        "name": "refreshToken",
-                        "in": "cookie"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Successfully password reset",
@@ -1452,6 +1441,194 @@
                 ],
                 "responses": {
                     "204": { "description": "Successfully deleted" },
+                    "400": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "errors": {
+                                                    "type": "object",
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": "Zod Validation Errors"
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["errors", "reason", "message"]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "reason": {
+                                                    "type": "string",
+                                                    "description": "Reason for validation error"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Detailed error message"
+                                                }
+                                            },
+                                            "required": ["reason", "message"]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": ["IAM User"],
+                "parameters": [
+                    {
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "User id"
+                        },
+                        "required": true,
+                        "name": "userId",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user": {
+                                            "type": "object",
+                                            "properties": {
+                                                "userId": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "username": {
+                                                    "type": "string",
+                                                    "maxLength": 255
+                                                },
+                                                "isBlocked": { "type": "boolean" },
+                                                "passwordAge": { "type": "string" },
+                                                "lastLoggedInAt": { "type": "string" },
+                                                "createdAt": { "type": "string" },
+                                                "updatedAt": { "type": "string" }
+                                            },
+                                            "required": [
+                                                "userId",
+                                                "username",
+                                                "isBlocked",
+                                                "passwordAge",
+                                                "lastLoggedInAt",
+                                                "createdAt",
+                                                "updatedAt"
+                                            ],
+                                            "description": "IAM user"
+                                        }
+                                    },
+                                    "required": ["user"]
+                                }
+                            }
+                        }
+                    },
                     "400": {
                         "description": "Validation error",
                         "content": {
