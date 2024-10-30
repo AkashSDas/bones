@@ -164,7 +164,13 @@ function Content(): React.JSX.Element {
                         type="submit"
                         className="w-full h-[38px] md:h-[46px] text-sm md:text-base"
                     >
-                        Create Account
+                        {mutation.isPending ? (
+                            <span className="flex items-center gap-4">
+                                <Loader /> Creating New Account
+                            </span>
+                        ) : (
+                            "Create Account"
+                        )}
                     </Button>
                 </form>
             </Form>

@@ -18,6 +18,7 @@ import {
     FormMessage,
 } from "@/components/shared/Form";
 import { Input } from "@/components/shared/Input";
+import { Loader } from "@/components/shared/Loader";
 import { usePostApiV1IamUser } from "@/gen/endpoints/iam-user/iam-user";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/toast";
@@ -136,7 +137,7 @@ function CreateIAMUser() {
                             type="submit"
                             className="w-full h-[38px] md:h-[46px] text-sm md:text-base"
                         >
-                            Create User
+                            {mutation.isPending ? <Loader /> : "Create User"}
                         </Button>
                     </form>
                 </Form>

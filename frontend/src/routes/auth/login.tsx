@@ -200,7 +200,7 @@ function AccountLogin(): React.JSX.Element {
                         type="submit"
                         className="w-full h-[38px] md:h-[46px] text-sm md:text-base"
                     >
-                        Login as Root User
+                        {mutation.isPending ? <Loader /> : "Login as Root User"}
                     </Button>
                 </form>
             </Form>
@@ -348,7 +348,7 @@ function IAMUserFormLogin(): React.JSX.Element {
                         type="submit"
                         className="w-full h-[38px] md:h-[46px] text-sm md:text-base"
                     >
-                        Login as IAM User
+                        {mutation.isPending ? <Loader /> : "Login as IAM User"}
                     </Button>
                 </form>
             </Form>

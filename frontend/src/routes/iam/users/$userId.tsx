@@ -307,13 +307,7 @@ function UserDetails({ user }: { user: GetApiV1IamUserUserId200["user"] }) {
                             Reset
                         </Button>
                         <Button className="w-full" disabled={disableBtn} type="submit">
-                            {updateMutation.isPending ? (
-                                <span>
-                                    <Loader /> Saving
-                                </span>
-                            ) : (
-                                "Saving"
-                            )}
+                            {updateMutation.isPending ? <Loader /> : "Saving"}
                         </Button>
                     </div>
                 </form>
@@ -335,13 +329,7 @@ function UserDetails({ user }: { user: GetApiV1IamUserUserId200["user"] }) {
                     onClick={() => deleteMutation.mutateAsync({ userId: user.userId })}
                     type="button"
                 >
-                    {deleteMutation.isPending ? (
-                        <span>
-                            <Loader /> Deleting
-                        </span>
-                    ) : (
-                        "Delete"
-                    )}
+                    {deleteMutation.isPending ? <Loader /> : "Delete"}
                 </Button>
             </div>
         </div>
