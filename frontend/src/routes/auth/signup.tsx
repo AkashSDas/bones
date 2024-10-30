@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import type React from "react";
 import { useForm } from "react-hook-form";
@@ -22,7 +21,6 @@ import { usePostApiV1IamAccount } from "@/gen/endpoints/iam-account/iam-account"
 import { useAuth, useOnLogin } from "@/hooks/auth";
 import { usePasswordStrength } from "@/hooks/form";
 import { useToast } from "@/hooks/toast";
-import { iamKeys } from "@/utils/react-query";
 
 export const Route = createFileRoute("/auth/signup")({
     component: SignupPage,
@@ -119,10 +117,6 @@ function Content(): React.JSX.Element {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Account Name</FormLabel>
-                                <FormDescription>
-                                    Choose a name for your account. Can be changed later
-                                    on in settings
-                                </FormDescription>
                                 <FormControl>
                                     <Input
                                         placeholder="Lean Startup"
