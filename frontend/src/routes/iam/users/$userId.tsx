@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import { AuthProtected } from "@/components/shared/AuthProtected";
 import { Button } from "@/components/shared/Button";
+import { Checkbox } from "@/components/shared/Checkbox";
 import {
     Form,
     FormControl,
@@ -20,7 +21,6 @@ import {
 import { Input } from "@/components/shared/Input";
 import { Loader } from "@/components/shared/Loader";
 import { PasswordStrengthBar } from "@/components/shared/PasswordStrengthBar";
-import { Checkbox } from "@/components/shared/checkbox";
 import {
     useDeleteApiV1IamUserUserId,
     useGetApiV1IamUserUserId,
