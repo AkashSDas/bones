@@ -8,6 +8,7 @@ import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { swaggerUI } from "@hono/swagger-ui";
 import { apiReference } from "@scalar/hono-api-reference";
+import { CookieStore, sessionMiddleware } from "hono-sessions";
 import { compress } from "hono/compress";
 import { cors } from "hono/cors";
 import { requestId } from "hono/request-id";
@@ -23,18 +24,33 @@ import { queue } from "./utils/task-queue";
 
 const app = createHonoApp();
 
+const store = new CookieStore();
+
 // ==========================
 // Middlewares
 // ==========================
 
 app.use(
     "/api/*",
+    sessionMiddleware({
+        store,
+        encryptionKey: env.COOKIE_ENCRYPTION_KEY,
+        expireAfterSeconds: 24 * 60 * 60, // max can be 400 days
+        cookieOptions: {
+            sameSite: "lax", // Recommended to avoid XSS attacks
+            httpOnly: true, // Recommended to avoid XSS attacks
+            secure: env.ENV === "production", // Recommended for basic CSRF protection in modern browsers
+            path: "/", // Required for this library to work properly
+            maxAge: 24 * 60 * 60, // max can be 400 days
+        },
+    }),
+);
+
+app.use(
+    "/api/*",
     cors({
         origin: env.CORS_ORIGINS,
-        allowHeaders: [],
-        allowMethods: ["POST", "GET", "OPTIONS"],
-        exposeHeaders: ["Content-Length"],
-        maxAge: 600,
+        allowMethods: ["POST", "PATCH", "DELETE", "GET", "OPTIONS"],
         credentials: true,
     }),
 );

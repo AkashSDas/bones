@@ -21,11 +21,13 @@ export const EnvironmentVariablesSchema = z
         APP_URL: z.string().url(),
         CLIENT_URL: z.string().url(),
 
+        ENV: z.enum(["production", "development", "qa", "pre-production"]),
         PORT: z.string().transform(validatePort),
         LOG_LEVEL: z
             .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
             .default("debug"),
 
+        COOKIE_ENCRYPTION_KEY: z.string(),
         CORS_ORIGINS: z.string().transform((v): string[] => {
             try {
                 const origins = v.split(",");
@@ -77,9 +79,11 @@ export const EnvironmentVariablesSchema = z
         APP_URL: env.APP_URL,
         CLIENT_URL: env.CLIENT_URL,
 
+        ENV: env.ENV,
         PORT: env.PORT,
         LOG_LEVEL: env.LOG_LEVEL,
 
+        COOKIE_ENCRYPTION_KEY: env.COOKIE_ENCRYPTION_KEY,
         CORS_ORIGINS: env.CORS_ORIGINS,
 
         DB_URL: `postgresql://${env.DB_USERNAME}:${env.DB_PASSWORD}@${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}`,

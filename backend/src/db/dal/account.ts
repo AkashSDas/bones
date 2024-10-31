@@ -98,10 +98,32 @@ class AccountDAL {
         return result.length > 0 ? result[0] : null;
     }
 
+    async findById(accountId: string): Promise<AccountClient | null> {
+        const result = await this.db
+            .select({
+                id: account.id,
+                accountId: account.accountId,
+                email: account.email,
+                accountName: account.accountName,
+                status: account.status,
+                passwordAge: account.passwordAge,
+                isVerified: account.isVerified,
+                lastVerifiedAt: account.lastVerifiedAt,
+                lastLoggedInAt: account.lastLoggedInAt,
+                createdAt: account.createdAt,
+                updatedAt: account.updatedAt,
+            })
+            .from(account)
+            .where(eq(account.accountId, accountId))
+            .limit(1);
+
+        return result.length > 0 ? result[0] : null;
+    }
+
     /**
      * @param accountId Account id (uuid)
      */
-    async findById(accountId: string): Promise<number | null> {
+    async findAccountById(accountId: string): Promise<number | null> {
         const result = await this.db
             .select({ id: account.id })
             .from(account)

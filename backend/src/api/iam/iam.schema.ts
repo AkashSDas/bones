@@ -1,5 +1,6 @@
 import { z } from "@hono/zod-openapi";
 
+import { AccountClientSchema } from "@/db/models/account";
 import { UserClientSchema } from "@/db/models/user";
 
 // ===================================
@@ -95,6 +96,12 @@ const AccountLoginResponseBody = z.object({
 // ===================================
 // Rest Account Password
 // ===================================
+
+const ResetAccountPasswordParams = z.object({
+    resetToken: z.string().openapi({
+        description: "Reset token that user received",
+    }),
+});
 
 const ResetAccountPasswordRequestBody = z.object({
     email: z.string().email().openapi({
@@ -244,6 +251,18 @@ const DeleteUserParam = z.object({
 });
 
 // ===================================
+// Get Single User
+// ===================================
+
+const GetSingleUserParam = z.object({
+    userId: z.string().uuid().openapi({ description: "User id" }),
+});
+
+const GetSingleUserResponseBody = z.object({
+    user: UserClientSchema.openapi({ description: "IAM user" }),
+});
+
+// ===================================
 // Get Many Users
 // ===================================
 
@@ -305,6 +324,16 @@ const UserLoginResponseBody = z.object({
 });
 
 // ===================================
+// Logged In User
+// ===================================
+
+const MyProfileResponseBody = z.object({
+    roles: z.array(z.enum(["admin", "user"])),
+    account: AccountClientSchema,
+    user: UserClientSchema.optional(),
+});
+
+// ===================================
 // Exports
 // ===================================
 
@@ -323,6 +352,7 @@ export const IAMSchemas = {
     AccountLoginRequestBody,
     AccountLoginResponseBody,
 
+    ResetAccountPasswordParams,
     ResetAccountPasswordRequestBody,
     ResetAccountPasswordResponseBody,
 
@@ -344,9 +374,14 @@ export const IAMSchemas = {
 
     DeleteUserParam,
 
+    GetSingleUserParam,
+    GetSingleUserResponseBody,
+
     GetManyUsersQuery,
     GetManyUserResponseBody,
 
     UserLoginRequestBody,
     UserLoginResponseBody,
+
+    MyProfileResponseBody,
 };

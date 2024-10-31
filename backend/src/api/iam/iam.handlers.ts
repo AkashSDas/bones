@@ -1,6 +1,5 @@
 import { env } from "@/utils/env";
 
-import { getCookie, setCookie } from "hono/cookie";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 
@@ -22,7 +21,6 @@ import { queue } from "@/utils/task-queue";
 import { type IAMHandler } from "./iam.routes";
 import { IAMSchemas } from "./iam.schema";
 
-const REFRESH_COOKIE_KEY = "refreshToken";
 const TOKEN_EXPIRY = 10 * 60 * 1000; // 10 mins
 
 // =========================================
@@ -66,12 +64,7 @@ export const accountSignup: IAMHandler["AccountSignup"] = async (c) => {
             accountId: account.accountId,
         });
 
-        setCookie(c, REFRESH_COOKIE_KEY, refreshToken, {
-            expires: env.REFRESH_TOKEN_AGE_IN_DATE,
-            httpOnly: true,
-            secure: true,
-            sameSite: "none",
-        });
+        c.get("session").set("refreshToken", refreshToken);
 
         log.info(`Adding send email task: ${account.accountId}`);
         await queue.addSendEmailTask({
@@ -101,7 +94,7 @@ export const activateAccount: IAMHandler["ActivateAccount"] = async (c) => {
             log.error("Invalid or expired activation token");
 
             if (redirect === "true") {
-                return c.redirect(`${env.CLIENT_URL}/login?activation=failed`);
+                return c.redirect(`${env.CLIENT_URL}/auth/activate?status=failed`);
             } else {
                 throw new BadRequestError({
                     message: "Activation token is either invalid or expired",
@@ -112,7 +105,7 @@ export const activateAccount: IAMHandler["ActivateAccount"] = async (c) => {
             log.info("Account activated and verified");
 
             if (redirect === "true") {
-                return c.redirect(`${env.CLIENT_URL}/login`);
+                return c.redirect(`${env.CLIENT_URL}/auth/activate?status=success`);
             } else {
                 return c.json({ message: "Account activated successfully" });
             }
@@ -124,7 +117,7 @@ export const activateAccount: IAMHandler["ActivateAccount"] = async (c) => {
             log.error(`Failed to activate account: ${e}`);
 
             if (redirect === "true") {
-                return c.redirect(`${env.CLIENT_URL}/login?activation=failed`);
+                return c.redirect(`${env.CLIENT_URL}/auth/activate?status=failed`);
             } else {
                 throw new InternalServerError({
                     message: "Failed to activate account",
@@ -183,12 +176,7 @@ export const accountLogin: IAMHandler["AccountLogin"] = async (c) => {
                 accountId: info.accountId,
             });
 
-            setCookie(c, REFRESH_COOKIE_KEY, refreshToken, {
-                expires: env.REFRESH_TOKEN_AGE_IN_DATE,
-                httpOnly: true,
-                secure: true,
-                sameSite: "none",
-            });
+            c.get("session").set("refreshToken", refreshToken);
 
             await dal.account.setLastLogin(info.accountId);
 
@@ -246,9 +234,9 @@ export const completeResetPassword: IAMHandler["CompleteResetPassword"] = async 
 };
 
 export const refreshAccessToken: IAMHandler["RefreshAccessToken"] = async (c) => {
-    const token = getCookie(c, "refreshToken");
+    const token = c.get("session").get("refreshToken");
 
-    if (token === undefined) {
+    if (token === null) {
         throw new UnauthorizedError({
             message: "Unauthorized",
             reason: "Missing refresh token",
@@ -308,7 +296,7 @@ export const createUser: IAMHandler["CreateUser"] = async (c) => {
     const { accountId } = content;
     const [exists, id] = await Promise.all([
         dal.user.existsByUsername(username, accountId),
-        dal.account.findById(accountId),
+        dal.account.findAccountById(accountId),
     ]);
 
     if (id === null) {
@@ -361,7 +349,7 @@ export const updateUser: IAMHandler["UpdateUser"] = async (c) => {
     } else {
         let generatedPwd: null | string = null;
 
-        if (update.isBlocked !== undefined) {
+        if (update.isBlocked) {
             log.info("Blocking user and ignoring other updates (if present)");
             await dal.user.setUserInfo(exists.userId, exists.accountId, {
                 isBlocked: update.isBlocked,
@@ -432,7 +420,7 @@ export const userExists: IAMHandler["UserExists"] = async (c) => {
     }
 
     const { accountId } = content;
-    const exists = await dal.account.findById(accountId);
+    const exists = await dal.account.findAccountById(accountId);
 
     if (exists === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
@@ -454,7 +442,7 @@ export const deleteUser: IAMHandler["DeleteUser"] = async (c) => {
     }
 
     const { accountId } = content;
-    const exists = await dal.account.findById(accountId);
+    const exists = await dal.account.findAccountById(accountId);
 
     if (exists === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
@@ -462,6 +450,33 @@ export const deleteUser: IAMHandler["DeleteUser"] = async (c) => {
         await dal.user.delete(userId, exists);
         log.info("User deleted");
         return c.body(null, status.NO_CONTENT);
+    }
+};
+
+// TODO: Throw forbidden error when requester (account) doesn't have access to user.
+// Current this request is skipped as DB makes changes based on relationships which
+// doesn't exists
+export const getUser: IAMHandler["GetUser"] = async (c) => {
+    const { userId } = c.req.valid("param");
+    const content = c.get("accountJWTContent");
+
+    if (content === undefined) {
+        throw new ForbiddenError({ message: "You don't account (admin) privileges" });
+    }
+
+    const { accountId } = content;
+    const exists = await dal.account.findAccountById(accountId);
+
+    if (exists === null) {
+        throw new NotFoundError({ message: "Account doesn't exists" });
+    } else {
+        const user = await dal.user.findById(userId, accountId);
+
+        if (user === null) {
+            throw new NotFoundError({ message: "User not found" });
+        }
+
+        return c.json({ user }, status.OK);
     }
 };
 
@@ -476,7 +491,7 @@ export const getUsers: IAMHandler["GetUsers"] = async (c) => {
     const { accountId } = userContent ?? accountContent!;
     const { limit, offset, search } = c.req.valid("query");
 
-    const exists = await dal.account.findById(accountId);
+    const exists = await dal.account.findAccountById(accountId);
 
     if (exists === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
@@ -523,16 +538,49 @@ export const userLogin: IAMHandler["UserLogin"] = async (c) => {
                 userId: info.userId,
             });
 
-            setCookie(c, REFRESH_COOKIE_KEY, refreshToken, {
-                expires: env.REFRESH_TOKEN_AGE_IN_DATE,
-                httpOnly: true,
-                secure: true,
-                sameSite: "none",
-            });
+            c.get("session").set("refreshToken", refreshToken);
 
             await dal.user.setLastLogin(info.userId, info.accountId);
 
             return c.json({ accessToken }, status.OK);
         }
     }
+};
+
+export const myProfile: IAMHandler["MyProfile"] = async (c) => {
+    const accountJWTcontent = c.get("accountJWTContent");
+    const userJWTcontent = c.get("userJWTContent");
+
+    if (accountJWTcontent) {
+        const { accountId } = accountJWTcontent;
+        const account = await dal.account.findById(accountId);
+
+        if (account === null) {
+            throw new NotFoundError({ message: "Account Not Found" });
+        }
+
+        return c.json({ roles: ["admin"] as const, account: account }, status.OK);
+    }
+
+    if (userJWTcontent) {
+        const { accountId, userId } = userJWTcontent;
+        const [user, account] = await Promise.all([
+            dal.user.findById(userId, accountId),
+            dal.account.findById(accountId),
+        ]);
+
+        if (account === null || user === null) {
+            throw new NotFoundError({ message: "Account/User Not Found" });
+        }
+
+        return c.json({ roles: ["user"] as const, account, user }, status.OK);
+    }
+
+    throw new UnauthorizedError({ message: "Unauthorized" });
+};
+
+export const logout: IAMHandler["Logout"] = async (c) => {
+    c.get("session").deleteSession();
+
+    return c.body(null, status.NO_CONTENT);
 };

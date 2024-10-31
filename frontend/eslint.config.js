@@ -1,5 +1,6 @@
 import eslint from "@eslint/js";
 import tanstackQuery from "@tanstack/eslint-plugin-query";
+import pluginRouter from "@tanstack/eslint-plugin-router";
 import eslintPluginPrettier from "eslint-plugin-prettier/recommended";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
@@ -16,6 +17,7 @@ export default tseslint.config(
             "node_modules",
             "package-lock.json",
             "pnpm-lock.yaml",
+            "src/gen/*",
         ],
     },
     {
@@ -40,6 +42,7 @@ export default tseslint.config(
             react,
             eslintPluginPrettier,
             "@tanstack/query": tanstackQuery,
+            "@tanstack/router": pluginRouter,
         },
         rules: {
             // React
@@ -48,7 +51,10 @@ export default tseslint.config(
             "react/react-in-jsx-scope": "off", // Not needed with React 17+
             "react-hooks/rules-of-hooks": "error",
             "react-hooks/exhaustive-deps": "warn",
-            "react-refresh/only-export-components": "error",
+            "react-refresh/only-export-components": [
+                "warn",
+                { allowConstantExport: true },
+            ],
 
             // TypeScript
             "@typescript-eslint/no-unused-vars": [
@@ -69,6 +75,8 @@ export default tseslint.config(
             "@tanstack/query/no-deprecated-options": "error",
             "@tanstack/query/prefer-query-object-syntax": "error",
             "@tanstack/query/stable-query-client": "error",
+
+            "@tanstack/router/create-route-property-order": "error",
         },
     },
 );

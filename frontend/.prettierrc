@@ -1,7 +1,7 @@
 {
     "tabWidth": 4,
     "useTabs": false,
-    "printWidth": 80,
+    "printWidth": 88,
     "semi": true,
     "singleQuote": false,
     "trailingComma": "all",
@@ -9,8 +9,8 @@
     "importOrderSeparation": true,
     "importOrderSortSpecifiers": true,
     "importOrderGroupNamespaceSpecifiers": true,
-    "plugins": [
-        "prettier-plugin-tailwindcss",
-        "@trivago/prettier-plugin-sort-imports"
-    ]
+    "plugins": ["prettier-plugin-tailwindcss", "@trivago/prettier-plugin-sort-imports"],
+    "tailwindAttributes": ["className"],
+    "tailwindFunctions": ["cva", "cn", "tw"],
+    "endOfLine": "auto"
 }
