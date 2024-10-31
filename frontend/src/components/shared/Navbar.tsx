@@ -1,11 +1,22 @@
-import { Link } from "@tanstack/react-router";
-import { MenuIcon, SearchIcon } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { KeyRoundIcon, MenuIcon, PlusIcon, SearchIcon, UsersIcon } from "lucide-react";
 import type React from "react";
+import { useEffect } from "react";
+import { useBoolean } from "usehooks-ts";
 
 import Logo from "@/assets/svgs/logo.svg?react";
 import { useAuth, useLogout } from "@/hooks/auth";
 
 import { Button } from "./Button";
+import {
+    CommandDialog,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+    CommandSeparator,
+} from "./Command";
 import { Loader } from "./Loader";
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetTrigger } from "./Sheet";
 import { Skeleton } from "./Skeleton";
@@ -23,18 +34,21 @@ export function Navbar(): React.JSX.Element {
             <MobileSideMenu />
 
             <div className="items-center justify-end hidden gap-4 md:flex">
-                {/* TODO: this should open a search so logged in and not logged in user can search/navigate */}
-                <Button size="icon" variant="ghost">
-                    <SearchIcon />
-                </Button>
-
                 {isLoading ? (
                     <Skeleton className="w-full h-9 min-w-32" />
                 ) : isLoggedIn ? (
-                    <Button variant="secondary" onClick={logout} disabled={isPending}>
-                        {isPending ? <Loader sizeInPx={18} /> : null}
-                        {isPending ? "Logging Out" : "Logout"}
-                    </Button>
+                    <>
+                        <CommandPalette />
+
+                        <Button
+                            variant="secondary"
+                            onClick={logout}
+                            disabled={isPending}
+                        >
+                            {isPending ? <Loader sizeInPx={18} /> : null}
+                            {isPending ? "Logging Out" : "Logout"}
+                        </Button>
+                    </>
                 ) : (
                     <>
                         <Button variant="secondary" asChild>
@@ -97,5 +111,80 @@ function MobileSideMenu(): React.JSX.Element {
                 </SheetFooter>
             </SheetContent>
         </Sheet>
+    );
+}
+
+function CommandPalette() {
+    const { value, toggle, setTrue, setValue, setFalse } = useBoolean();
+
+    const navigate = useNavigate();
+
+    useEffect(function () {
+        const down = (e: KeyboardEvent) => {
+            if (e.key === "/" && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                toggle();
+            }
+        };
+
+        document.addEventListener("keydown", down);
+        return () => document.removeEventListener("keydown", down);
+    }, []);
+
+    return (
+        <>
+            <Button size="icon" variant="ghost" onClick={setTrue}>
+                <SearchIcon />
+            </Button>
+
+            <CommandDialog open={value} onOpenChange={setValue}>
+                <CommandInput placeholder="Type a command or search..." />
+                <CommandList>
+                    <CommandEmpty>No results found.</CommandEmpty>
+
+                    <CommandGroup heading="Services">
+                        <Link to="/iam" onClick={setFalse}>
+                            <CommandItem
+                                onSelect={() => {
+                                    navigate({ to: "/iam" });
+                                    setFalse();
+                                }}
+                            >
+                                <KeyRoundIcon fontSize="14px" />
+                                <span>IAM</span>
+                            </CommandItem>
+                        </Link>
+                    </CommandGroup>
+
+                    <CommandSeparator />
+
+                    <CommandGroup heading="IAM">
+                        <Link to="/iam/users" onClick={setFalse}>
+                            <CommandItem
+                                onSelect={() => {
+                                    navigate({ to: "/iam/users" });
+                                    setFalse();
+                                }}
+                            >
+                                <UsersIcon />
+                                <span>See all IAM user users</span>
+                            </CommandItem>
+                        </Link>
+
+                        <Link to="/iam/users/new" onClick={setFalse}>
+                            <CommandItem
+                                onSelect={() => {
+                                    navigate({ to: "/iam/users/new" });
+                                    setFalse();
+                                }}
+                            >
+                                <PlusIcon />
+                                <span>Create IAM user</span>
+                            </CommandItem>
+                        </Link>
+                    </CommandGroup>
+                </CommandList>
+            </CommandDialog>
+        </>
     );
 }
