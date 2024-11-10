@@ -12,13 +12,19 @@
 
 import { Route as rootRoute } from "./routes/__root"
 import { Route as IndexImport } from "./routes/index"
+import { Route as WorkspaceIndexImport } from "./routes/workspace/index"
 import { Route as IamIndexImport } from "./routes/iam/index"
+import { Route as WorkspaceNewImport } from "./routes/workspace/new"
+import { Route as WorkspaceContainersImport } from "./routes/workspace/containers"
 import { Route as AuthSignupImport } from "./routes/auth/signup"
 import { Route as AuthResetPasswordImport } from "./routes/auth/reset-password"
 import { Route as AuthLoginImport } from "./routes/auth/login"
 import { Route as AuthForgotPasswordImport } from "./routes/auth/forgot-password"
 import { Route as AuthActivateImport } from "./routes/auth/activate"
+import { Route as WorkspaceWorkspaceIdIndexImport } from "./routes/workspace/$workspaceId/index"
 import { Route as IamUsersIndexImport } from "./routes/iam/users/index"
+import { Route as WorkspaceWorkspaceIdSettingsImport } from "./routes/workspace/$workspaceId/settings"
+import { Route as WorkspaceWorkspaceIdPermissionsImport } from "./routes/workspace/$workspaceId/permissions"
 import { Route as IamUsersNewImport } from "./routes/iam/users/new"
 import { Route as IamUsersUserIdImport } from "./routes/iam/users/$userId"
 
@@ -30,9 +36,27 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const WorkspaceIndexRoute = WorkspaceIndexImport.update({
+  id: "/workspace/",
+  path: "/workspace/",
+  getParentRoute: () => rootRoute,
+} as any)
+
 const IamIndexRoute = IamIndexImport.update({
   id: "/iam/",
   path: "/iam/",
+  getParentRoute: () => rootRoute,
+} as any)
+
+const WorkspaceNewRoute = WorkspaceNewImport.update({
+  id: "/workspace/new",
+  path: "/workspace/new",
+  getParentRoute: () => rootRoute,
+} as any)
+
+const WorkspaceContainersRoute = WorkspaceContainersImport.update({
+  id: "/workspace/containers",
+  path: "/workspace/containers",
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -66,11 +90,31 @@ const AuthActivateRoute = AuthActivateImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const WorkspaceWorkspaceIdIndexRoute = WorkspaceWorkspaceIdIndexImport.update({
+  id: "/workspace/$workspaceId/",
+  path: "/workspace/$workspaceId/",
+  getParentRoute: () => rootRoute,
+} as any)
+
 const IamUsersIndexRoute = IamUsersIndexImport.update({
   id: "/iam/users/",
   path: "/iam/users/",
   getParentRoute: () => rootRoute,
 } as any)
+
+const WorkspaceWorkspaceIdSettingsRoute =
+  WorkspaceWorkspaceIdSettingsImport.update({
+    id: "/workspace/$workspaceId/settings",
+    path: "/workspace/$workspaceId/settings",
+    getParentRoute: () => rootRoute,
+  } as any)
+
+const WorkspaceWorkspaceIdPermissionsRoute =
+  WorkspaceWorkspaceIdPermissionsImport.update({
+    id: "/workspace/$workspaceId/permissions",
+    path: "/workspace/$workspaceId/permissions",
+    getParentRoute: () => rootRoute,
+  } as any)
 
 const IamUsersNewRoute = IamUsersNewImport.update({
   id: "/iam/users/new",
@@ -130,11 +174,32 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AuthSignupImport
       parentRoute: typeof rootRoute
     }
+    "/workspace/containers": {
+      id: "/workspace/containers"
+      path: "/workspace/containers"
+      fullPath: "/workspace/containers"
+      preLoaderRoute: typeof WorkspaceContainersImport
+      parentRoute: typeof rootRoute
+    }
+    "/workspace/new": {
+      id: "/workspace/new"
+      path: "/workspace/new"
+      fullPath: "/workspace/new"
+      preLoaderRoute: typeof WorkspaceNewImport
+      parentRoute: typeof rootRoute
+    }
     "/iam/": {
       id: "/iam/"
       path: "/iam"
       fullPath: "/iam"
       preLoaderRoute: typeof IamIndexImport
+      parentRoute: typeof rootRoute
+    }
+    "/workspace/": {
+      id: "/workspace/"
+      path: "/workspace"
+      fullPath: "/workspace"
+      preLoaderRoute: typeof WorkspaceIndexImport
       parentRoute: typeof rootRoute
     }
     "/iam/users/$userId": {
@@ -151,11 +216,32 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof IamUsersNewImport
       parentRoute: typeof rootRoute
     }
+    "/workspace/$workspaceId/permissions": {
+      id: "/workspace/$workspaceId/permissions"
+      path: "/workspace/$workspaceId/permissions"
+      fullPath: "/workspace/$workspaceId/permissions"
+      preLoaderRoute: typeof WorkspaceWorkspaceIdPermissionsImport
+      parentRoute: typeof rootRoute
+    }
+    "/workspace/$workspaceId/settings": {
+      id: "/workspace/$workspaceId/settings"
+      path: "/workspace/$workspaceId/settings"
+      fullPath: "/workspace/$workspaceId/settings"
+      preLoaderRoute: typeof WorkspaceWorkspaceIdSettingsImport
+      parentRoute: typeof rootRoute
+    }
     "/iam/users/": {
       id: "/iam/users/"
       path: "/iam/users"
       fullPath: "/iam/users"
       preLoaderRoute: typeof IamUsersIndexImport
+      parentRoute: typeof rootRoute
+    }
+    "/workspace/$workspaceId/": {
+      id: "/workspace/$workspaceId/"
+      path: "/workspace/$workspaceId"
+      fullPath: "/workspace/$workspaceId"
+      preLoaderRoute: typeof WorkspaceWorkspaceIdIndexImport
       parentRoute: typeof rootRoute
     }
   }
@@ -170,10 +256,16 @@ export interface FileRoutesByFullPath {
   "/auth/login": typeof AuthLoginRoute
   "/auth/reset-password": typeof AuthResetPasswordRoute
   "/auth/signup": typeof AuthSignupRoute
+  "/workspace/containers": typeof WorkspaceContainersRoute
+  "/workspace/new": typeof WorkspaceNewRoute
   "/iam": typeof IamIndexRoute
+  "/workspace": typeof WorkspaceIndexRoute
   "/iam/users/$userId": typeof IamUsersUserIdRoute
   "/iam/users/new": typeof IamUsersNewRoute
+  "/workspace/$workspaceId/permissions": typeof WorkspaceWorkspaceIdPermissionsRoute
+  "/workspace/$workspaceId/settings": typeof WorkspaceWorkspaceIdSettingsRoute
   "/iam/users": typeof IamUsersIndexRoute
+  "/workspace/$workspaceId": typeof WorkspaceWorkspaceIdIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -183,10 +275,16 @@ export interface FileRoutesByTo {
   "/auth/login": typeof AuthLoginRoute
   "/auth/reset-password": typeof AuthResetPasswordRoute
   "/auth/signup": typeof AuthSignupRoute
+  "/workspace/containers": typeof WorkspaceContainersRoute
+  "/workspace/new": typeof WorkspaceNewRoute
   "/iam": typeof IamIndexRoute
+  "/workspace": typeof WorkspaceIndexRoute
   "/iam/users/$userId": typeof IamUsersUserIdRoute
   "/iam/users/new": typeof IamUsersNewRoute
+  "/workspace/$workspaceId/permissions": typeof WorkspaceWorkspaceIdPermissionsRoute
+  "/workspace/$workspaceId/settings": typeof WorkspaceWorkspaceIdSettingsRoute
   "/iam/users": typeof IamUsersIndexRoute
+  "/workspace/$workspaceId": typeof WorkspaceWorkspaceIdIndexRoute
 }
 
 export interface FileRoutesById {
@@ -197,10 +295,16 @@ export interface FileRoutesById {
   "/auth/login": typeof AuthLoginRoute
   "/auth/reset-password": typeof AuthResetPasswordRoute
   "/auth/signup": typeof AuthSignupRoute
+  "/workspace/containers": typeof WorkspaceContainersRoute
+  "/workspace/new": typeof WorkspaceNewRoute
   "/iam/": typeof IamIndexRoute
+  "/workspace/": typeof WorkspaceIndexRoute
   "/iam/users/$userId": typeof IamUsersUserIdRoute
   "/iam/users/new": typeof IamUsersNewRoute
+  "/workspace/$workspaceId/permissions": typeof WorkspaceWorkspaceIdPermissionsRoute
+  "/workspace/$workspaceId/settings": typeof WorkspaceWorkspaceIdSettingsRoute
   "/iam/users/": typeof IamUsersIndexRoute
+  "/workspace/$workspaceId/": typeof WorkspaceWorkspaceIdIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -212,10 +316,16 @@ export interface FileRouteTypes {
     | "/auth/login"
     | "/auth/reset-password"
     | "/auth/signup"
+    | "/workspace/containers"
+    | "/workspace/new"
     | "/iam"
+    | "/workspace"
     | "/iam/users/$userId"
     | "/iam/users/new"
+    | "/workspace/$workspaceId/permissions"
+    | "/workspace/$workspaceId/settings"
     | "/iam/users"
+    | "/workspace/$workspaceId"
   fileRoutesByTo: FileRoutesByTo
   to:
     | "/"
@@ -224,10 +334,16 @@ export interface FileRouteTypes {
     | "/auth/login"
     | "/auth/reset-password"
     | "/auth/signup"
+    | "/workspace/containers"
+    | "/workspace/new"
     | "/iam"
+    | "/workspace"
     | "/iam/users/$userId"
     | "/iam/users/new"
+    | "/workspace/$workspaceId/permissions"
+    | "/workspace/$workspaceId/settings"
     | "/iam/users"
+    | "/workspace/$workspaceId"
   id:
     | "__root__"
     | "/"
@@ -236,10 +352,16 @@ export interface FileRouteTypes {
     | "/auth/login"
     | "/auth/reset-password"
     | "/auth/signup"
+    | "/workspace/containers"
+    | "/workspace/new"
     | "/iam/"
+    | "/workspace/"
     | "/iam/users/$userId"
     | "/iam/users/new"
+    | "/workspace/$workspaceId/permissions"
+    | "/workspace/$workspaceId/settings"
     | "/iam/users/"
+    | "/workspace/$workspaceId/"
   fileRoutesById: FileRoutesById
 }
 
@@ -250,10 +372,16 @@ export interface RootRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  WorkspaceContainersRoute: typeof WorkspaceContainersRoute
+  WorkspaceNewRoute: typeof WorkspaceNewRoute
   IamIndexRoute: typeof IamIndexRoute
+  WorkspaceIndexRoute: typeof WorkspaceIndexRoute
   IamUsersUserIdRoute: typeof IamUsersUserIdRoute
   IamUsersNewRoute: typeof IamUsersNewRoute
+  WorkspaceWorkspaceIdPermissionsRoute: typeof WorkspaceWorkspaceIdPermissionsRoute
+  WorkspaceWorkspaceIdSettingsRoute: typeof WorkspaceWorkspaceIdSettingsRoute
   IamUsersIndexRoute: typeof IamUsersIndexRoute
+  WorkspaceWorkspaceIdIndexRoute: typeof WorkspaceWorkspaceIdIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -263,10 +391,16 @@ const rootRouteChildren: RootRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSignupRoute: AuthSignupRoute,
+  WorkspaceContainersRoute: WorkspaceContainersRoute,
+  WorkspaceNewRoute: WorkspaceNewRoute,
   IamIndexRoute: IamIndexRoute,
+  WorkspaceIndexRoute: WorkspaceIndexRoute,
   IamUsersUserIdRoute: IamUsersUserIdRoute,
   IamUsersNewRoute: IamUsersNewRoute,
+  WorkspaceWorkspaceIdPermissionsRoute: WorkspaceWorkspaceIdPermissionsRoute,
+  WorkspaceWorkspaceIdSettingsRoute: WorkspaceWorkspaceIdSettingsRoute,
   IamUsersIndexRoute: IamUsersIndexRoute,
+  WorkspaceWorkspaceIdIndexRoute: WorkspaceWorkspaceIdIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -287,10 +421,16 @@ export const routeTree = rootRoute
         "/auth/login",
         "/auth/reset-password",
         "/auth/signup",
+        "/workspace/containers",
+        "/workspace/new",
         "/iam/",
+        "/workspace/",
         "/iam/users/$userId",
         "/iam/users/new",
-        "/iam/users/"
+        "/workspace/$workspaceId/permissions",
+        "/workspace/$workspaceId/settings",
+        "/iam/users/",
+        "/workspace/$workspaceId/"
       ]
     },
     "/": {
@@ -311,8 +451,17 @@ export const routeTree = rootRoute
     "/auth/signup": {
       "filePath": "auth/signup.tsx"
     },
+    "/workspace/containers": {
+      "filePath": "workspace/containers.tsx"
+    },
+    "/workspace/new": {
+      "filePath": "workspace/new.tsx"
+    },
     "/iam/": {
       "filePath": "iam/index.tsx"
+    },
+    "/workspace/": {
+      "filePath": "workspace/index.tsx"
     },
     "/iam/users/$userId": {
       "filePath": "iam/users/$userId.tsx"
@@ -320,8 +469,17 @@ export const routeTree = rootRoute
     "/iam/users/new": {
       "filePath": "iam/users/new.tsx"
     },
+    "/workspace/$workspaceId/permissions": {
+      "filePath": "workspace/$workspaceId/permissions.tsx"
+    },
+    "/workspace/$workspaceId/settings": {
+      "filePath": "workspace/$workspaceId/settings.tsx"
+    },
     "/iam/users/": {
       "filePath": "iam/users/index.tsx"
+    },
+    "/workspace/$workspaceId/": {
+      "filePath": "workspace/$workspaceId/index.tsx"
     }
   }
 }

@@ -1,5 +1,12 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { KeyRoundIcon, MenuIcon, PlusIcon, SearchIcon, UsersIcon } from "lucide-react";
+import {
+    ContainerIcon,
+    KeyRoundIcon,
+    MenuIcon,
+    PlusIcon,
+    SearchIcon,
+    UsersIcon,
+} from "lucide-react";
 import type React from "react";
 import { useEffect } from "react";
 import { useBoolean } from "usehooks-ts";
@@ -152,6 +159,18 @@ function CommandPalette() {
                             >
                                 <KeyRoundIcon fontSize="14px" />
                                 <span>IAM</span>
+                            </CommandItem>
+                        </Link>
+
+                        <Link to="/workspace" onClick={setFalse}>
+                            <CommandItem
+                                onSelect={() => {
+                                    navigate({ to: "/workspace" });
+                                    setFalse();
+                                }}
+                            >
+                                <ContainerIcon fontSize="14px" />
+                                <span>Workspace</span>
                             </CommandItem>
                         </Link>
                     </CommandGroup>

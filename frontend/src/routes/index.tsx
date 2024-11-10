@@ -32,7 +32,7 @@ const services = [
         Icon: ContainerIcon,
         label: "Workspace",
         description: "Manage your software project in one place",
-        href: "/" as const,
+        href: "/workspace" as const,
     },
     {
         Icon: GitForkIcon,
