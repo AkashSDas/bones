@@ -46,6 +46,40 @@ export const OpenApiResponses = {
             },
         },
     },
+    rbacProtectedRoute: {
+        [status.UNAUTHORIZED]: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.UnauthorizedErrorSchema,
+                },
+            },
+        },
+        [status.NOT_FOUND]: {
+            description: "Not found",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.NotFoundErrorSchema,
+                },
+            },
+        },
+        [status.FORBIDDEN]: {
+            description: "Forbidden",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.ForbiddenErrorSchema,
+                },
+            },
+        },
+        [status.INTERNAL_SERVER_ERROR]: {
+            description: "Internal server error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.InternalServerErrorSchema,
+                },
+            },
+        },
+    },
     protectedAndValidationRoute: {
         [status.UNAUTHORIZED]: {
             description: "Unauthorized",
