@@ -98,7 +98,7 @@ class AccountDAL {
         return result.length > 0 ? result[0] : null;
     }
 
-    async findById(accountId: string): Promise<AccountClient | null> {
+    async findByAccountId(accountId: string): Promise<AccountClient | null> {
         const result = await this.db
             .select({
                 id: account.id,
@@ -118,19 +118,6 @@ class AccountDAL {
             .limit(1);
 
         return result.length > 0 ? result[0] : null;
-    }
-
-    /**
-     * @param accountId Account id (uuid)
-     */
-    async findAccountById(accountId: string): Promise<number | null> {
-        const result = await this.db
-            .select({ id: account.id })
-            .from(account)
-            .where(eq(account.accountId, accountId))
-            .limit(1);
-
-        return result.length > 0 ? result[0].id : null;
     }
 
     // ===========================
@@ -222,6 +209,19 @@ class AccountDAL {
             .limit(1);
 
         return result.length > 0;
+    }
+
+    /**
+     * @param accountId Account id (uuid)
+     */
+    async existsAccountById(accountId: string): Promise<number | null> {
+        const result = await this.db
+            .select({ id: account.id })
+            .from(account)
+            .where(eq(account.accountId, accountId))
+            .limit(1);
+
+        return result.length > 0 ? result[0].id : null;
     }
 }
 

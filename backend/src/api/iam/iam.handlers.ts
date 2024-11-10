@@ -296,7 +296,7 @@ export const createUser: IAMHandler["CreateUser"] = async (c) => {
     const { accountId } = content;
     const [exists, id] = await Promise.all([
         dal.user.existsByUsername(username, accountId),
-        dal.account.findAccountById(accountId),
+        dal.account.existsAccountById(accountId),
     ]);
 
     if (id === null) {
@@ -420,7 +420,7 @@ export const userExists: IAMHandler["UserExists"] = async (c) => {
     }
 
     const { accountId } = content;
-    const exists = await dal.account.findAccountById(accountId);
+    const exists = await dal.account.existsAccountById(accountId);
 
     if (exists === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
@@ -442,7 +442,7 @@ export const deleteUser: IAMHandler["DeleteUser"] = async (c) => {
     }
 
     const { accountId } = content;
-    const exists = await dal.account.findAccountById(accountId);
+    const exists = await dal.account.existsAccountById(accountId);
 
     if (exists === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
@@ -465,7 +465,7 @@ export const getUser: IAMHandler["GetUser"] = async (c) => {
     }
 
     const { accountId } = content;
-    const exists = await dal.account.findAccountById(accountId);
+    const exists = await dal.account.existsAccountById(accountId);
 
     if (exists === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
@@ -491,7 +491,7 @@ export const getUsers: IAMHandler["GetUsers"] = async (c) => {
     const { accountId } = userContent ?? accountContent!;
     const { limit, offset, search } = c.req.valid("query");
 
-    const exists = await dal.account.findAccountById(accountId);
+    const exists = await dal.account.existsAccountById(accountId);
 
     if (exists === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
@@ -553,7 +553,7 @@ export const myProfile: IAMHandler["MyProfile"] = async (c) => {
 
     if (accountJWTcontent) {
         const { accountId } = accountJWTcontent;
-        const account = await dal.account.findById(accountId);
+        const account = await dal.account.findByAccountId(accountId);
 
         if (account === null) {
             throw new NotFoundError({ message: "Account Not Found" });
@@ -566,7 +566,7 @@ export const myProfile: IAMHandler["MyProfile"] = async (c) => {
         const { accountId, userId } = userJWTcontent;
         const [user, account] = await Promise.all([
             dal.user.findById(userId, accountId),
-            dal.account.findById(accountId),
+            dal.account.findByAccountId(accountId),
         ]);
 
         if (account === null || user === null) {
