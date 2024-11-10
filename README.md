@@ -15,5 +15,8 @@
 - Drizzle and PostgreSQL
 - Docker and Kubernetes
 - Vitest
-- Keycloak
 - Stripe
+
+## Devbox
+
+- [Search packages for Devbox in NixOS](https://search.nixos.org/packages)

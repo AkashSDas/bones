@@ -1,0 +1,55 @@
+version: "3"
+
+env:
+    # Setup default gum style options
+    BORDER: double
+    BORDER_FOREGROUND: "212"
+    PADDING: "1 1"
+    MARGIN: "1 1"
+
+tasks:
+    kind:00-authenticate-cli:
+        desc: Authenticate the kind CLI
+        cmds:
+            - kind version
+
+    kind:01-generate-config:
+        desc: "Generate kind config with local absolute paths for PV mounts"
+        cmds:
+            # Set an environment variable REPLACE_WITH_ABSOLUTE_PATH to the current directory (${PWD})
+            # Then use `envsubst` to substitute this variable in the template file (kind-config.yaml.TEMPLATE)
+            # and output the result to a new file called "kind-config.yaml"
+            - REPLACE_WITH_ABSOLUTE_PATH=${PWD} envsubst < kind-config.yaml.TEMPLATE > kind-config.yaml
+
+    kind:02-create-cluster:
+        desc: Create a Kubernetes cluster using kind
+        cmds:
+            - kind create cluster --config kind-config.yaml
+
+        # Output after running the above command:
+        #
+        # task: [kind:02-create-cluster] kind create cluster --config kind-config.yaml
+        # Creating cluster "kind" ...
+        # ✓ Ensuring node image (kindest/node:v1.30.0) 🖼
+        # ✓ Preparing nodes 📦 📦 📦
+        # ✓ Writing configuration 📜
+        # ✓ Starting control-plane 🕹️
+        # ✓ Installing CNI 🔌
+        # ✓ Installing StorageClass 💾
+        # ✓ Joining worker nodes 🚜
+        # Set kubectl context to "kind-kind"
+        # You can now use your cluster with:
+        #
+        # kubectl cluster-info --context kind-kind # alternatively, use "kubectx"
+        #
+        # Not sure what to do next? 😅  Check out https://kind.sigs.k8s.io/docs/user/quick-start/
+
+    kind:03-run-cloud-provider-kind:
+        desc: "Run sigs.k8s.io/cloud-provider-kind@latest to enable load balancer services with KinD"
+        cmds:
+            - sudo cloud-provider-kind
+
+    kind:04-delete-cluster:
+        desc: Delete and existing a kind Kubernetes cluster
+        cmds:
+            - kind delete cluster
