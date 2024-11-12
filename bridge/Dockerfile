@@ -1,5 +1,3 @@
-# TODO: use a custom user (like Deno provides user deno but had a lot of issues)
-
 # Build stage using a fuller image to install dependencies and create users
 FROM denoland/deno:2.0.6 AS build
 
@@ -42,4 +40,3 @@ EXPOSE 4000
 
 # Run the application with the correct permission flags
 CMD ["run", "--allow-all", "./src/index.ts"]
-
