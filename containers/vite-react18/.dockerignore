@@ -1,4 +1,4 @@
-README.workspace.md
-.venv
-.gitignore
+node_modules
 Dockerfile
+README.workspace.md
+.gitignore

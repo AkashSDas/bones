@@ -1,8 +1,32 @@
-# This is local docker image for bridge service
-FROM bridge:latest AS bridge
+# Base image for Bridge service
+FROM bridge:1.0.0 AS bridge
 
-# `python-base` sets up all our shared environment variables
-FROM python:3.13.0-slim as python-base
+# Starting with Python image since it's a Python Workspace
+FROM python:3.13.0-slim
+
+# ===========================================
+# Setup Bridge and workspace utilities
+# ===========================================
+
+# Install required dependencies for workspace setup/execution
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends nginx supervisor curl neovim \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the Nginx and Supervisor configuration files
+COPY ./nginx.conf /etc/nginx/nginx.conf
+COPY ./supervisord.conf /etc/supervisor/supervisord.conf
+
+# Copy Bridge and install Deno (same version as used in Bridge) to run Bridge
+COPY --from=bridge /usr/bridge /usr/bridge
+COPY --from=denoland/deno:bin-2.0.6 /deno /usr/local/bin/deno
+
+# Expose the port Nginx will serve on
+EXPOSE 80
+
+# ===========================================
+# Setup workspace project
+# ===========================================
 
 # python
 ENV PYTHONUNBUFFERED=1 \
@@ -33,8 +57,6 @@ ENV PYTHONUNBUFFERED=1 \
 # prepend poetry and venv to path
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
-# `builder-base` stage is used to build deps + create our virtual environment
-FROM python-base as builder-base
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     # deps for installing poetry
@@ -52,25 +74,21 @@ COPY poetry.lock pyproject.toml ./
 # install runtime deps - uses $POETRY_VIRTUALENVS_IN_PROJECT internally
 RUN poetry install 
 
-# `development` image is used during development / testing
-FROM python-base as development
-ENV APP_ENV=development
-WORKDIR $PYSETUP_PATH
-
-# copy in our built poetry + venv
-COPY --from=builder-base $POETRY_HOME $POETRY_HOME
-COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
-
-# copy bridge
-COPY --from=bridge /usr/bridge /usr/bridge
+# Set the working directory to /usr/workspace
+WORKDIR /usr/workspace
 
 # copy current workspace
-COPY . /usr/workspace
+COPY . .
 
 # quicker install as runtime deps are already installed
 RUN poetry install
 
-# will become mountpoint of our code
-WORKDIR /usr/workspace
+# ===========================================
+# Workspace final image setup
+# ===========================================
 
-CMD ["bash"]
+# Delete unnescessary files
+RUN rm ./nginx.conf ./supervisord.conf
+
+# Run Supervisor to manage the services
+CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]

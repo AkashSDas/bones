@@ -1,8 +1,8 @@
 # Base image for Bridge service
 FROM bridge:1.0.0 AS bridge
 
-# Starting with Go image since it's a Go Workspace
-FROM golang:1.23-bullseye AS go-base
+# Starting with NodeJS image since it's Vite-React Workspace
+FROM node:20.8.0-bullseye-slim
 
 # ===========================================
 # Setup Bridge and workspace utilities
@@ -28,18 +28,20 @@ EXPOSE 80
 # Setup workspace project
 # ===========================================
 
-# Workspace directory
+# Install pnpm globally
+RUN corepack enable && corepack prepare pnpm@9.12.3 --activate
+
+# Set the workspace directory
 WORKDIR /usr/workspace
 
-# Copy only files required to install dependencies (better layer caching)
-COPY go.mod ./
+# Copy only files required to install dependencies for better layer caching
+COPY package.json pnpm-lock.yaml ./
 
-# Use cache mount to speed up install of existing dependencies
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    go mod download
+# Use cache mount to speed up installation of dependencies
+RUN --mount=type=cache,target=/root/.pnpm-store \
+    pnpm install --frozen-lockfile
 
-# Copy all files
+# Copy all project files into the workspace directory
 COPY . .
 
 # ===========================================
