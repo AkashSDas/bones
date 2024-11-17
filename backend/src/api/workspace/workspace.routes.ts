@@ -51,6 +51,65 @@ export const deinitializeWorkspace = createRoute({
     },
 });
 
+export const createWorkspace = createRoute({
+    method: "post",
+    path: "/",
+    tags: [TAGS.WORKSPACE],
+    middleware: [authenticate, rbacAdmin],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: WorkspaceSchemas.CreateWorkspaceRequestBody,
+                },
+            },
+        },
+    },
+    responses: {
+        ...OpenApiResponses.rbacProtectedRoute,
+        [status.CREATED]: {
+            description: "Workspace created",
+            content: {
+                "application/json": {
+                    schema: WorkspaceSchemas.CreateWorkspaceResponseBody,
+                },
+            },
+        },
+        [status.BAD_REQUEST]: {
+            description: "Validation error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.BadRequestErrorSchema,
+                },
+            },
+        },
+    },
+});
+
+export const deleteWorkspace = createRoute({
+    method: "delete",
+    path: "/{workspaceId}",
+    tags: [TAGS.WORKSPACE],
+    middleware: [authenticate, rbacAdmin],
+    request: {
+        params: WorkspaceSchemas.DeleteWorkspaceParams,
+    },
+    responses: {
+        ...OpenApiResponses.rbacProtectedRoute,
+        [status.NO_CONTENT]: {
+            description: "Workspace delete",
+        },
+        [status.BAD_REQUEST]: {
+            description: "Validation error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.BadRequestErrorSchema,
+                },
+            },
+        },
+    },
+});
+
 // ===============================
 // Types
 // ===============================
@@ -58,4 +117,7 @@ export const deinitializeWorkspace = createRoute({
 export type WorkspaceHandler = {
     InitializeWorkspace: Handler<typeof initializeWorkspace>;
     DeinitializeWorkspace: Handler<typeof deinitializeWorkspace>;
+
+    CreateWorkspace: Handler<typeof createWorkspace>;
+    DeleteWorkspace: Handler<typeof deleteWorkspace>;
 };
