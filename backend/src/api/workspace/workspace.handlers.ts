@@ -1,61 +1,45 @@
-import { k8sApi, k8sNames } from "@/lib/k8s";
-import { log } from "@/lib/logger";
-import { BadRequestError, InternalServerError, status } from "@/utils/http";
+import { status } from "@/utils/http";
+import { WorkspaceManager } from "@/utils/workspace";
 
 import { type WorkspaceHandler } from "./workspace.routes";
 
 export const initialize: WorkspaceHandler["InitializeWorkspace"] = async (c) => {
     const account = c.get("account")!;
 
-    if (!account.isVerified) {
-        throw new BadRequestError({ message: "Account not verified" });
-    }
+    const manager = new WorkspaceManager(account.accountId);
+    await manager.initialize();
 
-    // TODO: save initialization info in the DB once table is created
-
-    const namespace = k8sNames.getWorkspaceNamespace(account.accountId);
-
-    try {
-        // `.readNamespace` throws error if the namespace isn't found
-        await k8sApi.readNamespace(namespace);
-        log.info(`Namespace ${namespace} for workspace already exists`);
-
-        throw new BadRequestError({ message: "Workspace already initialized" });
-    } catch (e) {
-        if (e instanceof BadRequestError) {
-            throw e;
-        }
-
-        log.info(`Creating namespace ${namespace} for workspace`);
-
-        try {
-            await k8sApi.createNamespace({
-                apiVersion: "v1",
-                kind: "Namespace",
-                metadata: {
-                    name: namespace,
-                    labels: {
-                        name: namespace,
-                        accountId: account.accountId,
-                    },
-                },
-            });
-
-            return c.json({ message: "Workspace initialized successfully" }, status.OK);
-        } catch (e) {
-            throw new InternalServerError({
-                message: "Failed to initialize workspace",
-            });
-        }
-    }
+    return c.json({ message: "Workspace initialized successfully" }, status.OK);
 };
 
 export const deinitialize: WorkspaceHandler["DeinitializeWorkspace"] = async (c) => {
     const account = c.get("account")!;
 
-    const namespace = k8sNames.getWorkspaceNamespace(account.accountId);
+    const manager = new WorkspaceManager(account.accountId);
+    await manager.deinitialize();
 
-    await k8sApi.deleteNamespace(namespace).catch();
+    return c.body(null, status.NO_CONTENT);
+};
+
+export const createWorkspace: WorkspaceHandler["CreateWorkspace"] = async (c) => {
+    const account = c.get("account")!;
+    const body = c.req.valid("json");
+
+    const manager = new WorkspaceManager(account.accountId);
+    const workspaceURL = await manager.create(
+        body.containerImage,
+        body.containerImageTag,
+    );
+
+    return c.json({ workspaceURL }, status.CREATED);
+};
+
+export const deleteWorkspace: WorkspaceHandler["DeleteWorkspace"] = async (c) => {
+    const account = c.get("account")!;
+    const { workspaceId } = c.req.valid("param");
+
+    const manager = new WorkspaceManager(account.accountId);
+    await manager.delete(workspaceId);
 
     return c.body(null, status.NO_CONTENT);
 };
