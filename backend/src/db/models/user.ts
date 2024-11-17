@@ -36,11 +36,13 @@ export const user = pgTable(
     },
     function (table) {
         return {
-            userId: index().on(table.userId),
-            username: index().on(table.username),
-            accountId: index().on(table.accountId),
-            usernameAccountIdUnique: uniqueIndex().on(table.username, table.accountId),
-            usernameSearch: index("username_search_index").using(
+            userId: index("user_id").on(table.userId),
+            username: index("user_username").on(table.username),
+            accountId: index("user_account_id").on(table.accountId),
+            usernameAccountIdUnique: uniqueIndex(
+                "user_username_account_id_unique_index",
+            ).on(table.username, table.accountId),
+            usernameSearch: index("user_username_search_index").using(
                 "gin",
                 sql`to_tsvector('english', ${table.username})`,
             ),

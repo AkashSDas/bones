@@ -15,6 +15,13 @@
       "when": 1731833719854,
       "tag": "0001_create iam permission and workspace tables",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1731833916482,
+      "tag": "0002_change index names for user and account table",
+      "breakpoints": true
     }
   ]
 }

@@ -50,9 +50,9 @@ export const account = pgTable(
     },
     function (table) {
         return {
-            accountId: index().on(table.accountId),
-            email: index().on(table.email),
-            accountName: index().on(table.accountName),
+            accountId: index("account_id").on(table.accountId),
+            email: index("account_email").on(table.email),
+            accountName: index("account_name").on(table.accountName),
         };
     },
 );
