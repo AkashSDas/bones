@@ -7,7 +7,9 @@ const app = createHonoApp();
 
 const router = app
     .openapi(routes.initializeWorkspace, handlers.initialize)
-    .openapi(routes.deinitializeWorkspace, handlers.deinitialize);
+    .openapi(routes.deinitializeWorkspace, handlers.deinitialize)
+    .openapi(routes.createWorkspace, handlers.createWorkspace)
+    .openapi(routes.deleteWorkspace, handlers.deleteWorkspace);
 
 export { router as workspaceRouter };
 
