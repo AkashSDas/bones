@@ -22,6 +22,13 @@
       "when": 1731833916482,
       "tag": "0002_change index names for user and account table",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1731836847658,
+      "tag": "0003_drop read-write columns and add policy column in iam permission table",
+      "breakpoints": true
     }
   ]
 }
