@@ -19,12 +19,13 @@ const InitializeWorkspaceResponseBody = z.object({
 // ===============================================
 
 const CreateWorkspaceRequestBody = z.object({
+    containerImage: z.enum(["workspace"]),
     /** Keeping these as "enum" due to low number of available workspaces */
-    workspaceImage: z.enum([
-        "workspace:go1.23",
-        "workspace:python3.13",
-        "workspace:vite-react18",
-        "workspace:hono4.6-deno2.0",
+    containerImageTag: z.enum([
+        "go1.23",
+        "python3.13",
+        "vite-react18",
+        "hono4.6-deno2.0",
     ]),
 });
 
