@@ -14,16 +14,15 @@ RUN apk update \
 
 # Copy the Nginx and Supervisor configuration files
 COPY ./nginx.conf /etc/nginx/nginx.conf
+COPY ./port-8000-80.conf /etc/nginx/conf.d/port-8000-80.conf
 COPY ./supervisord.conf /etc/supervisor/supervisord.conf
 
 # Copy Bridge and install Deno (same version as used in Bridge) to run Bridge
 COPY --from=bridge /usr/bridge /usr/bridge
 COPY --from=denoland/deno:bin-2.0.6 /deno /usr/local/bin/deno
 
-# Expose the port Nginx will serve on
+# Exposed ports that user can use for their work
 EXPOSE 80
-
-# Expose other ports that user can use for their work
 EXPOSE 3000
 EXPOSE 3001
 EXPOSE 3002
@@ -60,7 +59,7 @@ RUN --mount=type=cache,target=/usr/bridge/.deno \
 # ===========================================
 
 # Delete unnecessary files
-RUN rm ./nginx.conf ./supervisord.conf
+RUN rm ./nginx.conf ./supervisord.conf ./port-8000-80.conf
 
 # Run Supervisor to manage the services
 CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]

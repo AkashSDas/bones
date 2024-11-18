@@ -10,21 +10,20 @@ FROM node:20.8.0-bullseye-slim
 
 # Install required dependencies for workspace setup/execution
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nginx supervisor curl neovim \
+    && apt-get install -y --no-install-recommends nginx supervisor curl neovim lsof \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the Nginx and Supervisor configuration files
 COPY ./nginx.conf /etc/nginx/nginx.conf
+COPY ./port-5173-80.conf /etc/nginx/conf.d/port-5173-80.conf
 COPY ./supervisord.conf /etc/supervisor/supervisord.conf
 
 # Copy Bridge and install Deno (same version as used in Bridge) to run Bridge
 COPY --from=bridge /usr/bridge /usr/bridge
 COPY --from=denoland/deno:bin-2.0.6 /deno /usr/local/bin/deno
 
-# Expose the port Nginx will serve on
+# Exposed ports that user can use for their work
 EXPOSE 80
-
-# Expose other ports that user can use for their work
 EXPOSE 3000
 EXPOSE 3001
 EXPOSE 3002
@@ -59,7 +58,7 @@ COPY . .
 # ===========================================
 
 # Delete unnescessary files
-RUN rm ./nginx.conf ./supervisord.conf
+RUN rm ./nginx.conf ./supervisord.conf ./port-5173-80.conf
 
 # Run Supervisor to manage the services
 CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
