@@ -3,6 +3,6 @@
 ## Docker Image
 
 ```bash
-docker build -t workspace:vite-react18 -f Dockerfile .
+docker build -t workspace:vite-react18 -f bones.Dockerfile .
 docker run --rm -it -p 80:80 workspace:vite-react18
 ```

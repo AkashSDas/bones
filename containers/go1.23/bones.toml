@@ -1,0 +1,13 @@
+# ==============================
+# Bones configuration goes here
+# ==============================
+
+# Commans to run where the container is started i.e. workspace is started
+# These commands are ran inside /usr/workspace
+[[start_commands]]
+run = "echo 'Hello World'"
+
+# Ports
+[[ports]]
+local_port = 8000
+external_port = 80

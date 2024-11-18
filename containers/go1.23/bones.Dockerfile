@@ -24,6 +24,16 @@ COPY --from=denoland/deno:bin-2.0.6 /deno /usr/local/bin/deno
 # Expose the port Nginx will serve on
 EXPOSE 80
 
+# Expose other ports that user can use for their work
+EXPOSE 3000
+EXPOSE 3001
+EXPOSE 3002
+EXPOSE 3002
+EXPOSE 4200
+EXPOSE 5173
+EXPOSE 8000
+EXPOSE 8080
+
 # ===========================================
 # Setup workspace project
 # ===========================================
