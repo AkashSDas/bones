@@ -17,6 +17,8 @@ type HonoVariables = {
     user?: UserClient | null;
     userPk?: number | null;
 
+    isAdmin?: boolean | null;
+
     // HonoSessions pkg related types
     session: Session<{ refreshToken: string }>;
     session_key_rotation: boolean;

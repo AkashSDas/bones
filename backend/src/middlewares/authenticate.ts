@@ -65,6 +65,7 @@ export const authenticate = createMiddleware<AppBindings>(async (c, next) => {
             } else {
                 c.set("account", account[1]);
                 c.set("accountPk", account[0]);
+                c.set("isAdmin", true);
             }
         } else if (payload["type"] === "user") {
             c.set("userJWTContent", payload);
@@ -91,6 +92,7 @@ export const authenticate = createMiddleware<AppBindings>(async (c, next) => {
                 c.set("accountPk", account[0]);
                 c.set("user", user[2]);
                 c.set("userPk", user[0]);
+                c.set("isAdmin", false);
             }
         } else {
             throw new Error(`Invalid payload type: ${payload["type"]}`);
