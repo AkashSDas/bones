@@ -29,7 +29,10 @@ const TOKEN_EXPIRY = 10 * 60 * 1000; // 10 mins
 
 export const accountSignup: IAMHandler["AccountSignup"] = async (c) => {
     const body = c.req.valid("json");
-    const exists = await dal.account.exists(body.email, body.accountName);
+    const exists = await dal.account.existsByEmailAndAccountName(
+        body.email,
+        body.accountName,
+    );
 
     if (exists) {
         throw new ConflictError({ message: "Account already exists" });
@@ -296,7 +299,7 @@ export const createUser: IAMHandler["CreateUser"] = async (c) => {
     const { accountId } = content;
     const [exists, id] = await Promise.all([
         dal.user.existsByUsername(username, accountId),
-        dal.account.existsAccountById(accountId),
+        dal.account.existsByAccountId(accountId),
     ]);
 
     if (id === null) {
@@ -420,7 +423,7 @@ export const userExists: IAMHandler["UserExists"] = async (c) => {
     }
 
     const { accountId } = content;
-    const exists = await dal.account.existsAccountById(accountId);
+    const exists = await dal.account.existsByAccountId(accountId);
 
     if (exists === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
@@ -442,7 +445,7 @@ export const deleteUser: IAMHandler["DeleteUser"] = async (c) => {
     }
 
     const { accountId } = content;
-    const exists = await dal.account.existsAccountById(accountId);
+    const exists = await dal.account.existsByAccountId(accountId);
 
     if (exists === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
@@ -465,7 +468,7 @@ export const getUser: IAMHandler["GetUser"] = async (c) => {
     }
 
     const { accountId } = content;
-    const exists = await dal.account.existsAccountById(accountId);
+    const exists = await dal.account.existsByAccountId(accountId);
 
     if (exists === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
@@ -476,7 +479,7 @@ export const getUser: IAMHandler["GetUser"] = async (c) => {
             throw new NotFoundError({ message: "User not found" });
         }
 
-        return c.json({ user }, status.OK);
+        return c.json({ user: user[1] }, status.OK);
     }
 };
 
@@ -491,7 +494,7 @@ export const getUsers: IAMHandler["GetUsers"] = async (c) => {
     const { accountId } = userContent ?? accountContent!;
     const { limit, offset, search } = c.req.valid("query");
 
-    const exists = await dal.account.existsAccountById(accountId);
+    const exists = await dal.account.existsByAccountId(accountId);
 
     if (exists === null) {
         throw new NotFoundError({ message: "Account doesn't exists" });
@@ -574,7 +577,7 @@ export const myProfile: IAMHandler["MyProfile"] = async (c) => {
         }
 
         return c.json(
-            { roles: ["user"] as const, account: account[1], user },
+            { roles: ["user"] as const, account: account[1], user: user[1] },
             status.OK,
         );
     }
