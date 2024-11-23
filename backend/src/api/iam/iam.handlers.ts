@@ -559,7 +559,7 @@ export const myProfile: IAMHandler["MyProfile"] = async (c) => {
             throw new NotFoundError({ message: "Account Not Found" });
         }
 
-        return c.json({ roles: ["admin"] as const, account: account }, status.OK);
+        return c.json({ roles: ["admin"] as const, account: account[1] }, status.OK);
     }
 
     if (userJWTcontent) {
@@ -573,7 +573,10 @@ export const myProfile: IAMHandler["MyProfile"] = async (c) => {
             throw new NotFoundError({ message: "Account/User Not Found" });
         }
 
-        return c.json({ roles: ["user"] as const, account, user }, status.OK);
+        return c.json(
+            { roles: ["user"] as const, account: account[1], user },
+            status.OK,
+        );
     }
 
     throw new UnauthorizedError({ message: "Unauthorized" });

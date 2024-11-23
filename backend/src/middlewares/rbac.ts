@@ -35,7 +35,8 @@ function rbac(opts: RBACOptions) {
                 throw new NotFoundError({ message: "Account doesn't exists" });
             }
 
-            c.set("account", account);
+            c.set("accountPk", account[0]);
+            c.set("account", account[1]);
 
             return next();
         } else {

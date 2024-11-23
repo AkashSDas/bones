@@ -1,4 +1,4 @@
-import { and, eq, gte, lte, or } from "drizzle-orm";
+import { and, eq, gte, or } from "drizzle-orm";
 
 import { type DB, db } from "..";
 import { account } from "../models";
@@ -79,7 +79,6 @@ class AccountDAL {
     async findByEmail(email: string): Promise<AccountClient | null> {
         const result = await this.db
             .select({
-                id: account.id,
                 accountId: account.accountId,
                 email: account.email,
                 accountName: account.accountName,
@@ -98,7 +97,7 @@ class AccountDAL {
         return result.length > 0 ? result[0] : null;
     }
 
-    async findByAccountId(accountId: string): Promise<AccountClient | null> {
+    async findByAccountId(accountId: string): Promise<[number, AccountClient] | null> {
         const result = await this.db
             .select({
                 id: account.id,
@@ -117,7 +116,7 @@ class AccountDAL {
             .where(eq(account.accountId, accountId))
             .limit(1);
 
-        return result.length > 0 ? result[0] : null;
+        return result.length > 0 ? [result[0].id, result[0]] : null;
     }
 
     // ===========================
