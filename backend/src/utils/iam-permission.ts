@@ -4,6 +4,23 @@ export class IAMPolicyManager {
     constructor() {}
 
     // =====================================
+    // IAM
+    // =====================================
+
+    /**
+     * This is a workspace service wide policy for an account. By default only admin has
+     * all the permissions, and read/write for all the users are not there by default.
+     **/
+    static buildIAMServicePolicy(): IAMPolicy["IAMService"] {
+        return {
+            readAll: false,
+            writeAll: false,
+            readForUsers: [],
+            writeForUsers: [],
+        };
+    }
+
+    // =====================================
     // Workspace
     // =====================================
 
