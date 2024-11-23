@@ -32,7 +32,7 @@ export const user = pgTable(
 
         accountId: integer("account_id")
             .notNull()
-            .references(() => account.id, { onDelete: "no action" }),
+            .references(() => account.id, { onDelete: "cascade" }), // When a account is deleted, delete the user
     },
     function (table) {
         return {

@@ -5,7 +5,9 @@ import { z } from "zod";
 
 import { orm } from "@/utils/db";
 
+import { iamPermission } from "./iam-permission";
 import { user } from "./user";
+import { workspace } from "./workspace";
 
 // Enums needs to be exported to create them in migrations
 // Manually had to add enum since drizzle kit is not being able to detect enums
@@ -60,6 +62,8 @@ export const account = pgTable(
 export const accountRelations = relations(account, function ({ many }) {
     return {
         users: many(user),
+        iamPermissions: many(iamPermission),
+        workspaces: many(workspace),
     };
 });
 

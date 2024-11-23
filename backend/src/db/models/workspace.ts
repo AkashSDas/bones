@@ -32,10 +32,12 @@ export const workspace = pgTable(
         // Don't allow account delete if it has any workspace associated to it
         accountId: integer("account_id")
             .notNull()
-            .references(() => account.id, { onDelete: "restrict" }),
+            .references(() => account.id, { onDelete: "restrict" }), // Prevent account deletion if there are any workspaces associated with it
 
         // This will be null when account is created by an account directly
-        createdByUserId: integer("created_by_user_id").references(() => user.id),
+        createdByUserId: integer("created_by_user_id").references(() => user.id, {
+            onDelete: "set null", // When a user is deleted, set the user id to null
+        }),
     },
     function (table) {
         return {

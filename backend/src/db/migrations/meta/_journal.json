@@ -29,6 +29,13 @@
       "when": 1731836847658,
       "tag": "0003_drop read-write columns and add policy column in iam permission table",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1732370037048,
+      "tag": "0004_create iam permission table and refactor relationships between tables",
+      "breakpoints": true
     }
   ]
 }
