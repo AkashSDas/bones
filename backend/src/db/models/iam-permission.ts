@@ -89,3 +89,6 @@ export const IAMPermissionClientSchema = IAMPermissionSchema.pick({
 });
 
 export type IAMPermissionClient = z.infer<typeof IAMPermissionClientSchema>;
+
+export type IAMPermissionPk = (typeof iamPermission.$inferSelect)["id"];
+export type IAMPermissionId = (typeof iamPermission.$inferSelect)["permissionId"];

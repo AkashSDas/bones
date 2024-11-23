@@ -74,3 +74,6 @@ export const UserClientSchema = UserSchema.pick({
 });
 
 export type UserClient = z.infer<typeof UserClientSchema>;
+
+export type UserPk = (typeof user.$inferSelect)["id"];
+export type UserId = (typeof user.$inferSelect)["userId"];

@@ -2,7 +2,13 @@ import { and, eq, gte, or } from "drizzle-orm";
 
 import { type DB, db } from "..";
 import { account } from "../models";
-import { type Account, type AccountClient, type NewAccount } from "../models/account";
+import {
+    type Account,
+    type AccountClient,
+    type AccountId,
+    type AccountPk,
+    type NewAccount,
+} from "../models/account";
 
 class AccountDAL {
     constructor(private db: DB) {
@@ -27,7 +33,7 @@ class AccountDAL {
      * @param hash Activation token
      * @param age Activation token age limit
      */
-    async findByActivationToken(hash: string, age: Date): Promise<number | null> {
+    async findByActivationToken(hash: string, age: Date): Promise<AccountPk | null> {
         const result = await this.db
             .select({ id: account.id, age: account.changeStatusTokenAge })
             .from(account)
@@ -46,7 +52,7 @@ class AccountDAL {
      * @param hash Reset password token
      * @param age Reset password token age limit
      */
-    async findByResetPasswordToken(hash: string, age: Date): Promise<number | null> {
+    async findByResetPasswordToken(hash: string, age: Date): Promise<AccountPk | null> {
         const result = await this.db
             .select({ id: account.id })
             .from(account)
@@ -97,7 +103,9 @@ class AccountDAL {
         return result.length > 0 ? result[0] : null;
     }
 
-    async findByAccountId(accountId: string): Promise<[number, AccountClient] | null> {
+    async findByAccountId(
+        accountId: AccountId,
+    ): Promise<[AccountPk, AccountClient] | null> {
         const result = await this.db
             .select({
                 id: account.id,
@@ -126,7 +134,7 @@ class AccountDAL {
     /**
      * @param id Primary key of an account
      */
-    async activate(id: number): Promise<void> {
+    async activate(id: AccountPk): Promise<void> {
         const result = await this.db
             .update(account)
             .set({
@@ -156,7 +164,7 @@ class AccountDAL {
     /**
      * @param id Primary key of an account
      */
-    async setPassword(id: number, pwd: string): Promise<void> {
+    async setPassword(id: AccountPk, pwd: string): Promise<void> {
         await this.db
             .update(account)
             .set({
@@ -168,7 +176,7 @@ class AccountDAL {
             .where(eq(account.id, id));
     }
 
-    async setLastLogin(accountId: string): Promise<void> {
+    async setLastLogin(accountId: AccountId): Promise<void> {
         await this.db
             .update(account)
             .set({ lastLoggedInAt: new Date().toISOString() })
@@ -216,7 +224,7 @@ class AccountDAL {
     /**
      * @param accountId Account id (uuid)
      */
-    async existsByAccountId(accountId: string): Promise<number | null> {
+    async existsByAccountId(accountId: AccountId): Promise<AccountPk | null> {
         const result = await this.db
             .select({ id: account.id })
             .from(account)

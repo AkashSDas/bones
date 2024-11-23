@@ -2,8 +2,14 @@ import { and, asc, eq, sql } from "drizzle-orm";
 
 import { type DB, db } from "..";
 import { account, user } from "../models";
-import { type Account } from "../models/account";
-import { type NewUser, type User, type UserClient } from "../models/user";
+import { type Account, AccountId, AccountPk } from "../models/account";
+import {
+    type NewUser,
+    type User,
+    type UserClient,
+    UserId,
+    UserPk,
+} from "../models/user";
 
 class UserDAL {
     constructor(private db: DB) {
@@ -28,8 +34,8 @@ class UserDAL {
      * @param accountId Primary key of an account
      */
     async setUserInfo(
-        id: number,
-        accountId: number,
+        id: UserPk,
+        accountId: AccountPk,
         newData: Partial<
             Pick<User, "isBlocked" | "username" | "passwordHash" | "passwordAge">
         >,
@@ -40,7 +46,7 @@ class UserDAL {
             .where(and(eq(user.accountId, accountId), eq(user.id, id)));
     }
 
-    async setLastLogin(userId: string, accountId: string): Promise<void> {
+    async setLastLogin(userId: UserId, accountId: AccountId): Promise<void> {
         const result = await this.db
             .select({ accountId: account.id })
             .from(user)
@@ -69,7 +75,7 @@ class UserDAL {
      */
     async existsByUsername(
         username: string,
-        accountId: string,
+        accountId: AccountId,
     ): Promise<null | { accountId: Account["id"]; userId: User["id"] }> {
         const result = await this.db
             .select({ userId: user.id, accountId: account.id })
@@ -86,8 +92,8 @@ class UserDAL {
      * @param accountId Account id (uuid)
      */
     async existsByUserId(
-        userId: string,
-        accountId: string,
+        userId: UserId,
+        accountId: AccountId,
     ): Promise<null | { accountId: Account["id"]; userId: User["id"] }> {
         const result = await this.db
             .select({ userId: user.id, accountId: account.id })
@@ -107,7 +113,7 @@ class UserDAL {
      * @param userId User id (uuid)
      * @param accountId Primary key of an account
      */
-    async delete(userId: string, accountId: number): Promise<void> {
+    async delete(userId: UserId, accountId: AccountPk): Promise<void> {
         await this.db
             .delete(user)
             .where(and(eq(user.userId, userId), eq(user.accountId, accountId)));
@@ -122,7 +128,7 @@ class UserDAL {
      * @param search Username text search
      */
     async find(
-        accountId: number,
+        accountId: AccountPk,
         search: string | undefined = undefined,
         limit: number = 20,
         offset: number = 0,
@@ -172,26 +178,11 @@ class UserDAL {
     }
 
     async findHashDetails(
-        accountId: string,
+        accountId: AccountId,
         username: string,
     ): Promise<
         (Pick<User, "passwordHash" | "userId"> & Pick<Account, "accountId">) | null
     > {
-        console.log(
-            await this.db
-                .select({
-                    accountId: account.accountId,
-                    passwordHash: user.passwordHash,
-                    userId: user.userId,
-                    username: user.username,
-                    id: account.id,
-                })
-                .from(user)
-                .innerJoin(account, eq(user.accountId, account.id))
-                // .where(and(eq(user.username, username), eq(account.accountId, accountId)))
-                .limit(1),
-        );
-
         const result = await this.db
             .select({
                 accountId: account.accountId,
@@ -211,8 +202,8 @@ class UserDAL {
      * @param accountId Account id (uuid)
      */
     async findById(
-        userId: string,
-        accountId: string,
+        userId: UserId,
+        accountId: AccountId,
     ): Promise<null | [number, number, UserClient]> {
         const result = await this.db
             .select({

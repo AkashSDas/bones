@@ -85,3 +85,6 @@ export const AccountClientSchema = AccountSchema.pick({
 });
 
 export type AccountClient = z.infer<typeof AccountClientSchema>;
+
+export type AccountPk = (typeof account.$inferSelect)["id"];
+export type AccountId = (typeof account.$inferSelect)["accountId"];

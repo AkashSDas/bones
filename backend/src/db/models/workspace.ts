@@ -77,3 +77,6 @@ export const WorkspaceClientSchema = WorkspaceSchema.pick({
 });
 
 export type WorkspaceClient = z.infer<typeof WorkspaceClientSchema>;
+
+export type WorkspacePk = (typeof workspace.$inferSelect)["id"];
+export type WorkspaceId = (typeof workspace.$inferSelect)["workspaceId"];
