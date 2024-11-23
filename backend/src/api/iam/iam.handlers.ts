@@ -479,7 +479,7 @@ export const getUser: IAMHandler["GetUser"] = async (c) => {
             throw new NotFoundError({ message: "User not found" });
         }
 
-        return c.json({ user: user[1] }, status.OK);
+        return c.json({ user: user[2] }, status.OK);
     }
 };
 
@@ -577,7 +577,7 @@ export const myProfile: IAMHandler["MyProfile"] = async (c) => {
         }
 
         return c.json(
-            { roles: ["user"] as const, account: account[1], user: user[1] },
+            { roles: ["user"] as const, account: account[1], user: user[2] },
             status.OK,
         );
     }

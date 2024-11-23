@@ -213,10 +213,11 @@ class UserDAL {
     async findById(
         userId: string,
         accountId: string,
-    ): Promise<null | [number, UserClient]> {
+    ): Promise<null | [number, number, UserClient]> {
         const result = await this.db
             .select({
                 id: user.id,
+                accountId: account.id,
                 userId: user.userId,
                 username: user.username,
                 isBlocked: user.isBlocked,
@@ -230,7 +231,9 @@ class UserDAL {
             .where(and(eq(user.userId, userId), eq(account.accountId, accountId)))
             .limit(1);
 
-        return result.length > 0 ? [result[0].id, result[0]] : null;
+        return result.length > 0
+            ? [result[0].accountId, result[0].id, result[0]]
+            : null;
     }
 }
 
