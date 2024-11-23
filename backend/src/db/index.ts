@@ -18,6 +18,7 @@ export const connection = postgres(env.DB_URL, {
 
 export const db = drizzle(connection, { schema, logger: true });
 export type DB = typeof db;
+export type TransactionCtx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 db.execute(sql`SET timezone = UTC`)
     .then(() => {

@@ -10,6 +10,7 @@ type HonoVariables = {
     userJWTContent?: Extract<TokenPayload, { type: "user" }>;
 
     account?: AccountClient | null;
+    accountPk?: number | null;
 
     // HonoSessions pkg related types
     session: Session<{ refreshToken: string }>;
