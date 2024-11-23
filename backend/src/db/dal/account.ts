@@ -180,7 +180,10 @@ class AccountDAL {
     // ===========================
 
     /** Check if a account with email and account name exists or not. */
-    async exists(email: string, accountName: string): Promise<boolean> {
+    async existsByEmailAndAccountName(
+        email: string,
+        accountName: string,
+    ): Promise<boolean> {
         const result = await this.db
             .select({ id: account.id })
             .from(account)
@@ -213,7 +216,7 @@ class AccountDAL {
     /**
      * @param accountId Account id (uuid)
      */
-    async existsAccountById(accountId: string): Promise<number | null> {
+    async existsByAccountId(accountId: string): Promise<number | null> {
         const result = await this.db
             .select({ id: account.id })
             .from(account)
