@@ -1,53 +1,35 @@
 import { createMiddleware } from "hono/factory";
 
-import { dal } from "@/db/dal";
-import {
-    ForbiddenError,
-    InternalServerError,
-    NotFoundError,
-    UnauthorizedError,
-} from "@/utils/http";
-import { AppBindings } from "@/utils/types";
+import { RBACValidator } from "@/utils/rbac";
+import { type AppBindings } from "@/utils/types";
 
-type RBACType = "admin";
+type RBAC = "allowAll" | "adminOnly";
 
-type RBACOptions = {
-    type: RBACType;
-};
+/**
+ * This middleware is responsible for validating the RBAC for the incoming request.
+ * This middleware should be called after `authenticate` middleware.
+ **/
+function rbac({ type }: { type: RBAC }) {
+    return createMiddleware<AppBindings>(async function (c, next) {
+        const rbac = new RBACValidator(c);
 
-/** This middleware should be called after `authenticate` middleware */
-function rbac(opts: RBACOptions) {
-    const { type } = opts;
-
-    return createMiddleware<AppBindings>(async (c, next) => {
-        const accountJWT = c.get("accountJWTContent");
-
-        if (type === "admin") {
-            if (accountJWT?.type !== "account") {
-                throw new ForbiddenError({
-                    message: "You don't account (admin) privileges",
-                });
+        switch (type) {
+            case "allowAll": {
+                rbac.validateAllowedAll();
+                return next();
             }
-
-            const account = await dal.account.findByAccountId(accountJWT.accountId);
-
-            if (account === null) {
-                throw new NotFoundError({ message: "Account doesn't exists" });
+            case "adminOnly": {
+                rbac.validateAdminOnly();
+                return next();
             }
-
-            c.set("accountPk", account[0]);
-            c.set("account", account[1]);
-
-            return next();
-        } else {
-            throw new InternalServerError({
-                message: "Internal Server Error",
-                reason: `Unknown RBAC type: ${type}`,
-            });
+            default: {
+                return next();
+            }
         }
     });
 }
 
-const rbacAdmin = rbac({ type: "admin" });
+const rbacAllowAll = rbac({ type: "allowAll" });
+const rbacAdminOnly = rbac({ type: "adminOnly" });
 
-export { rbacAdmin };
+export { rbacAllowAll, rbacAdminOnly };
