@@ -3,7 +3,7 @@ import { createMiddleware } from "hono/factory";
 import { RBACValidator } from "@/utils/rbac";
 import { type AppBindings } from "@/utils/types";
 
-type RBAC = "allowAll" | "adminOnly";
+type RBAC = "adminOnly";
 
 /**
  * This middleware is responsible for validating the RBAC for the incoming request.
@@ -14,10 +14,6 @@ function rbac({ type }: { type: RBAC }) {
         const rbac = new RBACValidator(c);
 
         switch (type) {
-            case "allowAll": {
-                rbac.validateAllowedAll();
-                return next();
-            }
             case "adminOnly": {
                 rbac.validateAdminOnly();
                 return next();
@@ -29,7 +25,6 @@ function rbac({ type }: { type: RBAC }) {
     });
 }
 
-const rbacAllowAll = rbac({ type: "allowAll" });
 const rbacAdminOnly = rbac({ type: "adminOnly" });
 
-export { rbacAllowAll, rbacAdminOnly };
+export { rbacAdminOnly };

@@ -25,10 +25,6 @@ export class RBACValidator {
         this.user = c.get("user") ?? null;
     }
 
-    validateAllowedAll(): void {
-        return;
-    }
-
     validateAdminOnly(): void {
         if (!this.isAdmin) {
             throw new ForbiddenError({ reason: "Admin only" });
