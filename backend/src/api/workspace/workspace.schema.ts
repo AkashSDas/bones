@@ -19,6 +19,7 @@ const InitializeWorkspaceResponseBody = z.object({
 // ===============================================
 
 const CreateWorkspaceRequestBody = z.object({
+    name: z.string(),
     containerImage: z.enum(["workspace"]),
     /** Keeping these as "enum" due to low number of available workspaces */
     containerImageTag: z.enum([
