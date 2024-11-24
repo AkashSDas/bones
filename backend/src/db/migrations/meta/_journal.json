@@ -36,6 +36,13 @@
       "when": 1732370037048,
       "tag": "0004_create iam permission table and refactor relationships between tables",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1732444316626,
+      "tag": "0005_create iam permission user mapping table and remove policy column in iam permission table",
+      "breakpoints": true
     }
   ]
 }

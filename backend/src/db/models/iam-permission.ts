@@ -1,5 +1,5 @@
 import { relations, sql } from "drizzle-orm";
-import { index, integer, jsonb, pgEnum, pgTable, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgEnum, pgTable, varchar } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -34,9 +34,11 @@ export const iamPermission = pgTable(
         permissionId: orm.uuid("permission_id").unique(),
 
         name: varchar("name", { length: 255 }).notNull(),
-        policy: jsonb("policy"),
-
         serviceType: iamServicePermissionEnum("service_type").notNull(),
+        is_service_wide: boolean("is_service_wide").notNull().default(false),
+
+        readAll: boolean("read_all").notNull().default(false),
+        writeAll: boolean("write_all").notNull().default(false),
 
         workspaceId: integer("workspace_id").references(() => workspace.id, {
             onDelete: "cascade", // When a workspace is deleted, delete the permission
@@ -82,7 +84,6 @@ export const IAMPermissionSchema = createSelectSchema(iamPermission);
 export const IAMPermissionClientSchema = IAMPermissionSchema.pick({
     name: true,
     permissionId: true,
-    policy: true,
     createdAt: true,
     updatedAt: true,
 });
