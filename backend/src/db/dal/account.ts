@@ -1,6 +1,6 @@
 import { and, eq, gte, or } from "drizzle-orm";
 
-import { type DB, db } from "..";
+import { type DB, TransactionCtx, db } from "..";
 import { account } from "../models";
 import {
     type Account,
@@ -9,10 +9,11 @@ import {
     type AccountPk,
     type NewAccount,
 } from "../models/account";
+import { BaseDAL } from "./base";
 
-class AccountDAL {
-    constructor(private db: DB) {
-        this.db = db;
+class AccountDAL extends BaseDAL {
+    constructor(db: DB) {
+        super(db);
     }
 
     // ===========================
@@ -20,8 +21,10 @@ class AccountDAL {
     // ===========================
 
     /** Create a new account. */
-    async create(payload: NewAccount): Promise<Account> {
-        const result = await this.db.insert(account).values(payload).returning();
+    async create(payload: NewAccount, tx?: TransactionCtx): Promise<Account> {
+        const ctx = this.getDbContext(tx);
+
+        const result = await ctx.insert(account).values(payload).returning();
         return result[0];
     }
 

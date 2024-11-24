@@ -10,10 +10,11 @@ import {
     UserId,
     UserPk,
 } from "../models/user";
+import { BaseDAL } from "./base";
 
-class UserDAL {
-    constructor(private db: DB) {
-        this.db = db;
+class UserDAL extends BaseDAL {
+    constructor(db: DB) {
+        super(db);
     }
 
     // ===========================
