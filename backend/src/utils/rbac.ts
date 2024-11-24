@@ -67,7 +67,7 @@ export class RBACValidator {
             this.accountPk,
         );
 
-        if (read && perm.readAll) {
+        if (read && (perm.readAll || perm.writeAll)) {
             return;
         }
         if (write && perm.writeAll) {
@@ -113,7 +113,7 @@ export class RBACValidator {
         const [permPk, perm] =
             await dal.iamPermission.findWorkspaceServiceWidePermission(this.accountPk);
 
-        if (read && perm.readAll) {
+        if (read && (perm.readAll || perm.writeAll)) {
             return;
         }
         if (write && perm.writeAll) {
@@ -144,6 +144,16 @@ export class RBACValidator {
         write,
         workspacePk,
     }: IAMPermissionOpts & { workspacePk: WorkspacePk }): Promise<void> {
+        let hasAccess = false;
+        try {
+            this.validateWorkspaceServiceWide({ read, write });
+            hasAccess = true;
+        } catch (e) {}
+
+        if (hasAccess) {
+            return;
+        }
+
         if (read && write) {
             log.error("Only one value is allowed to be added: 'read' or 'write'");
             throw new InternalServerError({});
@@ -171,7 +181,7 @@ export class RBACValidator {
 
         const [permPk, perm] = result;
 
-        if (read && perm.readAll) {
+        if (read && (perm.readAll || perm.writeAll)) {
             return;
         }
         if (write && perm.writeAll) {
