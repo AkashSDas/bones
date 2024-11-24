@@ -16,7 +16,8 @@ import {
     NewIAMPermission,
 } from "../models/iam-permission";
 import { iamPermissionUser } from "../models/iam-permission-user";
-import { type UserClient, UserClientSchema, type UserId, user } from "../models/user";
+import { type UserClient, UserClientSchema, UserPk, user } from "../models/user";
+import { WorkspacePk } from "../models/workspace";
 import { BaseDAL } from "./base";
 
 class IAMPermissionDAL extends BaseDAL {
@@ -27,6 +28,39 @@ class IAMPermissionDAL extends BaseDAL {
     // ==================================
     // Create
     // ==================================
+
+    async deleteWorkspaceServiceWide(accountPk: AccountPk): Promise<void> {
+        const perm = await this.findWorkspaceServiceWidePermission(accountPk);
+        if (perm) {
+            await this.db.delete(iamPermission).where(eq(iamPermission.id, perm[0]));
+        }
+    }
+
+    async createWorkspaceServiceWide(
+        accountPk: AccountPk,
+    ): Promise<IAMPermissionClient> {
+        const exists = await this.findWorkspaceServiceWidePermission(accountPk);
+        if (exists) {
+            log.info(
+                `Workspace service wide permission already exists for account ${accountPk}`,
+            );
+            return exists[1];
+        }
+
+        const result = await this.db
+            .insert(iamPermission)
+            .values({
+                name: "Workspace Service Wide Policy",
+                serviceType: IAM_SERVICE.WORKSPACE,
+                isServiceWide: true,
+                readAll: false,
+                writeAll: false,
+                accountId: accountPk,
+            })
+            .returning();
+
+        return result[0];
+    }
 
     async createIAMServiceWide(
         accountPk: AccountPk,
@@ -88,6 +122,57 @@ class IAMPermissionDAL extends BaseDAL {
     // Find
     // ==================================
 
+    async findWorkspacePermission(
+        accountPk: AccountPk,
+        userPk: UserPk,
+        workspacePk: WorkspacePk,
+    ): Promise<[IAMPermissionPk, IAMPermissionClient] | null> {
+        const result = await this.db
+            .select(this.permissionSelect)
+            .from(iamPermission)
+            .innerJoin(
+                iamPermissionUser,
+                eq(iamPermissionUser.permissionId, iamPermission.id),
+            )
+            .where(
+                and(
+                    eq(iamPermission.accountId, accountPk),
+                    eq(iamPermission.serviceType, IAM_SERVICE.WORKSPACE),
+                    eq(iamPermission.isServiceWide, false),
+                    eq(iamPermission.workspaceId, workspacePk),
+                    eq(iamPermissionUser.userId, userPk),
+                ),
+            )
+            .limit(1);
+
+        return result.length === 0 ? null : [result[0].id, result[0]];
+    }
+
+    async findWorkspaceServiceWidePermission(
+        accountPk: AccountPk,
+    ): Promise<[IAMPermissionPk, IAMPermissionClient]> {
+        const result = await this.db
+            .select(this.permissionSelect)
+            .from(iamPermission)
+            .where(
+                and(
+                    eq(iamPermission.accountId, accountPk),
+                    eq(iamPermission.isServiceWide, true),
+                    eq(iamPermission.serviceType, IAM_SERVICE.WORKSPACE),
+                ),
+            )
+            .limit(1);
+
+        if (result.length === 0) {
+            log.error(
+                `Account ${accountPk} does not have a workspace service wide permission`,
+            );
+            throw new InternalServerError({});
+        }
+
+        return [result[0].id, result[0]];
+    }
+
     async findIAMWidePermission(
         accountPk: AccountPk,
         tx?: TransactionCtx,
@@ -100,6 +185,7 @@ class IAMPermissionDAL extends BaseDAL {
                 and(
                     eq(iamPermission.accountId, accountPk),
                     eq(iamPermission.isServiceWide, true),
+                    eq(iamPermission.serviceType, IAM_SERVICE.IAM),
                 ),
             )
             .limit(1);
