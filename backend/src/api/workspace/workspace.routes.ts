@@ -82,7 +82,7 @@ export const deleteWorkspace = createRoute({
     method: "delete",
     path: "/{workspaceId}",
     tags: [TAGS.WORKSPACE],
-    middleware: [authenticate, rbac.workspaceServiceWideWrite],
+    middleware: [authenticate],
     request: {
         params: WorkspaceSchemas.DeleteWorkspaceParams,
     },
@@ -90,6 +90,61 @@ export const deleteWorkspace = createRoute({
         ...OpenApiResponses.rbacRoute,
         [status.NO_CONTENT]: {
             description: "Workspace delete",
+        },
+    },
+});
+
+export const updateWorkspace = createRoute({
+    method: "patch",
+    path: "/{workspaceId}",
+    tags: [TAGS.WORKSPACE],
+    middleware: [authenticate],
+    request: {
+        params: WorkspaceSchemas.UpdateWorkspaceParams,
+        body: {
+            content: {
+                "application/json": {
+                    schema: WorkspaceSchemas.UpdateWorkspaceRequestBody,
+                },
+            },
+        },
+    },
+    responses: {
+        ...OpenApiResponses.rbacRoute,
+        [status.OK]: {
+            description: "Workspace updated",
+        },
+    },
+});
+
+export const getWorkspace = createRoute({
+    method: "get",
+    path: "/{workspaceId}",
+    tags: [TAGS.WORKSPACE],
+    middleware: [authenticate],
+    request: {
+        params: WorkspaceSchemas.GetWorkspaceParams,
+    },
+    responses: {
+        ...OpenApiResponses.rbacRoute,
+        [status.OK]: {
+            description: "Workspace details",
+        },
+    },
+});
+
+export const getWorkspaces = createRoute({
+    method: "get",
+    path: "/",
+    tags: [TAGS.WORKSPACE],
+    middleware: [authenticate],
+    request: {
+        query: WorkspaceSchemas.GetWorkspacesQuery,
+    },
+    responses: {
+        ...OpenApiResponses.rbacRoute,
+        [status.OK]: {
+            description: "List of workspaces",
         },
     },
 });
@@ -104,4 +159,7 @@ export type WorkspaceHandler = {
 
     CreateWorkspace: Handler<typeof createWorkspace>;
     DeleteWorkspace: Handler<typeof deleteWorkspace>;
+    UpdateWorkspace: Handler<typeof updateWorkspace>;
+    GetWorkspace: Handler<typeof getWorkspace>;
+    GetWorkspaces: Handler<typeof getWorkspaces>;
 };
