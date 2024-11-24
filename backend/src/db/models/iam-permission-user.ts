@@ -1,11 +1,24 @@
 import { relations } from "drizzle-orm";
-import { index, integer, pgTable } from "drizzle-orm/pg-core";
+import { index, integer, pgEnum, pgTable } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
 
 import { orm } from "@/utils/db";
 
 import { iamPermission } from "./iam-permission";
 import { user } from "./user";
+
+export const IAM_PERMISSION_ACCESS_TYPE = {
+    READ: "read",
+    WRITE: "write",
+} as const;
+
+export type IAMPermissionAccessType =
+    (typeof IAM_PERMISSION_ACCESS_TYPE)[keyof typeof IAM_PERMISSION_ACCESS_TYPE];
+
+export const iamPermissionAccessTypeEnum = pgEnum("iam_permission_access_type", [
+    IAM_PERMISSION_ACCESS_TYPE.READ,
+    IAM_PERMISSION_ACCESS_TYPE.WRITE,
+]);
 
 export const iamPermissionUser = pgTable(
     "iam_permission_users",
@@ -18,6 +31,8 @@ export const iamPermissionUser = pgTable(
         userId: integer("user_id")
             .notNull()
             .references(() => user.id, { onDelete: "cascade" }),
+
+        accessType: iamPermissionAccessTypeEnum("access_type").notNull(),
 
         createdAt: orm.timestamp("created_at").notNull().defaultNow(),
         updatedAt: orm.timestamp("updated_at").notNull().defaultNow(),

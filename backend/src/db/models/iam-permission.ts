@@ -35,7 +35,7 @@ export const iamPermission = pgTable(
 
         name: varchar("name", { length: 255 }).notNull(),
         serviceType: iamServicePermissionEnum("service_type").notNull(),
-        is_service_wide: boolean("is_service_wide").notNull().default(false),
+        isServiceWide: boolean("is_service_wide").notNull().default(false),
 
         readAll: boolean("read_all").notNull().default(false),
         writeAll: boolean("write_all").notNull().default(false),
@@ -84,6 +84,10 @@ export const IAMPermissionSchema = createSelectSchema(iamPermission);
 export const IAMPermissionClientSchema = IAMPermissionSchema.pick({
     name: true,
     permissionId: true,
+    serviceType: true,
+    isServiceWide: true,
+    readAll: true,
+    writeAll: true,
     createdAt: true,
     updatedAt: true,
 });
