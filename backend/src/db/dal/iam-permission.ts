@@ -1,17 +1,22 @@
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
-import { type IAMPolicy } from "@/schemas/iam-permission";
+import { IAMPermissionSchemas } from "@/api/iam-permission/iam-permission.schema";
+import { log } from "@/lib/logger";
+import { ConflictError, InternalServerError } from "@/utils/http";
 
 import { type DB, type TransactionCtx, db } from "..";
 import { iamPermission } from "../models";
 import { type AccountPk } from "../models/account";
 import {
     type IAMPermissionClient,
+    type IAMPermissionId,
     type IAMPermissionPk,
-    IAMPermissionSchema,
-    type IAMService,
+    IAM_SERVICE,
+    NewIAMPermission,
 } from "../models/iam-permission";
+import { iamPermissionUser } from "../models/iam-permission-user";
+import { type UserClient, UserClientSchema, type UserId, user } from "../models/user";
 import { BaseDAL } from "./base";
 
 class IAMPermissionDAL extends BaseDAL {
@@ -20,49 +25,60 @@ class IAMPermissionDAL extends BaseDAL {
     }
 
     // ==================================
-    // Exists
-    // ==================================
-
-    /** Check whether an account has a service wide policy for a given service type. */
-    async existsServiceWidePolicy(accountId: AccountPk, serviceType: IAMService) {
-        const result = await this.db
-            .select({ id: iamPermission.id })
-            .from(iamPermission)
-            .where(
-                and(
-                    eq(iamPermission.accountId, accountId),
-                    eq(iamPermission.serviceType, serviceType),
-                ),
-            )
-            .limit(1);
-
-        return result.length > 0;
-    }
-
-    // ==================================
     // Create
     // ==================================
 
-    async createServiceWidePolicy(
-        accountId: AccountPk,
-        serviceType: IAMService,
-        policy:
-            | IAMPolicy["IAMService"]
-            | IAMPolicy["Workspace"]
-            | IAMPolicy["WorkspaceService"],
-        policyName: string,
+    async createIAMServiceWide(
+        accountPk: AccountPk,
         tx?: TransactionCtx,
-    ) {
-        const ctx = this.getDbContext(tx);
+    ): Promise<IAMPermissionClient> {
+        const exists = await this.findIAMWidePermission(accountPk, tx);
+        if (exists) {
+            throw new ConflictError({ message: "IAM permission already exists" });
+        }
 
+        const ctx = this.getDbContext(tx);
         const result = await ctx
             .insert(iamPermission)
             .values({
-                accountId,
-                serviceType,
-                policy,
-                name: policyName,
+                name: "IAM Service Wide Policy",
+                serviceType: IAM_SERVICE.IAM,
+                isServiceWide: false,
+                readAll: false,
+                writeAll: false,
+                accountId: accountPk,
             })
+            .returning();
+
+        return result[0];
+    }
+
+    // ==================================
+    // Update
+    // ==================================
+
+    async update(
+        accountPk: AccountPk,
+        permissionId: IAMPermissionId,
+        body: z.infer<typeof IAMPermissionSchemas.UpdateIAMPermissionRequestBody>,
+        tx?: TransactionCtx,
+    ): Promise<IAMPermissionClient> {
+        const ctx = this.getDbContext(tx);
+
+        const patch: Partial<NewIAMPermission> = {};
+        if (body.name) patch.name = body.name;
+        if (body.readAll) patch.readAll = body.readAll;
+        if (body.writeAll) patch.writeAll = body.writeAll;
+
+        const result = await ctx
+            .update(iamPermission)
+            .set(patch)
+            .where(
+                and(
+                    eq(iamPermission.permissionId, permissionId),
+                    eq(iamPermission.accountId, accountPk),
+                ),
+            )
             .returning();
 
         return result[0];
@@ -73,105 +89,164 @@ class IAMPermissionDAL extends BaseDAL {
     // ==================================
 
     async findIAMWidePermission(
-        accountId: AccountPk,
-    ): Promise<null | [AccountPk, IAMPermissionPk, IAMPermissionClient]> {
-        const result = await this.db
-            .select({
-                id: iamPermission.id,
-                name: iamPermission.name,
-                permissionId: iamPermission.permissionId,
-                policy: iamPermission.policy,
-                accountId: iamPermission.accountId,
-                createdAt: iamPermission.createdAt,
-                updatedAt: iamPermission.updatedAt,
-            })
+        accountPk: AccountPk,
+        tx?: TransactionCtx,
+    ): Promise<[IAMPermissionPk, IAMPermissionClient]> {
+        const ctx = this.getDbContext(tx);
+        const result = await ctx
+            .select(this.permissionSelect)
             .from(iamPermission)
-            .where(eq(iamPermission.accountId, accountId))
+            .where(
+                and(
+                    eq(iamPermission.accountId, accountPk),
+                    eq(iamPermission.isServiceWide, true),
+                ),
+            )
             .limit(1);
 
-        return result.length > 0
-            ? [
-                  result[0].accountId,
-                  result[0].id,
-                  {
-                      name: result[0].name,
-                      permissionId: result[0].permissionId,
-                      policy: result[0].policy as z.infer<
-                          typeof IAMPermissionSchema.shape.policy
-                      >,
-                      createdAt: result[0].createdAt,
-                      updatedAt: result[0].updatedAt,
-                  },
-              ]
-            : null;
+        if (result.length === 0) {
+            log.error(`Account ${accountPk} does not have a service wide permission`);
+            throw new InternalServerError({});
+        }
+
+        return [result[0].id, result[0]];
     }
 
-    // async findByWorkspaceId(
-    //     workspaceId: number,
-    // ): Promise<[number, IAMPermissionClient] | null> {
-    //     const result = await this.db
-    //         .select({
-    //             id: iamPermission.id,
-    //             name: iamPermission.name,
-    //             permissionId: iamPermission.permissionId,
-    //             policy: iamPermission.policy,
-    //             accountId: iamPermission.accountId,
-    //             createdAt: iamPermission.createdAt,
-    //             updatedAt: iamPermission.updatedAt,
-    //         })
-    //         .from(iamPermission)
-    //         .where(eq(iamPermission.workspaceId, workspaceId))
-    //         .limit(1);
+    async findById(
+        permissionId: IAMPermissionId,
+        accountPk: AccountPk,
+    ): Promise<[number, IAMPermissionClient & { users: UserClient[] }] | null> {
+        const result = await this.db
+            .select({
+                ...this.permissionSelect,
+                users: sql<UserClient[]>`ARRAY_AGG(${user})`,
+            })
+            .from(iamPermission)
+            .innerJoin(
+                iamPermissionUser,
+                eq(iamPermissionUser.permissionId, iamPermission.id),
+            )
+            .innerJoin(user, eq(user.id, iamPermissionUser.userId))
+            .where(
+                and(
+                    eq(iamPermission.permissionId, permissionId),
+                    eq(iamPermission.accountId, accountPk),
+                ),
+            )
+            .limit(1);
 
-    //     return result.length > 0
-    //         ? [
-    //               result[0].id,
-    //               {
-    //                   name: result[0].name,
-    //                   permissionId: result[0].permissionId,
-    //                   policy: result[0].policy as z.infer<
-    //                       typeof IAMPermissionSchema.shape.policy
-    //                   >,
-    //                   createdAt: result[0].createdAt,
-    //                   updatedAt: result[0].updatedAt,
-    //                   accountId: result[0].accountId,
-    //               },
-    //           ]
-    //         : null;
-    // }
+        return result.length === 0 ? null : [result[0].id, result[0]];
+    }
 
-    // ===========================
-    // Delete
-    // ===========================
+    async findManyByAccountId(
+        accountPk: AccountPk,
+        search: string | undefined = undefined,
+        limit: number = 20,
+        offset: number = 0,
+    ): Promise<[number, (IAMPermissionClient & { users: UserClient[] })[]]> {
+        if (search !== undefined) {
+            const iamSearchCondition = sql`to_tsvector('english', ${iamPermission.name}) @@ to_tsquery('english', ${search})`;
+            const userSearchCondition = sql`to_tsvector('english', ${user.username}) @@ to_tsquery('english', ${search})`;
 
-    // /**
-    //  * Supporting transaction
-    //  */
-    // async deleteByAccountId(accountId: number, tx?: TransactionCtx): Promise<void> {
-    //     let ctx: DB | TransactionCtx = this.db;
+            const totalCount = await this.db
+                .select({ count: sql<number>`COUNT(${iamPermission.id})` })
+                .from(iamPermission)
+                .innerJoin(
+                    iamPermissionUser,
+                    eq(iamPermissionUser.permissionId, iamPermission.id),
+                )
+                .innerJoin(user, eq(user.id, iamPermissionUser.userId))
+                .where(
+                    and(
+                        or(iamSearchCondition, userSearchCondition),
+                        eq(iamPermission.accountId, accountPk),
+                    ),
+                )
+                .then((r) => r[0].count);
 
-    //     if (tx !== undefined) {
-    //         ctx = tx;
-    //     }
+            const result = await this.db
+                .select({
+                    ...this.permissionSelect,
+                    users: sql<UserClient[]>`ARRAY_AGG(${user})`,
+                })
+                .from(iamPermission)
+                .innerJoin(
+                    iamPermissionUser,
+                    eq(iamPermissionUser.permissionId, iamPermission.id),
+                )
+                .innerJoin(user, eq(user.id, iamPermissionUser.userId))
+                .where(
+                    and(
+                        or(iamSearchCondition, userSearchCondition),
+                        eq(iamPermission.accountId, accountPk),
+                    ),
+                )
+                .orderBy(asc(iamPermission.updatedAt))
+                .limit(limit)
+                .offset(offset);
 
-    //     await ctx.delete(iamPermission).where(eq(iamPermission.accountId, accountId));
-    // }
+            return [
+                totalCount,
+                result.map((r) => ({
+                    ...r,
+                    users: r.users.map((u) => UserClientSchema.parse(u)),
+                })),
+            ];
+        } else {
+            const totalCount = await this.db
+                .select({ count: sql<number>`COUNT(${iamPermission.id})` })
+                .from(iamPermission)
+                .innerJoin(
+                    iamPermissionUser,
+                    eq(iamPermissionUser.permissionId, iamPermission.id),
+                )
+                .innerJoin(user, eq(user.id, iamPermissionUser.userId))
+                .where(eq(iamPermission.accountId, accountPk))
+                .then((r) => r[0].count);
 
-    // /**
-    //  * `resourceId` will be public facing uuid ID for a resource. Resource will be things
-    //  * like Workspace, etc...
-    //  *
-    //  * Supporting transaction
-    //  */
-    // async deleteByResourceId(resourceId: string, tx?: TransactionCtx): Promise<void> {
-    //     let ctx: DB | TransactionCtx = this.db;
+            const result = await this.db
+                .select({
+                    ...this.permissionSelect,
+                    users: sql<UserClient[]>`ARRAY_AGG(${user})`,
+                })
+                .from(iamPermission)
+                .innerJoin(
+                    iamPermissionUser,
+                    eq(iamPermissionUser.permissionId, iamPermission.id),
+                )
+                .innerJoin(user, eq(user.id, iamPermissionUser.userId))
+                .where(eq(iamPermission.accountId, accountPk))
+                .orderBy(asc(iamPermission.updatedAt))
+                .limit(limit)
+                .offset(offset);
 
-    //     if (tx !== undefined) {
-    //         ctx = tx;
-    //     }
+            return [
+                totalCount,
+                result.map((r) => ({
+                    ...r,
+                    users: r.users.map((u) => UserClientSchema.parse(u)),
+                })),
+            ];
+        }
+    }
 
-    //     await ctx.delete(iamPermission).where(eq(iamPermission.resourceId, resourceId));
-    // }
+    // ==================================
+    // Private methods
+    // ==================================
+
+    private get permissionSelect() {
+        return {
+            id: iamPermission.id,
+            permissionId: iamPermission.permissionId,
+            name: iamPermission.name,
+            serviceType: iamPermission.serviceType,
+            isServiceWide: iamPermission.isServiceWide,
+            readAll: iamPermission.readAll,
+            writeAll: iamPermission.writeAll,
+            createdAt: iamPermission.createdAt,
+            updatedAt: iamPermission.updatedAt,
+        };
+    }
 }
 
 export const iamPermissionDAL = new IAMPermissionDAL(db);

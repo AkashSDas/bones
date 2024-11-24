@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
 import { type DB, db } from "..";
 import { account, user } from "../models";
@@ -98,6 +98,18 @@ class UserDAL extends BaseDAL {
             .limit(1);
 
         return result.length > 0 ? result[0] : null;
+    }
+
+    async existsByUserIdInBatch(
+        userIds: UserId[],
+        accountPk: AccountPk,
+    ): Promise<{ id: UserPk; userId: UserId }[]> {
+        const result = await this.db
+            .select({ id: user.id, userId: user.userId })
+            .from(user)
+            .where(and(inArray(user.userId, userIds), eq(user.accountId, accountPk)));
+
+        return result;
     }
 
     // ===========================
