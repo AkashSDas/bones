@@ -1,7 +1,8 @@
 import { createRoute } from "@hono/zod-openapi";
 
+import { accountStatus } from "@/middlewares/account-status";
 import { authenticate } from "@/middlewares/authenticate";
-import { rbacIAMServiceWideRead, rbacIAMServiceWideWrite } from "@/middlewares/rbac";
+import { rbac } from "@/middlewares/rbac";
 import { HttpErrorSchemas } from "@/schemas/http";
 import { OpenApiResponses, status } from "@/utils/http";
 import type { AppRouteHandler as Handler } from "@/utils/types";
@@ -212,7 +213,7 @@ export const createUser = createRoute({
     method: "post",
     path: "/user",
     tags: [TAGS.USER],
-    middleware: [authenticate, rbacIAMServiceWideWrite],
+    middleware: [authenticate, rbac.iamServiceWideWrite, accountStatus.allowOnlyActive],
     request: {
         body: {
             content: {
@@ -239,7 +240,7 @@ export const updateUser = createRoute({
     method: "patch",
     path: "/user/{userId}",
     tags: [TAGS.USER],
-    middleware: [authenticate, rbacIAMServiceWideWrite],
+    middleware: [authenticate, rbac.iamServiceWideWrite],
     request: {
         params: IAMSchemas.UpdateUserParams,
         body: {
@@ -275,7 +276,7 @@ export const userExists = createRoute({
     method: "get",
     path: "/user/exists",
     tags: [TAGS.USER],
-    middleware: [authenticate, rbacIAMServiceWideRead],
+    middleware: [authenticate, rbac.iamServiceWideRead],
     request: {
         query: IAMSchemas.UserExistsQuery,
     },
@@ -296,7 +297,7 @@ export const deleteUser = createRoute({
     method: "delete",
     path: "/user/{userId}",
     tags: [TAGS.USER],
-    middleware: [authenticate, rbacIAMServiceWideWrite],
+    middleware: [authenticate, rbac.iamServiceWideWrite],
     request: {
         params: IAMSchemas.DeleteUserParam,
     },
@@ -320,7 +321,7 @@ export const getUser = createRoute({
     method: "get",
     path: "/user/{userId}",
     tags: [TAGS.USER],
-    middleware: [authenticate, rbacIAMServiceWideRead],
+    middleware: [authenticate, rbac.iamServiceWideRead],
     request: {
         params: IAMSchemas.GetSingleUserParam,
     },
@@ -349,7 +350,7 @@ export const getUsers = createRoute({
     method: "get",
     path: "/user",
     tags: [TAGS.USER],
-    middleware: [authenticate, rbacIAMServiceWideRead],
+    middleware: [authenticate, rbac.iamServiceWideRead],
     request: {
         query: IAMSchemas.GetManyUsersQuery,
     },
