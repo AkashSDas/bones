@@ -46,7 +46,10 @@ class IAMPermissionDAL extends BaseDAL {
     async createServiceWidePolicy(
         accountId: AccountPk,
         serviceType: IAMService,
-        policy: IAMPolicy,
+        policy:
+            | IAMPolicy["IAMService"]
+            | IAMPolicy["Workspace"]
+            | IAMPolicy["WorkspaceService"],
         policyName: string,
         tx?: TransactionCtx,
     ) {

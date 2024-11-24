@@ -63,6 +63,8 @@ export const authenticate = createMiddleware<AppBindings>(async (c, next) => {
                     reason: "Account not found",
                 });
             } else {
+                // We get payload account id's account therefore no need to verify account
+                // id belongs to the account pk
                 c.set("account", account[1]);
                 c.set("accountPk", account[0]);
                 c.set("isAdmin", true);

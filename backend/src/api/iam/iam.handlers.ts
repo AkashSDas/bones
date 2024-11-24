@@ -3,7 +3,9 @@ import { env } from "@/utils/env";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 
+import { db } from "@/db";
 import { dal } from "@/db/dal";
+import { IAM_SERVICE } from "@/db/models/iam-permission";
 import { UserClientSchema } from "@/db/models/user";
 import { log } from "@/lib/logger";
 import { auth } from "@/utils/auth";
@@ -16,6 +18,7 @@ import {
     UnauthorizedError,
     status,
 } from "@/utils/http";
+import { RBACValidator } from "@/utils/rbac";
 import { queue } from "@/utils/task-queue";
 
 import { type IAMHandler } from "./iam.routes";
@@ -43,17 +46,37 @@ export const accountSignup: IAMHandler["AccountSignup"] = async (c) => {
         const activationHashToken = auth.hashToken(activationToken);
         const activationTokenAge = new Date(new Date().getTime() + TOKEN_EXPIRY);
 
-        const account = await dal.account.create({
-            email: body.email,
-            accountName: body.accountName,
+        const { account } = await db.transaction(async function (tx) {
+            const account = await dal.account.create(
+                {
+                    email: body.email,
+                    accountName: body.accountName,
 
-            passwordHash: hash,
-            passwordAge: new Date().toISOString(),
+                    passwordHash: hash,
+                    passwordAge: new Date().toISOString(),
 
-            changeStatusToken: activationHashToken,
-            changeStatusTokenAge: activationTokenAge.toISOString(),
+                    changeStatusToken: activationHashToken,
+                    changeStatusTokenAge: activationTokenAge.toISOString(),
 
-            lastLoggedInAt: new Date().toISOString(),
+                    lastLoggedInAt: new Date().toISOString(),
+                },
+                tx,
+            );
+
+            const iamPermission = await dal.iamPermission.createServiceWidePolicy(
+                account.id,
+                IAM_SERVICE.IAM,
+                {
+                    readAll: true,
+                    writeAll: true,
+                    readForUsers: [],
+                    writeForUsers: [],
+                },
+                "IAM Service Wide Policy",
+                tx,
+            );
+
+            return { account, iamPermission };
         });
 
         log.info(`Account created successfully: ${account.accountId}`);
@@ -193,7 +216,7 @@ export const resetPassword: IAMHandler["ResetPassword"] = async (c) => {
     const exists = await dal.account.existsByEmail(body.email);
 
     if (!exists) {
-        throw new BadRequestError({ message: "Account doesn't exists" });
+        throw new NotFoundError({ message: "Account doesn't exists" });
     } else {
         const resetToken = auth.createToken();
         const resetHashToken = auth.hashToken(resetToken);
@@ -289,300 +312,236 @@ export const refreshAccessToken: IAMHandler["RefreshAccessToken"] = async (c) =>
 // =========================================
 
 export const createUser: IAMHandler["CreateUser"] = async (c) => {
+    const rbac = new RBACValidator(c);
+    await rbac.validateIAMPermission(false, true);
+
     const { username, password } = c.req.valid("json");
-    const content = c.get("accountJWTContent");
+    const { accountId } = c.get("account")!;
+    const accountPk = c.get("accountPk")!;
 
-    if (content === undefined) {
-        throw new ForbiddenError({ message: "You don't account (admin) privileges" });
-    }
-
-    const { accountId } = content;
-    const [exists, id] = await Promise.all([
-        dal.user.existsByUsername(username, accountId),
-        dal.account.existsByAccountId(accountId),
-    ]);
-
-    if (id === null) {
-        throw new NotFoundError({ message: "Account doesn't exists" });
-    } else if (exists !== null) {
+    const exists = await dal.user.existsByUsername(username, accountId);
+    if (exists !== null) {
         throw new BadRequestError({
             message: `Username '${username}' is already used by an user in this account`,
         });
-    } else {
-        const pwd = password ?? auth.generateRandomPassword(16);
-        const isGeneratedPwd = password === undefined;
-        const [hash] = await auth.hashPwd(pwd);
-
-        const user = await dal.user.create({
-            accountId: id,
-            username,
-            passwordHash: hash,
-            passwordAge: new Date().toISOString(),
-            lastLoggedInAt: new Date().toISOString(),
-        });
-
-        log.info("Create a new user");
-        return c.json(
-            {
-                user: await UserClientSchema.parseAsync(user),
-                generatedPassword: isGeneratedPwd ? pwd : undefined,
-            },
-            status.CREATED,
-        );
     }
+
+    const pwd = password ?? auth.generateRandomPassword(16);
+    const isGeneratedPwd = password === undefined;
+    const [hash] = await auth.hashPwd(pwd);
+
+    const user = await dal.user.create({
+        accountId: accountPk,
+        username,
+        passwordHash: hash,
+        passwordAge: new Date().toISOString(),
+        lastLoggedInAt: new Date().toISOString(),
+    });
+
+    log.info("Create a new user");
+
+    return c.json(
+        {
+            user: await UserClientSchema.parseAsync(user),
+            generatedPassword: isGeneratedPwd ? pwd : undefined,
+        },
+        status.CREATED,
+    );
 };
 
-// TODO: Throw forbidden error when requester (account) doesn't have access to user.
-// Current this request is skipped as DB makes changes based on relationships which
-// doesn't exists
 export const updateUser: IAMHandler["UpdateUser"] = async (c) => {
+    const rbac = new RBACValidator(c);
+    await rbac.validateIAMPermission(false, true);
+
     const update = c.req.valid("json");
     const { userId } = c.req.valid("param");
-    const content = c.get("accountJWTContent");
+    const { accountId } = c.get("account")!;
+    const accountPk = c.get("accountPk")!;
 
-    if (content === undefined) {
-        throw new ForbiddenError({ message: "You don't account (admin) privileges" });
-    }
-
-    const { accountId } = content;
-    const exists = await dal.user.existsByUserId(userId, accountId);
-
-    if (exists === null) {
+    const userExists = await dal.user.existsByUserId(userId, accountId);
+    if (userExists === null) {
         throw new NotFoundError({ message: "User doesn't exists" });
-    } else {
-        let generatedPwd: null | string = null;
-
-        if (update.isBlocked) {
-            log.info("Blocking user and ignoring other updates (if present)");
-            await dal.user.setUserInfo(exists.userId, exists.accountId, {
-                isBlocked: update.isBlocked,
-            });
-        } else {
-            if (update.password || update.generateNewPassword) {
-                let pwd: string | undefined = undefined;
-
-                if (update.generateNewPassword === true) {
-                    pwd = auth.generateRandomPassword(16);
-                    generatedPwd = pwd;
-                    log.info("Generated a new password for user");
-                } else {
-                    pwd = update.password;
-                }
-
-                if (pwd !== undefined) {
-                    const [hash] = await auth.hashPwd(pwd);
-                    await dal.user.setUserInfo(exists.userId, exists.accountId, {
-                        passwordHash: hash,
-                        passwordAge: new Date().toISOString(),
-                    });
-                    log.info("Saved user password");
-                }
-
-                // REMOVING FIELDS THAT ARE NOT PASSWORD USER TABLE TO UPDATE
-                delete update.password;
-                delete update.generateNewPassword;
-            }
-
-            if (update.username) {
-                const exists = await dal.user.existsByUsername(
-                    update.username,
-                    accountId,
-                );
-
-                if (exists !== null) {
-                    throw new BadRequestError({
-                        message: `Username '${update.username}' is already used by an user in this account`,
-                    });
-                }
-            }
-
-            if (Object.values(update).length > 0) {
-                await dal.user.setUserInfo(exists.userId, exists.accountId, update);
-                log.info("Updated user details");
-            }
-        }
-
-        const response: z.infer<typeof IAMSchemas.UpdateUserResponseBody> = {
-            message: "User updated",
-        };
-
-        if (generatedPwd) {
-            response["generatedPassword"] = generatedPwd;
-        }
-
-        return c.json(response, status.OK);
     }
+    if (userExists.accountId !== accountPk) {
+        throw new ForbiddenError({ message: "You don't have access to this user" });
+    }
+
+    let generatedPwd: null | string = null;
+
+    if (update.isBlocked) {
+        log.info("Blocking user and ignoring other updates (if present)");
+        await dal.user.setUserInfo(userExists.userId, userExists.accountId, {
+            isBlocked: update.isBlocked,
+        });
+    } else {
+        if (update.password || update.generateNewPassword) {
+            let pwd: string | undefined = undefined;
+
+            if (update.generateNewPassword === true) {
+                pwd = auth.generateRandomPassword(16);
+                generatedPwd = pwd;
+                log.info("Generated a new password for user");
+            } else {
+                pwd = update.password;
+            }
+
+            if (pwd !== undefined) {
+                const [hash] = await auth.hashPwd(pwd);
+                await dal.user.setUserInfo(userExists.userId, userExists.accountId, {
+                    passwordHash: hash,
+                    passwordAge: new Date().toISOString(),
+                });
+                log.info("Saved user password");
+            }
+
+            // REMOVING FIELDS THAT ARE NOT PASSWORD USER TABLE TO UPDATE
+            delete update.password;
+            delete update.generateNewPassword;
+        }
+
+        if (update.username) {
+            const exists = await dal.user.existsByUsername(update.username, accountId);
+
+            if (exists !== null) {
+                throw new BadRequestError({
+                    message: `Username '${update.username}' is already used by an user in this account`,
+                });
+            }
+        }
+
+        if (Object.values(update).length > 0) {
+            await dal.user.setUserInfo(userExists.userId, userExists.accountId, update);
+            log.info("Updated user details");
+        }
+    }
+
+    const response: z.infer<typeof IAMSchemas.UpdateUserResponseBody> = {
+        message: "User updated",
+    };
+
+    if (generatedPwd) {
+        response["generatedPassword"] = generatedPwd;
+    }
+
+    return c.json(response, status.OK);
 };
 
 export const userExists: IAMHandler["UserExists"] = async (c) => {
+    const rbac = new RBACValidator(c);
+    await rbac.validateIAMPermission(true, false);
+
     const { username } = c.req.valid("query");
-    const content = c.get("accountJWTContent");
+    const { accountId } = c.get("account")!;
 
-    if (content === undefined) {
-        throw new ForbiddenError({ message: "You don't account (admin) privileges" });
-    }
-
-    const { accountId } = content;
-    const exists = await dal.account.existsByAccountId(accountId);
-
-    if (exists === null) {
-        throw new NotFoundError({ message: "Account doesn't exists" });
-    } else {
-        const exists = await dal.user.existsByUsername(username, accountId);
-        return c.json({ exists: exists !== null }, status.OK);
-    }
+    const userExists = await dal.user.existsByUsername(username, accountId);
+    return c.json({ exists: userExists !== null }, status.OK);
 };
 
-// TODO: Throw forbidden error when requester (account) doesn't have access to user.
-// Current this request is skipped as DB makes changes based on relationships which
-// doesn't exists
 export const deleteUser: IAMHandler["DeleteUser"] = async (c) => {
+    const rbac = new RBACValidator(c);
+    await rbac.validateIAMPermission(false, true);
+
     const { userId } = c.req.valid("param");
-    const content = c.get("accountJWTContent");
+    const accountPk = c.get("accountPk")!;
+    const { accountId } = c.get("account")!;
 
-    if (content === undefined) {
-        throw new ForbiddenError({ message: "You don't account (admin) privileges" });
+    const userExists = await dal.user.existsByUserId(userId, accountId);
+    if (userExists === null) {
+        throw new NotFoundError({ message: "User doesn't exists" });
+    }
+    if (userExists.accountId !== accountPk) {
+        throw new ForbiddenError({ message: "You don't have access to this user" });
     }
 
-    const { accountId } = content;
-    const exists = await dal.account.existsByAccountId(accountId);
-
-    if (exists === null) {
-        throw new NotFoundError({ message: "Account doesn't exists" });
-    } else {
-        await dal.user.delete(userId, exists);
-        log.info("User deleted");
-        return c.body(null, status.NO_CONTENT);
-    }
+    await dal.user.delete(userId, accountPk);
+    log.info("User deleted");
+    return c.body(null, status.NO_CONTENT);
 };
 
-// TODO: Throw forbidden error when requester (account) doesn't have access to user.
-// Current this request is skipped as DB makes changes based on relationships which
-// doesn't exists
 export const getUser: IAMHandler["GetUser"] = async (c) => {
+    const rbac = new RBACValidator(c);
+    await rbac.validateIAMPermission(true, false);
+
     const { userId } = c.req.valid("param");
-    const content = c.get("accountJWTContent");
+    const { accountId } = c.get("account")!;
+    const accountPk = c.get("accountPk")!;
 
-    if (content === undefined) {
-        throw new ForbiddenError({ message: "You don't account (admin) privileges" });
+    const user = await dal.user.findById(userId, accountId);
+
+    if (user === null) {
+        throw new NotFoundError({ message: "User not found" });
+    }
+    if (user[0] !== accountPk) {
+        throw new ForbiddenError({ message: "You don't have access to this user" });
     }
 
-    const { accountId } = content;
-    const exists = await dal.account.existsByAccountId(accountId);
-
-    if (exists === null) {
-        throw new NotFoundError({ message: "Account doesn't exists" });
-    } else {
-        const user = await dal.user.findById(userId, accountId);
-
-        if (user === null) {
-            throw new NotFoundError({ message: "User not found" });
-        }
-
-        return c.json({ user: user[2] }, status.OK);
-    }
+    return c.json({ user: user[2] }, status.OK);
 };
 
 export const getUsers: IAMHandler["GetUsers"] = async (c) => {
-    const accountContent = c.get("accountJWTContent");
-    const userContent = c.get("userJWTContent");
+    const rbac = new RBACValidator(c);
+    await rbac.validateIAMPermission(true, false);
 
-    if (!userContent && !accountContent) {
-        throw new ForbiddenError({ message: "You don't account access" });
-    }
-
-    const { accountId } = userContent ?? accountContent!;
     const { limit, offset, search } = c.req.valid("query");
+    const accountPk = c.get("accountPk")!;
 
-    const exists = await dal.account.existsByAccountId(accountId);
+    const { users, totalCount } = await dal.user.find(accountPk, search, limit, offset);
 
-    if (exists === null) {
-        throw new NotFoundError({ message: "Account doesn't exists" });
-    } else {
-        const { users, totalCount } = await dal.user.find(
-            exists,
-            search,
-            limit,
-            offset,
-        );
-
-        return c.json(
-            {
-                total: totalCount,
-                users: await Promise.all(
-                    users.map((u) => UserClientSchema.parseAsync(u)),
-                ),
-            },
-            status.OK,
-        );
-    }
+    return c.json(
+        {
+            total: totalCount,
+            users: await Promise.all(users.map((u) => UserClientSchema.parseAsync(u))),
+        },
+        status.OK,
+    );
 };
 
 export const userLogin: IAMHandler["UserLogin"] = async (c) => {
     const body = c.req.valid("json");
-    const info = await dal.user.findHashDetails(body.accountId, body.username);
 
+    const info = await dal.user.findHashDetails(body.accountId, body.username);
     if (info === null) {
         throw new NotFoundError({ message: "User doesn't exists" });
-    } else {
-        const isRightPwd = await auth.verifyPwd(body.password, info.passwordHash);
-
-        if (!isRightPwd) {
-            throw new BadRequestError({ message: "Wrong password" });
-        } else {
-            const accessToken = auth.createAccessToken({
-                type: "user",
-                accountId: info.accountId,
-                userId: info.userId,
-            });
-            const refreshToken = auth.createRefreshToken({
-                type: "user",
-                accountId: info.accountId,
-                userId: info.userId,
-            });
-
-            c.get("session").set("refreshToken", refreshToken);
-
-            await dal.user.setLastLogin(info.userId, info.accountId);
-
-            return c.json({ accessToken }, status.OK);
-        }
     }
+
+    const isRightPwd = await auth.verifyPwd(body.password, info.passwordHash);
+    if (!isRightPwd) {
+        throw new BadRequestError({ message: "Wrong password" });
+    }
+
+    const accessToken = auth.createAccessToken({
+        type: "user",
+        accountId: info.accountId,
+        userId: info.userId,
+    });
+    const refreshToken = auth.createRefreshToken({
+        type: "user",
+        accountId: info.accountId,
+        userId: info.userId,
+    });
+
+    c.get("session").set("refreshToken", refreshToken);
+
+    await dal.user.setLastLogin(info.userId, info.accountId);
+
+    return c.json({ accessToken }, status.OK);
 };
 
 export const myProfile: IAMHandler["MyProfile"] = async (c) => {
-    const accountJWTcontent = c.get("accountJWTContent");
-    const userJWTcontent = c.get("userJWTContent");
+    const isAdmin = c.get("isAdmin")!;
+    const account = c.get("account")!;
+    const user = c.get("user");
 
-    if (accountJWTcontent) {
-        const { accountId } = accountJWTcontent;
-        const account = await dal.account.findByAccountId(accountId);
-
-        if (account === null) {
-            throw new NotFoundError({ message: "Account Not Found" });
-        }
-
-        return c.json({ roles: ["admin"] as const, account: account[1] }, status.OK);
+    if (isAdmin) {
+        return c.json({ roles: ["admin"] as const, account }, status.OK);
     }
 
-    if (userJWTcontent) {
-        const { accountId, userId } = userJWTcontent;
-        const [user, account] = await Promise.all([
-            dal.user.findById(userId, accountId),
-            dal.account.findByAccountId(accountId),
-        ]);
-
-        if (account === null || user === null) {
-            throw new NotFoundError({ message: "Account/User Not Found" });
-        }
-
-        return c.json(
-            { roles: ["user"] as const, account: account[1], user: user[2] },
-            status.OK,
-        );
+    if (!user) {
+        log.error("User must have been set in the middleware");
+        throw new InternalServerError({});
     }
 
-    throw new UnauthorizedError({ message: "Unauthorized" });
+    return c.json({ roles: ["user"] as const, account, user }, status.OK);
 };
 
 export const logout: IAMHandler["Logout"] = async (c) => {

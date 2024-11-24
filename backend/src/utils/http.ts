@@ -28,6 +28,59 @@ export const status = {
 
 /** Common Zod Open API response utility */
 export const OpenApiResponses = {
+    // =========================================
+    // Public routes
+    // =========================================
+
+    publicValidatedRoute: {
+        [status.INTERNAL_SERVER_ERROR]: {
+            description: "Internal server error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.InternalServerErrorSchema,
+                },
+            },
+        },
+        [status.BAD_REQUEST]: {
+            description: "Validation error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.UserBadRequestSchemas,
+                },
+            },
+        },
+    },
+    publicValidatedNotFoundRoute: {
+        [status.INTERNAL_SERVER_ERROR]: {
+            description: "Internal server error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.InternalServerErrorSchema,
+                },
+            },
+        },
+        [status.BAD_REQUEST]: {
+            description: "Validation error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.UserBadRequestSchemas,
+                },
+            },
+        },
+        [status.NOT_FOUND]: {
+            description: "Not found",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.NotFoundErrorSchema,
+                },
+            },
+        },
+    },
+
+    // =========================================
+    // Protected routes
+    // =========================================
+
     protectedRoute: {
         [status.UNAUTHORIZED]: {
             description: "Unauthorized",
@@ -46,7 +99,7 @@ export const OpenApiResponses = {
             },
         },
     },
-    rbacProtectedRoute: {
+    protectedValidatedRoute: {
         [status.UNAUTHORIZED]: {
             description: "Unauthorized",
             content: {
@@ -55,11 +108,45 @@ export const OpenApiResponses = {
                 },
             },
         },
-        [status.NOT_FOUND]: {
-            description: "Not found",
+        [status.INTERNAL_SERVER_ERROR]: {
+            description: "Internal server error",
             content: {
                 "application/json": {
-                    schema: HttpErrorSchemas.NotFoundErrorSchema,
+                    schema: HttpErrorSchemas.InternalServerErrorSchema,
+                },
+            },
+        },
+        [status.BAD_REQUEST]: {
+            description: "Validation error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.UserBadRequestSchemas,
+                },
+            },
+        },
+    },
+    rbacRoute: {
+        [status.UNAUTHORIZED]: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.UnauthorizedErrorSchema,
+                },
+            },
+        },
+        [status.INTERNAL_SERVER_ERROR]: {
+            description: "Internal server error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.InternalServerErrorSchema,
+                },
+            },
+        },
+        [status.BAD_REQUEST]: {
+            description: "Validation error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.UserBadRequestSchemas,
                 },
             },
         },
@@ -68,68 +155,6 @@ export const OpenApiResponses = {
             content: {
                 "application/json": {
                     schema: HttpErrorSchemas.ForbiddenErrorSchema,
-                },
-            },
-        },
-        [status.INTERNAL_SERVER_ERROR]: {
-            description: "Internal server error",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.InternalServerErrorSchema,
-                },
-            },
-        },
-    },
-    protectedAndValidationRoute: {
-        [status.UNAUTHORIZED]: {
-            description: "Unauthorized",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.UnauthorizedErrorSchema,
-                },
-            },
-        },
-        [status.INTERNAL_SERVER_ERROR]: {
-            description: "Internal server error",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.InternalServerErrorSchema,
-                },
-            },
-        },
-        [status.BAD_REQUEST]: {
-            description: "Validation error",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.UserBadRequestSchemas,
-                },
-            },
-        },
-    },
-    publicRoute: {
-        [status.INTERNAL_SERVER_ERROR]: {
-            description: "Internal server error",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.InternalServerErrorSchema,
-                },
-            },
-        },
-    },
-    publicAndValidationRoute: {
-        [status.INTERNAL_SERVER_ERROR]: {
-            description: "Internal server error",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.InternalServerErrorSchema,
-                },
-            },
-        },
-        [status.BAD_REQUEST]: {
-            description: "Validation error",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.UserBadRequestSchemas,
                 },
             },
         },

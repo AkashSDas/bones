@@ -25,6 +25,19 @@ export class RBACValidator {
         this.user = c.get("user") ?? null;
     }
 
+    private checkUserBlocked(): UserClient {
+        if (this.user === null) {
+            log.error("User is not set");
+            throw new InternalServerError({});
+        }
+
+        if (this.user.isBlocked) {
+            throw new ForbiddenError({ reason: "User is blocked" });
+        }
+
+        return this.user;
+    }
+
     validateAdminOnly(): void {
         if (!this.isAdmin) {
             throw new ForbiddenError({ reason: "Admin only" });
@@ -43,10 +56,8 @@ export class RBACValidator {
         }
 
         if (this.isAdmin) return;
-        if (this.user === null) {
-            log.error("User is not set");
-            throw new InternalServerError({});
-        }
+
+        const user = this.checkUserBlocked();
 
         const iamPermission = await dal.iamPermission.findIAMWidePermission(
             this.accountPk,
@@ -76,11 +87,11 @@ export class RBACValidator {
                 return;
             }
 
-            if (!readForUsers.includes(this.user.userId) && read) {
+            if (!readForUsers.includes(user.userId) && read) {
                 throw new ForbiddenError({ reason: "Read forbidden" });
             }
 
-            if (!writeForUsers.includes(this.user.userId) && write) {
+            if (!writeForUsers.includes(user.userId) && write) {
                 throw new ForbiddenError({ reason: "Write forbidden" });
             }
         }

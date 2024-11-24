@@ -2,14 +2,8 @@ import { and, asc, eq, sql } from "drizzle-orm";
 
 import { type DB, db } from "..";
 import { account, user } from "../models";
-import { type Account, AccountId, AccountPk } from "../models/account";
-import {
-    type NewUser,
-    type User,
-    type UserClient,
-    UserId,
-    UserPk,
-} from "../models/user";
+import type { Account, AccountId, AccountPk } from "../models/account";
+import type { NewUser, User, UserClient, UserId, UserPk } from "../models/user";
 import { BaseDAL } from "./base";
 
 class UserDAL extends BaseDAL {
@@ -205,7 +199,7 @@ class UserDAL extends BaseDAL {
     async findById(
         userId: UserId,
         accountId: AccountId,
-    ): Promise<null | [number, number, UserClient]> {
+    ): Promise<null | [AccountPk, UserPk, UserClient]> {
         const result = await this.db
             .select({
                 id: user.id,
