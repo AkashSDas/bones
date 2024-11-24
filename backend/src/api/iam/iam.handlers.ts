@@ -5,7 +5,6 @@ import { z } from "zod";
 
 import { db } from "@/db";
 import { dal } from "@/db/dal";
-import { IAM_SERVICE } from "@/db/models/iam-permission";
 import { UserClientSchema } from "@/db/models/user";
 import { log } from "@/lib/logger";
 import { auth } from "@/utils/auth";
