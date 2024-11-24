@@ -83,7 +83,6 @@ export const IAMPermissionClientSchema = IAMPermissionSchema.pick({
     name: true,
     permissionId: true,
     policy: true,
-    accountId: true,
     createdAt: true,
     updatedAt: true,
 });
