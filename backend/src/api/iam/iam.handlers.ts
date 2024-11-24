@@ -62,16 +62,8 @@ export const accountSignup: IAMHandler["AccountSignup"] = async (c) => {
                 tx,
             );
 
-            const iamPermission = await dal.iamPermission.createServiceWidePolicy(
+            const iamPermission = await dal.iamPermission.createIAMServiceWide(
                 account.id,
-                IAM_SERVICE.IAM,
-                {
-                    readAll: true,
-                    writeAll: true,
-                    readForUsers: [],
-                    writeForUsers: [],
-                },
-                "IAM Service Wide Policy",
                 tx,
             );
 
