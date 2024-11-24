@@ -1,5 +1,5 @@
 import { dal } from "@/db/dal";
-import { UserClient } from "@/db/models/user";
+import { type UserClient } from "@/db/models/user";
 import { log } from "@/lib/logger";
 import { IAMPolicySchemas } from "@/schemas/iam-permission";
 
@@ -7,12 +7,17 @@ import { InternalServerError } from "./http";
 import { ForbiddenError } from "./http";
 import { type HonoContext } from "./types";
 
+type IAMPermissionOpts = {
+    read?: boolean;
+    write?: boolean;
+};
+
 export class RBACValidator {
     private isAdmin: boolean;
     private accountPk: number;
     private user: UserClient | null;
 
-    constructor(private c: HonoContext) {
+    constructor(c: HonoContext) {
         this.isAdmin = c.get("isAdmin") ?? false;
 
         const accountPk = c.get("accountPk");
@@ -25,18 +30,9 @@ export class RBACValidator {
         this.user = c.get("user") ?? null;
     }
 
-    private checkUserBlocked(): UserClient {
-        if (this.user === null) {
-            log.error("User is not set");
-            throw new InternalServerError({});
-        }
-
-        if (this.user.isBlocked) {
-            throw new ForbiddenError({ reason: "User is blocked" });
-        }
-
-        return this.user;
-    }
+    // =========================================
+    // RBAC Validators
+    // =========================================
 
     validateAdminOnly(): void {
         if (!this.isAdmin) {
@@ -44,12 +40,11 @@ export class RBACValidator {
         }
     }
 
-    async validateIAMPermission(read: boolean, write: boolean): Promise<void> {
+    async validateIAMServiceWide({ read, write }: IAMPermissionOpts): Promise<void> {
         if (read && write) {
             log.error("Only one value is allowed to be added: 'read' or 'write'");
             throw new InternalServerError({});
         }
-
         if (!read && !write) {
             log.error("At least one value is required: 'read' or 'write'");
             throw new InternalServerError({});
@@ -95,5 +90,22 @@ export class RBACValidator {
                 throw new ForbiddenError({ reason: "Write forbidden" });
             }
         }
+    }
+
+    // =========================================
+    // Private methods
+    // =========================================
+
+    private checkUserBlocked(): UserClient {
+        if (this.user === null) {
+            log.error("User is not set");
+            throw new InternalServerError({});
+        }
+
+        if (this.user.isBlocked) {
+            throw new ForbiddenError({ reason: "User is blocked" });
+        }
+
+        return this.user;
     }
 }

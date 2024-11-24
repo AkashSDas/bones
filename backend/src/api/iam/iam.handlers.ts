@@ -18,7 +18,6 @@ import {
     UnauthorizedError,
     status,
 } from "@/utils/http";
-import { RBACValidator } from "@/utils/rbac";
 import { queue } from "@/utils/task-queue";
 
 import { type IAMHandler } from "./iam.routes";
@@ -312,9 +311,6 @@ export const refreshAccessToken: IAMHandler["RefreshAccessToken"] = async (c) =>
 // =========================================
 
 export const createUser: IAMHandler["CreateUser"] = async (c) => {
-    const rbac = new RBACValidator(c);
-    await rbac.validateIAMPermission(false, true);
-
     const { username, password } = c.req.valid("json");
     const { accountId } = c.get("account")!;
     const accountPk = c.get("accountPk")!;
@@ -350,9 +346,6 @@ export const createUser: IAMHandler["CreateUser"] = async (c) => {
 };
 
 export const updateUser: IAMHandler["UpdateUser"] = async (c) => {
-    const rbac = new RBACValidator(c);
-    await rbac.validateIAMPermission(false, true);
-
     const update = c.req.valid("json");
     const { userId } = c.req.valid("param");
     const { accountId } = c.get("account")!;
@@ -427,9 +420,6 @@ export const updateUser: IAMHandler["UpdateUser"] = async (c) => {
 };
 
 export const userExists: IAMHandler["UserExists"] = async (c) => {
-    const rbac = new RBACValidator(c);
-    await rbac.validateIAMPermission(true, false);
-
     const { username } = c.req.valid("query");
     const { accountId } = c.get("account")!;
 
@@ -438,9 +428,6 @@ export const userExists: IAMHandler["UserExists"] = async (c) => {
 };
 
 export const deleteUser: IAMHandler["DeleteUser"] = async (c) => {
-    const rbac = new RBACValidator(c);
-    await rbac.validateIAMPermission(false, true);
-
     const { userId } = c.req.valid("param");
     const accountPk = c.get("accountPk")!;
     const { accountId } = c.get("account")!;
@@ -459,9 +446,6 @@ export const deleteUser: IAMHandler["DeleteUser"] = async (c) => {
 };
 
 export const getUser: IAMHandler["GetUser"] = async (c) => {
-    const rbac = new RBACValidator(c);
-    await rbac.validateIAMPermission(true, false);
-
     const { userId } = c.req.valid("param");
     const { accountId } = c.get("account")!;
     const accountPk = c.get("accountPk")!;
@@ -479,9 +463,6 @@ export const getUser: IAMHandler["GetUser"] = async (c) => {
 };
 
 export const getUsers: IAMHandler["GetUsers"] = async (c) => {
-    const rbac = new RBACValidator(c);
-    await rbac.validateIAMPermission(true, false);
-
     const { limit, offset, search } = c.req.valid("query");
     const accountPk = c.get("accountPk")!;
 
