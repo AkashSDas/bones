@@ -2,7 +2,14 @@ import { env } from "./env";
 
 import * as k8s from "@kubernetes/client-node";
 import { v4 as uuid } from "uuid";
+import { z } from "zod";
 
+import { WorkspaceSchemas } from "@/api/workspace/workspace.schema";
+import { db } from "@/db";
+import { dal } from "@/db/dal";
+import { type AccountPk } from "@/db/models/account";
+import { UserPk } from "@/db/models/user";
+import { WorkspaceClient, WorkspaceId, WorkspacePk } from "@/db/models/workspace";
 import { k8sApi, k8sKind, k8sNames, k8sNetworkingApi } from "@/lib/k8s";
 import { log } from "@/lib/logger";
 
@@ -24,7 +31,7 @@ export class WorkspaceManager {
      * under same namespace. Also, if I delete the namespace, all resources in it will be
      * terminated (easy peasy)
      **/
-    async initialize(): Promise<string> {
+    async initialize(accountPk: AccountPk): Promise<string> {
         const namespace = k8sNames.workspaceNamespace(this.accountId);
 
         try {
@@ -41,10 +48,14 @@ export class WorkspaceManager {
             if (e instanceof k8s.HttpError) {
                 try {
                     log.info(`Creating namespace '${namespace}' for workspace`);
+
                     await k8sApi.createNamespace(this.buildNamespaceConfig(namespace));
+                    await dal.iamPermission.createWorkspaceServiceWide(accountPk);
+
                     return namespace;
                 } catch (e) {
-                    log.error(`Failed to create namespace: ${e}`);
+                    log.error(`Failed to create namespace: ${e}. Rolling back`);
+                    await dal.iamPermission.deleteWorkspaceServiceWide(accountPk);
                 }
             }
 
@@ -58,8 +69,13 @@ export class WorkspaceManager {
      * This will delete namespace related to a workspace and along with that it will
      * terminate all of the resources inside that namespace
      */
-    async deinitialize() {
+    async deinitialize(accountPk: AccountPk) {
         try {
+            const exists = await dal.workspace.existsByAccountId(accountPk);
+            if (exists) {
+                await dal.workspace.deleteByAccountId(accountPk);
+            }
+
             const namespace = k8sNames.workspaceNamespace(this.accountId);
             await k8sApi.deleteNamespace(namespace);
         } catch (e) {
@@ -72,18 +88,40 @@ export class WorkspaceManager {
     }
 
     /**
-     * TODO: create this on the basis of a config (RAM, storage)
-     *
      * Create a new workspace based on container img and tag
-     *
      * @returns Workspace URL
      */
-    async create(containerImage: string, containerImageTag: string): Promise<string> {
+    async create(
+        accountPk: AccountPk,
+        userPk: UserPk | null,
+        workspaceName: string,
+        containerImage: z.infer<
+            typeof WorkspaceSchemas.CreateWorkspaceRequestBody.shape.containerImage
+        >,
+        containerImageTag: z.infer<
+            typeof WorkspaceSchemas.CreateWorkspaceRequestBody.shape.containerImageTag
+        >,
+    ): Promise<{ workspaceURL: string; workspace: WorkspaceClient }> {
         const namespace = k8sNames.workspaceNamespace(this.accountId);
         const workspaceId = uuid();
         const workspaceDomain = k8sNames.workspaceDomain(workspaceId);
+        let workspacePk: WorkspacePk | null = null;
 
         try {
+            const { workspace } = await dal.workspace.create(
+                accountPk,
+                {
+                    name: workspaceName,
+                    containerImage,
+                    containerImageTag,
+                },
+                userPk,
+            );
+
+            workspacePk = workspace.id;
+
+            log.info(`Workspace created: ${workspacePk}`);
+
             // These operations must be done in the same order without running them concurrently
 
             const pod = await k8sApi.createNamespacedPod(
@@ -116,17 +154,30 @@ export class WorkspaceManager {
 
             log.info(`Ingress created: ${ingress}`);
 
-            return `http://${workspaceDomain}`;
+            return {
+                workspaceURL: `http://${workspaceDomain}`,
+                workspace,
+            };
         } catch (e) {
-            log.error(`Failed to create workspace resources: ${e}`);
+            log.fatal(`Failed to create workspace resources: ${e}. Rollback`);
+
+            if (workspacePk) {
+                await dal.workspace.deleteByWorkspaceId(workspacePk);
+                log.info("Workspace deleted");
+            }
+
             throw new InternalServerError({ message: "Failed to create workspace" });
         }
     }
 
-    async delete(workspaceId: string) {
+    async delete(workspacePk: WorkspacePk, workspaceId: WorkspaceId) {
         const namespace = k8sNames.workspaceNamespace(this.accountId);
 
         try {
+            await dal.workspace.deleteByWorkspaceId(workspacePk);
+
+            log.info("Workspace deleted");
+
             // These operations must be done in the same order without running them concurrently
 
             await k8sNetworkingApi.deleteNamespacedIngress(
@@ -150,7 +201,7 @@ export class WorkspaceManager {
 
             log.info("Pod deleted");
         } catch (e) {
-            log.error(`Failed to delete workspace: ${e}`);
+            log.fatal(`Failed to delete workspace: ${e}`);
             throw new InternalServerError({ message: "Failed to delete workspace" });
         }
     }
@@ -191,6 +242,7 @@ export class WorkspaceManager {
                 },
             },
             spec: {
+                terminationGracePeriodSeconds: 30, // Give some time for workspace main container to terminate gracefully
                 containers: [
                     {
                         name: k8sNames.workspaceMainContainer(config.workspaceId),
@@ -209,6 +261,50 @@ export class WorkspaceManager {
                                 mountPath: "/etc/nginx/conf.d",
                             },
                         ],
+
+                        resources: {
+                            // CPU limits: 1 core maximum, 200 millicores (0.2 cores) minimum request
+                            // Memory limits: 2GB maximum, 512MB minimum request
+                            // Storage limits: 1GB maximum, 500MB minimum request
+                            limits: {
+                                cpu: "1",
+                                memory: "2Gi",
+                                "ephemeral-storage": "1Gi",
+                            },
+                            requests: {
+                                cpu: "200m",
+                                memory: "512Mi",
+                                "ephemeral-storage": "500Mi",
+                            },
+                        },
+                        securityContext: {
+                            // This will allow workspace main container to run as non-root user
+                            // which is required for nginx to run
+                            runAsNonRoot: true,
+                            capabilities: {
+                                drop: ["ALL"], // Drop all capabilities from workspace main container
+                            },
+                            readOnlyRootFilesystem: true, // Make workspace main container to have a read-only root filesystem
+                            allowPrivilegeEscalation: false, // Disable privilege escalation
+                        },
+                        livenessProbe: {
+                            httpGet: {
+                                path: "/",
+                                port: 80,
+                            },
+                            // initialDelaySeconds: 30,
+                            periodSeconds: 10, // Check every 10 seconds
+                            timeoutSeconds: 5, // Timeout after 5 seconds
+                            failureThreshold: 3, // Consider the pod as unhealthy after 3 consecutive failures
+                        },
+                        readinessProbe: {
+                            // initialDelaySeconds: 30,
+                            periodSeconds: 5, // Check every 5 seconds
+                            httpGet: {
+                                path: "/",
+                                port: 80,
+                            },
+                        },
                     },
                 ],
                 volumes: [

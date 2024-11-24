@@ -1,7 +1,7 @@
 import { createRoute } from "@hono/zod-openapi";
 
 import { authenticate } from "@/middlewares/authenticate";
-import { rbacAdmin } from "@/middlewares/rbac";
+import { rbac } from "@/middlewares/rbac";
 import { HttpErrorSchemas } from "@/schemas/http";
 import { OpenApiResponses, status } from "@/utils/http";
 import type { AppRouteHandler as Handler } from "@/utils/types";
@@ -16,9 +16,9 @@ export const initializeWorkspace = createRoute({
     method: "post",
     path: "/initialize",
     tags: [TAGS.WORKSPACE],
-    middleware: [authenticate, rbacAdmin],
+    middleware: [authenticate, rbac.adminOnly],
     responses: {
-        ...OpenApiResponses.rbacProtectedRoute,
+        ...OpenApiResponses.rbacRoute,
         [status.OK]: {
             description: "Account initialized successfully",
             content: {
@@ -42,11 +42,11 @@ export const deinitializeWorkspace = createRoute({
     method: "delete",
     path: "/deinitialize",
     tags: [TAGS.WORKSPACE],
-    middleware: [authenticate, rbacAdmin],
+    middleware: [authenticate, rbac.adminOnly],
     responses: {
-        ...OpenApiResponses.rbacProtectedRoute,
+        ...OpenApiResponses.rbacRoute,
         [status.NO_CONTENT]: {
-            description: "Account deinitialized successfully",
+            description: `Account deinitialized successfully and in the process delete any workspace(s) that account has`,
         },
     },
 });
@@ -55,7 +55,7 @@ export const createWorkspace = createRoute({
     method: "post",
     path: "/",
     tags: [TAGS.WORKSPACE],
-    middleware: [authenticate, rbacAdmin],
+    middleware: [authenticate, rbac.workspaceServiceWideWrite],
     request: {
         body: {
             content: {
@@ -66,20 +66,12 @@ export const createWorkspace = createRoute({
         },
     },
     responses: {
-        ...OpenApiResponses.rbacProtectedRoute,
+        ...OpenApiResponses.rbacRoute,
         [status.CREATED]: {
             description: "Workspace created",
             content: {
                 "application/json": {
                     schema: WorkspaceSchemas.CreateWorkspaceResponseBody,
-                },
-            },
-        },
-        [status.BAD_REQUEST]: {
-            description: "Validation error",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.BadRequestErrorSchema,
                 },
             },
         },
@@ -90,22 +82,14 @@ export const deleteWorkspace = createRoute({
     method: "delete",
     path: "/{workspaceId}",
     tags: [TAGS.WORKSPACE],
-    middleware: [authenticate, rbacAdmin],
+    middleware: [authenticate, rbac.workspaceServiceWideWrite],
     request: {
         params: WorkspaceSchemas.DeleteWorkspaceParams,
     },
     responses: {
-        ...OpenApiResponses.rbacProtectedRoute,
+        ...OpenApiResponses.rbacRoute,
         [status.NO_CONTENT]: {
             description: "Workspace delete",
-        },
-        [status.BAD_REQUEST]: {
-            description: "Validation error",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.BadRequestErrorSchema,
-                },
-            },
         },
     },
 });
