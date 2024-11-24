@@ -3,6 +3,7 @@ import type { AccountClient, AccountPk } from "@/db/models/account";
 import type { IAMPermissionClient, IAMPermissionId } from "@/db/models/iam-permission";
 import { IAM_PERMISSION_ACCESS_TYPE } from "@/db/models/iam-permission-user";
 import { type UserClient, UserPk } from "@/db/models/user";
+import { type WorkspacePk } from "@/db/models/workspace";
 import { log } from "@/lib/logger";
 
 import { InternalServerError } from "./http";
@@ -65,6 +66,110 @@ export class RBACValidator {
         const [permPk, perm] = await dal.iamPermission.findIAMWidePermission(
             this.accountPk,
         );
+
+        if (read && perm.readAll) {
+            return;
+        }
+        if (write && perm.writeAll) {
+            return;
+        }
+
+        const permMapping = await dal.iamPermissionUser.findByPermissionIdAndUserId(
+            permPk,
+            userPk,
+        );
+        const hasReadAccess = permMapping.some(
+            (p) => p.accessType === IAM_PERMISSION_ACCESS_TYPE.READ,
+        );
+        const hasWriteAccess = permMapping.some(
+            (p) => p.accessType === IAM_PERMISSION_ACCESS_TYPE.WRITE,
+        );
+
+        if (read && (hasReadAccess || hasWriteAccess)) return;
+        if (write && hasWriteAccess) return;
+
+        throw new ForbiddenError({
+            message: "You don't have access IAM Service",
+        });
+    }
+
+    async validateWorkspaceServiceWide({
+        read,
+        write,
+    }: IAMPermissionOpts): Promise<void> {
+        if (read && write) {
+            log.error("Only one value is allowed to be added: 'read' or 'write'");
+            throw new InternalServerError({});
+        }
+        if (!read && !write) {
+            log.error("At least one value is required: 'read' or 'write'");
+            throw new InternalServerError({});
+        }
+
+        if (this.isAdmin) return;
+
+        const [userPk] = this.checkUserBlocked();
+
+        const [permPk, perm] =
+            await dal.iamPermission.findWorkspaceServiceWidePermission(this.accountPk);
+
+        if (read && perm.readAll) {
+            return;
+        }
+        if (write && perm.writeAll) {
+            return;
+        }
+
+        const permMapping = await dal.iamPermissionUser.findByPermissionIdAndUserId(
+            permPk,
+            userPk,
+        );
+        const hasReadAccess = permMapping.some(
+            (p) => p.accessType === IAM_PERMISSION_ACCESS_TYPE.READ,
+        );
+        const hasWriteAccess = permMapping.some(
+            (p) => p.accessType === IAM_PERMISSION_ACCESS_TYPE.WRITE,
+        );
+
+        if (read && (hasReadAccess || hasWriteAccess)) return;
+        if (write && hasWriteAccess) return;
+
+        throw new ForbiddenError({
+            message: "You don't have access IAM Service",
+        });
+    }
+
+    async validateWorkspace({
+        read,
+        write,
+        workspacePk,
+    }: IAMPermissionOpts & { workspacePk: WorkspacePk }): Promise<void> {
+        if (read && write) {
+            log.error("Only one value is allowed to be added: 'read' or 'write'");
+            throw new InternalServerError({});
+        }
+        if (!read && !write) {
+            log.error("At least one value is required: 'read' or 'write'");
+            throw new InternalServerError({});
+        }
+
+        if (this.isAdmin) return;
+
+        const [userPk] = this.checkUserBlocked();
+
+        const result = await dal.iamPermission.findWorkspacePermission(
+            this.accountPk,
+            userPk,
+            workspacePk,
+        );
+
+        if (result === null) {
+            throw new ForbiddenError({
+                message: "You don't have access to this workspace",
+            });
+        }
+
+        const [permPk, perm] = result;
 
         if (read && perm.readAll) {
             return;
