@@ -4,13 +4,9 @@
  * Bones
  * OpenAPI spec version: 1.0.0
  */
-import type { PostApiV1IamAccount400Errors } from "./postApiV1IamAccount400Errors";
+import type { PostApiV1IamAccount400AnyOf } from "./postApiV1IamAccount400AnyOf";
+import type { PostApiV1IamAccount400AnyOfThree } from "./postApiV1IamAccount400AnyOfThree";
 
-export type PostApiV1IamAccount400 = {
-    /** Zod Validation Errors */
-    errors: PostApiV1IamAccount400Errors;
-    /** Detailed error message */
-    message: string;
-    /** Reason for validation error */
-    reason: string;
-};
+export type PostApiV1IamAccount400 =
+    | PostApiV1IamAccount400AnyOf
+    | PostApiV1IamAccount400AnyOfThree;

@@ -30,12 +30,11 @@ import type {
     GetApiV1IamUser400,
     GetApiV1IamUser401,
     GetApiV1IamUser403,
-    GetApiV1IamUser404,
     GetApiV1IamUser500,
     GetApiV1IamUserExists200,
     GetApiV1IamUserExists400,
     GetApiV1IamUserExists401,
-    GetApiV1IamUserExists404,
+    GetApiV1IamUserExists403,
     GetApiV1IamUserExists500,
     GetApiV1IamUserExistsParams,
     GetApiV1IamUserParams,
@@ -56,7 +55,6 @@ import type {
     PostApiV1IamUser400,
     PostApiV1IamUser401,
     PostApiV1IamUser403,
-    PostApiV1IamUser404,
     PostApiV1IamUser500,
     PostApiV1IamUserBody,
     PostApiV1IamUserLogin200,
@@ -82,7 +80,6 @@ export const getPostApiV1IamUserMutationOptions = <
         | PostApiV1IamUser400
         | PostApiV1IamUser401
         | PostApiV1IamUser403
-        | PostApiV1IamUser404
         | PostApiV1IamUser500
     >,
     TContext = unknown,
@@ -122,7 +119,6 @@ export type PostApiV1IamUserMutationError = AxiosError<
     | PostApiV1IamUser400
     | PostApiV1IamUser401
     | PostApiV1IamUser403
-    | PostApiV1IamUser404
     | PostApiV1IamUser500
 >;
 
@@ -131,7 +127,6 @@ export const usePostApiV1IamUser = <
         | PostApiV1IamUser400
         | PostApiV1IamUser401
         | PostApiV1IamUser403
-        | PostApiV1IamUser404
         | PostApiV1IamUser500
     >,
     TContext = unknown,
@@ -176,7 +171,6 @@ export const getGetApiV1IamUserQueryOptions = <
         | GetApiV1IamUser400
         | GetApiV1IamUser401
         | GetApiV1IamUser403
-        | GetApiV1IamUser404
         | GetApiV1IamUser500
     >,
 >(
@@ -207,11 +201,7 @@ export type GetApiV1IamUserQueryResult = NonNullable<
     Awaited<ReturnType<typeof getApiV1IamUser>>
 >;
 export type GetApiV1IamUserQueryError = AxiosError<
-    | GetApiV1IamUser400
-    | GetApiV1IamUser401
-    | GetApiV1IamUser403
-    | GetApiV1IamUser404
-    | GetApiV1IamUser500
+    GetApiV1IamUser400 | GetApiV1IamUser401 | GetApiV1IamUser403 | GetApiV1IamUser500
 >;
 
 export function useGetApiV1IamUser<
@@ -220,7 +210,6 @@ export function useGetApiV1IamUser<
         | GetApiV1IamUser400
         | GetApiV1IamUser401
         | GetApiV1IamUser403
-        | GetApiV1IamUser404
         | GetApiV1IamUser500
     >,
 >(
@@ -246,7 +235,6 @@ export function useGetApiV1IamUser<
         | GetApiV1IamUser400
         | GetApiV1IamUser401
         | GetApiV1IamUser403
-        | GetApiV1IamUser404
         | GetApiV1IamUser500
     >,
 >(
@@ -272,7 +260,6 @@ export function useGetApiV1IamUser<
         | GetApiV1IamUser400
         | GetApiV1IamUser401
         | GetApiV1IamUser403
-        | GetApiV1IamUser404
         | GetApiV1IamUser500
     >,
 >(
@@ -291,7 +278,6 @@ export function useGetApiV1IamUser<
         | GetApiV1IamUser400
         | GetApiV1IamUser401
         | GetApiV1IamUser403
-        | GetApiV1IamUser404
         | GetApiV1IamUser500
     >,
 >(
@@ -696,7 +682,7 @@ export const getGetApiV1IamUserExistsQueryOptions = <
     TError = AxiosError<
         | GetApiV1IamUserExists400
         | GetApiV1IamUserExists401
-        | GetApiV1IamUserExists404
+        | GetApiV1IamUserExists403
         | GetApiV1IamUserExists500
     >,
 >(
@@ -733,7 +719,7 @@ export type GetApiV1IamUserExistsQueryResult = NonNullable<
 export type GetApiV1IamUserExistsQueryError = AxiosError<
     | GetApiV1IamUserExists400
     | GetApiV1IamUserExists401
-    | GetApiV1IamUserExists404
+    | GetApiV1IamUserExists403
     | GetApiV1IamUserExists500
 >;
 
@@ -742,7 +728,7 @@ export function useGetApiV1IamUserExists<
     TError = AxiosError<
         | GetApiV1IamUserExists400
         | GetApiV1IamUserExists401
-        | GetApiV1IamUserExists404
+        | GetApiV1IamUserExists403
         | GetApiV1IamUserExists500
     >,
 >(
@@ -771,7 +757,7 @@ export function useGetApiV1IamUserExists<
     TError = AxiosError<
         | GetApiV1IamUserExists400
         | GetApiV1IamUserExists401
-        | GetApiV1IamUserExists404
+        | GetApiV1IamUserExists403
         | GetApiV1IamUserExists500
     >,
 >(
@@ -800,7 +786,7 @@ export function useGetApiV1IamUserExists<
     TError = AxiosError<
         | GetApiV1IamUserExists400
         | GetApiV1IamUserExists401
-        | GetApiV1IamUserExists404
+        | GetApiV1IamUserExists403
         | GetApiV1IamUserExists500
     >,
 >(
@@ -822,7 +808,7 @@ export function useGetApiV1IamUserExists<
     TError = AxiosError<
         | GetApiV1IamUserExists400
         | GetApiV1IamUserExists401
-        | GetApiV1IamUserExists404
+        | GetApiV1IamUserExists403
         | GetApiV1IamUserExists500
     >,
 >(

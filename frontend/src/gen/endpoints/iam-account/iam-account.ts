@@ -41,6 +41,7 @@ import type {
     PostApiV1IamAccountLoginBody,
     PostApiV1IamAccountResetPassword200,
     PostApiV1IamAccountResetPassword400,
+    PostApiV1IamAccountResetPassword404,
     PostApiV1IamAccountResetPassword500,
     PostApiV1IamAccountResetPasswordBody,
     PostApiV1IamAccountResetPasswordResetToken200,
@@ -569,7 +570,9 @@ export const postApiV1IamAccountResetPassword = (
 
 export const getPostApiV1IamAccountResetPasswordMutationOptions = <
     TError = AxiosError<
-        PostApiV1IamAccountResetPassword400 | PostApiV1IamAccountResetPassword500
+        | PostApiV1IamAccountResetPassword400
+        | PostApiV1IamAccountResetPassword404
+        | PostApiV1IamAccountResetPassword500
     >,
     TContext = unknown,
 >(options?: {
@@ -606,12 +609,16 @@ export type PostApiV1IamAccountResetPasswordMutationResult = NonNullable<
 export type PostApiV1IamAccountResetPasswordMutationBody =
     PostApiV1IamAccountResetPasswordBody;
 export type PostApiV1IamAccountResetPasswordMutationError = AxiosError<
-    PostApiV1IamAccountResetPassword400 | PostApiV1IamAccountResetPassword500
+    | PostApiV1IamAccountResetPassword400
+    | PostApiV1IamAccountResetPassword404
+    | PostApiV1IamAccountResetPassword500
 >;
 
 export const usePostApiV1IamAccountResetPassword = <
     TError = AxiosError<
-        PostApiV1IamAccountResetPassword400 | PostApiV1IamAccountResetPassword500
+        | PostApiV1IamAccountResetPassword400
+        | PostApiV1IamAccountResetPassword404
+        | PostApiV1IamAccountResetPassword500
     >,
     TContext = unknown,
 >(options?: {

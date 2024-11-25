@@ -25,9 +25,7 @@ import type {
     GetApiV1IamLoginRefresh401,
     GetApiV1IamLoginRefresh500,
     GetApiV1IamMe200,
-    GetApiV1IamMe400,
     GetApiV1IamMe401,
-    GetApiV1IamMe404,
     GetApiV1IamMe500,
     PostApiV1IamLogout401,
     PostApiV1IamLogout500,
@@ -170,9 +168,7 @@ export const getGetApiV1IamMeQueryKey = () => {
 
 export const getGetApiV1IamMeQueryOptions = <
     TData = Awaited<ReturnType<typeof getApiV1IamMe>>,
-    TError = AxiosError<
-        GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
-    >,
+    TError = AxiosError<GetApiV1IamMe401 | GetApiV1IamMe500>,
 >(options?: {
     query?: Partial<
         UseQueryOptions<Awaited<ReturnType<typeof getApiV1IamMe>>, TError, TData>
@@ -197,15 +193,11 @@ export const getGetApiV1IamMeQueryOptions = <
 export type GetApiV1IamMeQueryResult = NonNullable<
     Awaited<ReturnType<typeof getApiV1IamMe>>
 >;
-export type GetApiV1IamMeQueryError = AxiosError<
-    GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
->;
+export type GetApiV1IamMeQueryError = AxiosError<GetApiV1IamMe401 | GetApiV1IamMe500>;
 
 export function useGetApiV1IamMe<
     TData = Awaited<ReturnType<typeof getApiV1IamMe>>,
-    TError = AxiosError<
-        GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
-    >,
+    TError = AxiosError<GetApiV1IamMe401 | GetApiV1IamMe500>,
 >(options: {
     query: Partial<
         UseQueryOptions<Awaited<ReturnType<typeof getApiV1IamMe>>, TError, TData>
@@ -222,9 +214,7 @@ export function useGetApiV1IamMe<
 }): DefinedUseQueryResult<TData, TError> & { queryKey: QueryKey };
 export function useGetApiV1IamMe<
     TData = Awaited<ReturnType<typeof getApiV1IamMe>>,
-    TError = AxiosError<
-        GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
-    >,
+    TError = AxiosError<GetApiV1IamMe401 | GetApiV1IamMe500>,
 >(options?: {
     query?: Partial<
         UseQueryOptions<Awaited<ReturnType<typeof getApiV1IamMe>>, TError, TData>
@@ -241,9 +231,7 @@ export function useGetApiV1IamMe<
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey };
 export function useGetApiV1IamMe<
     TData = Awaited<ReturnType<typeof getApiV1IamMe>>,
-    TError = AxiosError<
-        GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
-    >,
+    TError = AxiosError<GetApiV1IamMe401 | GetApiV1IamMe500>,
 >(options?: {
     query?: Partial<
         UseQueryOptions<Awaited<ReturnType<typeof getApiV1IamMe>>, TError, TData>
@@ -253,9 +241,7 @@ export function useGetApiV1IamMe<
 
 export function useGetApiV1IamMe<
     TData = Awaited<ReturnType<typeof getApiV1IamMe>>,
-    TError = AxiosError<
-        GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
-    >,
+    TError = AxiosError<GetApiV1IamMe401 | GetApiV1IamMe500>,
 >(options?: {
     query?: Partial<
         UseQueryOptions<Awaited<ReturnType<typeof getApiV1IamMe>>, TError, TData>
