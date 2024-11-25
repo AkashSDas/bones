@@ -10,4 +10,4 @@ const router = app
     .openapi(routes.updateIAMPermission, handlers.updateIAMPermission)
     .openapi(routes.getIAMPermission, handlers.getIAMPermission);
 
-export { router as iamRouter };
+export { router as iamPermissionRouter };

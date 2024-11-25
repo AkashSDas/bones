@@ -15,6 +15,7 @@ import { requestId } from "hono/request-id";
 import { v7 as uuid } from "uuid";
 
 import { iamRouter } from "./api/iam";
+import { iamPermissionRouter } from "./api/iam-permission";
 import { pingRouter } from "./api/ping";
 import { workspaceRouter } from "./api/workspace";
 import { asyncLocalStorage, log } from "./lib/logger";
@@ -127,6 +128,7 @@ app.get("/api/doc/ref", apiReference({ spec: { url: "/api/doc" } }));
 
 app.route("/api/v1/ping", pingRouter);
 app.route("/api/v1/iam", iamRouter);
+app.route("/api/v1/iam-permission", iamPermissionRouter);
 app.route("/api/v1/workspace", workspaceRouter);
 
 log.info(`Server is running on port ${env.PORT}`);

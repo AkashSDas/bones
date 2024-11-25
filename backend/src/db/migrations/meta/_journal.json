@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1728584045328,
+      "when": 1732503322297,
       "tag": "0000_initial",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1731833719854,
-      "tag": "0001_create iam permission and workspace tables",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1731833916482,
-      "tag": "0002_change index names for user and account table",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1731836847658,
-      "tag": "0003_drop read-write columns and add policy column in iam permission table",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1732370037048,
-      "tag": "0004_create iam permission table and refactor relationships between tables",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1732444316626,
-      "tag": "0005_create iam permission user mapping table and remove policy column in iam permission table",
       "breakpoints": true
     }
   ]
