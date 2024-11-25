@@ -39,12 +39,18 @@ class IAMPermissionDAL extends BaseDAL {
     async createWorkspaceServiceWide(
         accountPk: AccountPk,
     ): Promise<IAMPermissionClient> {
-        const exists = await this.findWorkspaceServiceWidePermission(accountPk);
-        if (exists) {
-            log.info(
-                `Workspace service wide permission already exists for account ${accountPk}`,
-            );
-            return exists[1];
+        try {
+            const exists = await this.findWorkspaceServiceWidePermission(accountPk);
+            if (exists) {
+                log.info(
+                    `Workspace service wide permission already exists for account ${accountPk}`,
+                );
+                return exists[1];
+            }
+        } catch (e) {
+            if (!(e instanceof InternalServerError)) {
+                throw e;
+            }
         }
 
         const result = await this.db
@@ -66,9 +72,15 @@ class IAMPermissionDAL extends BaseDAL {
         accountPk: AccountPk,
         tx?: TransactionCtx,
     ): Promise<IAMPermissionClient> {
-        const exists = await this.findIAMWidePermission(accountPk, tx);
-        if (exists) {
-            throw new ConflictError({ message: "IAM permission already exists" });
+        try {
+            const exists = await this.findIAMWidePermission(accountPk, tx);
+            if (exists) {
+                throw new ConflictError({ message: "IAM permission already exists" });
+            }
+        } catch (e) {
+            if (!(e instanceof InternalServerError)) {
+                throw e;
+            }
         }
 
         const ctx = this.getDbContext(tx);
