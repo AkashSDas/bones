@@ -34,11 +34,11 @@ import type {
 export const getApiV1IamLoginRefresh = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<GetApiV1IamLoginRefresh200>> => {
-    return axios.default.get(`http://localhost:8000/api/v1/iam/login/refresh`, options);
+    return axios.default.get(`http://localhost:5050/api/v1/iam/login/refresh`, options);
 };
 
 export const getGetApiV1IamLoginRefreshQueryKey = () => {
-    return [`http://localhost:8000/api/v1/iam/login/refresh`] as const;
+    return [`http://localhost:5050/api/v1/iam/login/refresh`] as const;
 };
 
 export const getGetApiV1IamLoginRefreshQueryOptions = <
@@ -159,11 +159,11 @@ export function useGetApiV1IamLoginRefresh<
 export const getApiV1IamMe = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<GetApiV1IamMe200>> => {
-    return axios.default.get(`http://localhost:8000/api/v1/iam/me`, options);
+    return axios.default.get(`http://localhost:5050/api/v1/iam/me`, options);
 };
 
 export const getGetApiV1IamMeQueryKey = () => {
-    return [`http://localhost:8000/api/v1/iam/me`] as const;
+    return [`http://localhost:5050/api/v1/iam/me`] as const;
 };
 
 export const getGetApiV1IamMeQueryOptions = <
@@ -263,7 +263,7 @@ export const postApiV1IamLogout = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<void>> => {
     return axios.default.post(
-        `http://localhost:8000/api/v1/iam/logout`,
+        `http://localhost:5050/api/v1/iam/logout`,
         undefined,
         options,
     );

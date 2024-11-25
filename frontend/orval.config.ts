@@ -10,7 +10,7 @@ export default defineConfig({
             target: "./src/gen/endpoints",
             schemas: "./src/gen/schemas",
             // fileExtension: ".gen.ts", // TODO: issue with this is that the imports in each are file have extension .ts and not .gen.ts
-            baseUrl: "http://localhost:8000",
+            baseUrl: "http://localhost:5050",
             mock: true,
             client: "react-query",
             // httpClient: "fetch",

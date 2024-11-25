@@ -60,7 +60,7 @@ export const postApiV1WorkspaceInitialize = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<PostApiV1WorkspaceInitialize200>> => {
     return axios.default.post(
-        `http://localhost:8000/api/v1/workspace/initialize`,
+        `http://localhost:5050/api/v1/workspace/initialize`,
         undefined,
         options,
     );
@@ -141,7 +141,7 @@ export const deleteApiV1WorkspaceDeinitialize = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<void>> => {
     return axios.default.delete(
-        `http://localhost:8000/api/v1/workspace/deinitialize`,
+        `http://localhost:5050/api/v1/workspace/deinitialize`,
         options,
     );
 };
@@ -222,7 +222,7 @@ export const postApiV1Workspace = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<PostApiV1Workspace201>> => {
     return axios.default.post(
-        `http://localhost:8000/api/v1/workspace`,
+        `http://localhost:5050/api/v1/workspace`,
         postApiV1WorkspaceBody,
         options,
     );
@@ -305,7 +305,7 @@ export const getApiV1Workspace = (
     params?: GetApiV1WorkspaceParams,
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<void>> => {
-    return axios.default.get(`http://localhost:8000/api/v1/workspace`, {
+    return axios.default.get(`http://localhost:5050/api/v1/workspace`, {
         ...options,
         params: { ...params, ...options?.params },
     });
@@ -313,7 +313,7 @@ export const getApiV1Workspace = (
 
 export const getGetApiV1WorkspaceQueryKey = (params?: GetApiV1WorkspaceParams) => {
     return [
-        `http://localhost:8000/api/v1/workspace`,
+        `http://localhost:5050/api/v1/workspace`,
         ...(params ? [params] : []),
     ] as const;
 };
@@ -481,7 +481,7 @@ export const deleteApiV1WorkspaceWorkspaceId = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<void>> => {
     return axios.default.delete(
-        `http://localhost:8000/api/v1/workspace/${workspaceId}`,
+        `http://localhost:5050/api/v1/workspace/${workspaceId}`,
         options,
     );
 };
@@ -565,7 +565,7 @@ export const patchApiV1WorkspaceWorkspaceId = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<void>> => {
     return axios.default.patch(
-        `http://localhost:8000/api/v1/workspace/${workspaceId}`,
+        `http://localhost:5050/api/v1/workspace/${workspaceId}`,
         patchApiV1WorkspaceWorkspaceIdBody,
         options,
     );
@@ -650,13 +650,13 @@ export const getApiV1WorkspaceWorkspaceId = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<void>> => {
     return axios.default.get(
-        `http://localhost:8000/api/v1/workspace/${workspaceId}`,
+        `http://localhost:5050/api/v1/workspace/${workspaceId}`,
         options,
     );
 };
 
 export const getGetApiV1WorkspaceWorkspaceIdQueryKey = (workspaceId: string) => {
-    return [`http://localhost:8000/api/v1/workspace/${workspaceId}`] as const;
+    return [`http://localhost:5050/api/v1/workspace/${workspaceId}`] as const;
 };
 
 export const getGetApiV1WorkspaceWorkspaceIdQueryOptions = <

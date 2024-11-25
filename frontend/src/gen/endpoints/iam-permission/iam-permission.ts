@@ -44,7 +44,7 @@ export const getApiV1IamPermission = (
     params?: GetApiV1IamPermissionParams,
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<GetApiV1IamPermission200>> => {
-    return axios.default.get(`http://localhost:8000/api/v1/iam-permission`, {
+    return axios.default.get(`http://localhost:5050/api/v1/iam-permission`, {
         ...options,
         params: { ...params, ...options?.params },
     });
@@ -54,7 +54,7 @@ export const getGetApiV1IamPermissionQueryKey = (
     params?: GetApiV1IamPermissionParams,
 ) => {
     return [
-        `http://localhost:8000/api/v1/iam-permission`,
+        `http://localhost:5050/api/v1/iam-permission`,
         ...(params ? [params] : []),
     ] as const;
 };
@@ -223,7 +223,7 @@ export const patchApiV1IamPermissionPermissionId = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<PatchApiV1IamPermissionPermissionId200>> => {
     return axios.default.patch(
-        `http://localhost:8000/api/v1/iam-permission/${permissionId}`,
+        `http://localhost:5050/api/v1/iam-permission/${permissionId}`,
         patchApiV1IamPermissionPermissionIdBody,
         options,
     );
@@ -309,13 +309,13 @@ export const getApiV1IamPermissionPermissionId = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<GetApiV1IamPermissionPermissionId200>> => {
     return axios.default.get(
-        `http://localhost:8000/api/v1/iam-permission/${permissionId}`,
+        `http://localhost:5050/api/v1/iam-permission/${permissionId}`,
         options,
     );
 };
 
 export const getGetApiV1IamPermissionPermissionIdQueryKey = (permissionId: string) => {
-    return [`http://localhost:8000/api/v1/iam-permission/${permissionId}`] as const;
+    return [`http://localhost:5050/api/v1/iam-permission/${permissionId}`] as const;
 };
 
 export const getGetApiV1IamPermissionPermissionIdQueryOptions = <
