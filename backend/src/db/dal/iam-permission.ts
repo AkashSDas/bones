@@ -1,4 +1,4 @@
-import { and, asc, eq, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { IAMPermissionSchemas } from "@/api/iam-permission/iam-permission.schema";
@@ -238,93 +238,101 @@ class IAMPermissionDAL extends BaseDAL {
 
     async findManyByAccountId(
         accountPk: AccountPk,
-        search: string | undefined = undefined,
+        search: string | undefined,
         limit: number = 20,
         offset: number = 0,
     ): Promise<[number, (IAMPermissionClient & { users: UserClient[] })[]]> {
-        if (search !== undefined) {
-            const iamSearchCondition = sql`to_tsvector('english', ${iamPermission.name}) @@ to_tsquery('english', ${search})`;
-            const userSearchCondition = sql`to_tsvector('english', ${user.username}) @@ to_tsquery('english', ${search})`;
-
-            const totalCount = await this.db
-                .select({ count: sql<number>`COUNT(${iamPermission.id})` })
+        if (search === undefined) {
+            const totalPermissions = await this.db
+                .select({ count: sql<number>`COUNT(DISTINCT ${iamPermission.id})` })
                 .from(iamPermission)
-                .innerJoin(
-                    iamPermissionUser,
-                    eq(iamPermissionUser.permissionId, iamPermission.id),
-                )
-                .innerJoin(user, eq(user.id, iamPermissionUser.userId))
-                .where(
-                    and(
-                        or(iamSearchCondition, userSearchCondition),
-                        eq(iamPermission.accountId, accountPk),
-                    ),
-                )
+                .where(eq(iamPermission.accountId, accountPk))
                 .then((r) => r[0].count);
 
-            const result = await this.db
-                .select({
-                    ...this.permissionSelect,
-                    users: sql<UserClient[]>`ARRAY_AGG(${user})`,
-                })
+            const permissions = await this.db
+                .select(this.permissionSelect)
                 .from(iamPermission)
-                .innerJoin(
-                    iamPermissionUser,
-                    eq(iamPermissionUser.permissionId, iamPermission.id),
-                )
-                .innerJoin(user, eq(user.id, iamPermissionUser.userId))
-                .where(
-                    and(
-                        or(iamSearchCondition, userSearchCondition),
-                        eq(iamPermission.accountId, accountPk),
-                    ),
-                )
                 .orderBy(asc(iamPermission.updatedAt))
                 .limit(limit)
                 .offset(offset);
 
-            return [
-                totalCount,
-                result.map((r) => ({
-                    ...r,
-                    users: r.users.map((u) => UserClientSchema.parse(u)),
-                })),
-            ];
+            const iamPermissionUsers = await this.db
+                .select({
+                    permissionId: iamPermissionUser.permissionId,
+                    users: sql<UserClient[]>`ARRAY_AGG(${user})`,
+                })
+                .from(user)
+                .innerJoin(iamPermissionUser, eq(iamPermissionUser.userId, user.id))
+                .where(
+                    inArray(
+                        iamPermissionUser.permissionId,
+                        permissions.map((p) => p.id),
+                    ),
+                )
+                .groupBy(iamPermissionUser.permissionId);
+
+            const results: (IAMPermissionClient & { users: UserClient[] })[] = [];
+
+            for (const perm of permissions) {
+                const users = iamPermissionUsers
+                    .filter((u) => u.permissionId === perm.id)
+                    .map((u) => u.users);
+
+                results.push({ ...perm, users: users[0] });
+            }
+
+            return [totalPermissions, results];
         } else {
-            const totalCount = await this.db
-                .select({ count: sql<number>`COUNT(${iamPermission.id})` })
+            const totalPermissions = await this.db
+                .select({ count: sql<number>`COUNT(DISTINCT ${iamPermission.id})` })
                 .from(iamPermission)
-                .innerJoin(
-                    iamPermissionUser,
-                    eq(iamPermissionUser.permissionId, iamPermission.id),
+                .where(
+                    and(
+                        eq(iamPermission.accountId, accountPk),
+                        sql`to_tsvector('english', ${iamPermission.name}) @@ to_tsquery('english', ${search})`,
+                    ),
                 )
-                .innerJoin(user, eq(user.id, iamPermissionUser.userId))
-                .where(eq(iamPermission.accountId, accountPk))
                 .then((r) => r[0].count);
 
-            const result = await this.db
-                .select({
-                    ...this.permissionSelect,
-                    users: sql<UserClient[]>`ARRAY_AGG(${user})`,
-                })
+            const permissions = await this.db
+                .select(this.permissionSelect)
                 .from(iamPermission)
-                .innerJoin(
-                    iamPermissionUser,
-                    eq(iamPermissionUser.permissionId, iamPermission.id),
+                .where(
+                    and(
+                        eq(iamPermission.accountId, accountPk),
+                        sql`to_tsvector('english', ${iamPermission.name}) @@ to_tsquery('english', ${search})`,
+                    ),
                 )
-                .innerJoin(user, eq(user.id, iamPermissionUser.userId))
-                .where(eq(iamPermission.accountId, accountPk))
                 .orderBy(asc(iamPermission.updatedAt))
                 .limit(limit)
                 .offset(offset);
 
-            return [
-                totalCount,
-                result.map((r) => ({
-                    ...r,
-                    users: r.users.map((u) => UserClientSchema.parse(u)),
-                })),
-            ];
+            const iamPermissionUsers = await this.db
+                .select({
+                    permissionId: iamPermissionUser.permissionId,
+                    users: sql<UserClient[]>`ARRAY_AGG(${user})`,
+                })
+                .from(user)
+                .innerJoin(iamPermissionUser, eq(iamPermissionUser.userId, user.id))
+                .where(
+                    inArray(
+                        iamPermissionUser.permissionId,
+                        permissions.map((p) => p.id),
+                    ),
+                )
+                .groupBy(iamPermissionUser.permissionId);
+
+            const results: (IAMPermissionClient & { users: UserClient[] })[] = [];
+
+            for (const perm of permissions) {
+                const users = iamPermissionUsers
+                    .filter((u) => u.permissionId === perm.id)
+                    .map((u) => u.users);
+
+                results.push({ ...perm, users: users[0] });
+            }
+
+            return [totalPermissions, results];
         }
     }
 
