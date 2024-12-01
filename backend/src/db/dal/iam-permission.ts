@@ -213,27 +213,41 @@ class IAMPermissionDAL extends BaseDAL {
     async findById(
         permissionId: IAMPermissionId,
         accountPk: AccountPk,
-    ): Promise<[number, IAMPermissionClient & { users: UserClient[] }] | null> {
-        const result = await this.db
-            .select({
-                ...this.permissionSelect,
-                users: sql<UserClient[]>`ARRAY_AGG(${user})`,
-            })
+    ): Promise<
+        [IAMPermissionPk, IAMPermissionClient & { users: UserClient[] }] | null
+    > {
+        const permissions = await this.db
+            .select(this.permissionSelect)
             .from(iamPermission)
-            .innerJoin(
-                iamPermissionUser,
-                eq(iamPermissionUser.permissionId, iamPermission.id),
-            )
-            .innerJoin(user, eq(user.id, iamPermissionUser.userId))
             .where(
                 and(
                     eq(iamPermission.permissionId, permissionId),
                     eq(iamPermission.accountId, accountPk),
                 ),
             )
+            .orderBy(asc(iamPermission.updatedAt))
             .limit(1);
 
-        return result.length === 0 ? null : [result[0].id, result[0]];
+        if (permissions.length === 0) {
+            return null;
+        }
+
+        const permission = permissions[0];
+
+        const iamPermissionUsers = await this.db
+            .select({
+                permissionId: iamPermissionUser.permissionId,
+                users: sql<UserClient[]>`ARRAY_AGG(${user})`,
+            })
+            .from(user)
+            .innerJoin(iamPermissionUser, eq(iamPermissionUser.userId, user.id))
+            .where(eq(iamPermissionUser.permissionId, permission.id))
+            .groupBy(iamPermissionUser.permissionId);
+
+        return [
+            permission.id,
+            { ...permission, users: iamPermissionUsers.map((u) => u.users)[0] },
+        ];
     }
 
     async findManyByAccountId(
