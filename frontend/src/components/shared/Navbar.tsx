@@ -4,6 +4,7 @@ import {
     KeyRoundIcon,
     MenuIcon,
     PlusIcon,
+    ScrollIcon,
     SearchIcon,
     UsersIcon,
 } from "lucide-react";
@@ -33,14 +34,14 @@ export function Navbar(): React.JSX.Element {
     const { isPending, logout } = useLogout();
 
     return (
-        <nav className="flex items-center justify-between w-full h-12 gap-2 px-4 border-b md:h-14 md:px-8 bg-grey-950 border-b-grey-800">
+        <nav className="flex gap-2 justify-between items-center px-4 w-full h-12 border-b md:h-14 md:px-8 bg-grey-950 border-b-grey-800">
             <Link to="/">
                 <Logo className="h-[23.15px] w-[37.98px] md:h-[30.86px] md:w-[50.64px]" />
             </Link>
 
             <MobileSideMenu />
 
-            <div className="items-center justify-end hidden gap-4 md:flex">
+            <div className="hidden gap-4 justify-end items-center md:flex">
                 {isLoading ? (
                     <Skeleton className="w-full h-9 min-w-32" />
                 ) : isLoggedIn ? (
@@ -101,7 +102,7 @@ function MobileSideMenu(): React.JSX.Element {
                             </Button>
                         </SheetClose>
                     ) : (
-                        <div className="flex flex-col w-full gap-2">
+                        <div className="flex flex-col gap-2 w-full">
                             <SheetClose asChild>
                                 <Button variant="secondary" asChild className="w-full">
                                     <Link to="/auth/login">Login</Link>
@@ -178,6 +179,18 @@ function CommandPalette() {
                     <CommandSeparator />
 
                     <CommandGroup heading="IAM">
+                        <Link to="/iam/users/new" onClick={setFalse}>
+                            <CommandItem
+                                onSelect={() => {
+                                    navigate({ to: "/iam/users/new" });
+                                    setFalse();
+                                }}
+                            >
+                                <PlusIcon />
+                                <span>Create IAM user</span>
+                            </CommandItem>
+                        </Link>
+
                         <Link to="/iam/users" onClick={setFalse}>
                             <CommandItem
                                 onSelect={() => {
@@ -190,15 +203,15 @@ function CommandPalette() {
                             </CommandItem>
                         </Link>
 
-                        <Link to="/iam/users/new" onClick={setFalse}>
+                        <Link to="/iam/policies" onClick={setFalse}>
                             <CommandItem
                                 onSelect={() => {
-                                    navigate({ to: "/iam/users/new" });
+                                    navigate({ to: "/iam/policies" });
                                     setFalse();
                                 }}
                             >
-                                <PlusIcon />
-                                <span>Create IAM user</span>
+                                <ScrollIcon />
+                                <span>IAM Policies</span>
                             </CommandItem>
                         </Link>
                     </CommandGroup>
