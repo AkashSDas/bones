@@ -21,4 +21,9 @@ export const iamKeys = {
     iamUser(userId: string) {
         return ["iamUser", userId];
     },
+
+    /** List of IAM policies in an account */
+    iamPolicies(limit: string, offset: string, search: string | undefined) {
+        return ["iamPolicies", limit, offset, search] as const;
+    },
 };
