@@ -20,8 +20,9 @@ import {
     RotateCwIcon,
     SearchIcon,
     TelescopeIcon,
+    UsersIcon,
 } from "lucide-react";
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 import { useDebounceCallback, useMediaQuery } from "usehooks-ts";
 import { z } from "zod";
 
@@ -30,7 +31,7 @@ import { Button } from "@/components/shared/Button";
 import { Input } from "@/components/shared/Input";
 import { Loader } from "@/components/shared/Loader";
 import { useGetApiV1IamPermission } from "@/gen/endpoints/iam-permission/iam-permission";
-import { GetApiV1IamPermission200PermissionsItem } from "@/gen/schemas";
+import { type GetApiV1IamPermission200PermissionsItem } from "@/gen/schemas";
 import { useAuth } from "@/hooks/auth";
 import { formatDate } from "@/utils/datetime";
 import { iamKeys } from "@/utils/react-query";
@@ -96,8 +97,7 @@ const columns = [
                 </div>
             );
         },
-        minSize: 200,
-        maxSize: 200,
+        minSize: 360,
     }),
     columnHelper.accessor("name", {
         header: () => (
@@ -107,6 +107,7 @@ const columns = [
             </span>
         ),
         cell: (info) => <span className="select-all">{info.getValue()}</span>,
+        minSize: 360,
     }),
     columnHelper.accessor("serviceType", {
         header: () => (
@@ -123,6 +124,7 @@ const columns = [
                 </span>
             );
         },
+        minSize: 64,
     }),
     columnHelper.accessor("isServiceWide", {
         header: () => (
@@ -141,7 +143,7 @@ const columns = [
                 {info.getValue() ? "Yes" : "No"}
             </span>
         ),
-        maxSize: 34,
+        minSize: 64,
     }),
     columnHelper.accessor("readAll", {
         header: () => (
@@ -160,7 +162,7 @@ const columns = [
                 {info.getValue() ? "Yes" : "No"}
             </span>
         ),
-        maxSize: 34,
+        minSize: 64,
     }),
     columnHelper.accessor("writeAll", {
         header: () => (
@@ -179,7 +181,34 @@ const columns = [
                 {info.getValue() ? "Yes" : "No"}
             </span>
         ),
-        maxSize: 34,
+        minSize: 64,
+    }),
+    columnHelper.accessor("users", {
+        header: () => (
+            <span className="flex gap-2 items-center">
+                <UsersIcon size="16px" />
+                IAM Users
+            </span>
+        ),
+        cell: (info) => {
+            const users = info.getValue();
+
+            if (users.length === 0) {
+                return <span>No Users</span>;
+            }
+
+            return (
+                <span
+                    className={cn(
+                        "font-medium text-xs !h-6 tracking-wider uppercase rounded-sm px-4 py-1 text-white",
+                        info.getValue() ? "bg-error-500" : "bg-success-500",
+                    )}
+                >
+                    Design this portion
+                </span>
+            );
+        },
+        minSize: 64,
     }),
     columnHelper.accessor("createdAt", {
         header: () => (
@@ -189,6 +218,7 @@ const columns = [
             </span>
         ),
         cell: (info) => formatDate(info.getValue(), "DD MMM YYYY AM/PM"),
+        minSize: 64,
     }),
     columnHelper.accessor("updatedAt", {
         header: () => (
@@ -198,6 +228,7 @@ const columns = [
             </span>
         ),
         cell: (info) => formatDate(info.getValue(), "DD MMM YYYY AM/PM"),
+        minSize: 64,
     }),
 ];
 

@@ -26,4 +26,9 @@ export const iamKeys = {
     iamPolicies(limit: string, offset: string, search: string | undefined) {
         return ["iamPolicies", limit, offset, search] as const;
     },
+
+    /** IAM policy */
+    iamPolicy(permissionId: string) {
+        return ["iamPolicy", permissionId];
+    },
 };
