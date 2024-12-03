@@ -25,7 +25,7 @@ import { useToast } from "@/hooks/toast";
 
 export const Route = createFileRoute("/iam/users/new")({
     component: () => (
-        <AuthProtected forRoles={["admin"]}>
+        <AuthProtected>
             <CreateIAMUser />
         </AuthProtected>
     ),

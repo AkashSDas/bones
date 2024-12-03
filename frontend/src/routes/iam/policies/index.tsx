@@ -45,7 +45,7 @@ const SearchSchema = z.object({
 
 export const Route = createFileRoute("/iam/policies/")({
     component: () => (
-        <AuthProtected forRoles={["admin"]}>
+        <AuthProtected>
             <IAMPoliciesView />
         </AuthProtected>
     ),
