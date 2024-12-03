@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { UsersIcon } from "lucide-react";
 
 import { PolicyUpdateForm } from "@/components/iam-permission/PolicyUpdateForm";
 import { AuthProtected } from "@/components/shared/AuthProtected";
@@ -8,7 +9,7 @@ import { useGetApiV1IamPermissionPermissionId } from "@/gen/endpoints/iam-permis
 import { useAuth } from "@/hooks/auth";
 import { iamKeys } from "@/utils/react-query";
 
-export const Route = createFileRoute("/iam/policies/$policyId")({
+export const Route = createFileRoute("/iam/policies/$policyId/")({
     component: () => (
         <AuthProtected>
             <IAMPolicyDetails />
@@ -51,6 +52,12 @@ function IAMPolicyDetails() {
                     <>
                         <PolicyUpdateForm permission={data.permission} />
                         <hr className="my-16 border border-grey-800" />
+
+                        <Link to="/iam/policies/$policyId/users" params={{ policyId }}>
+                            <Button className="w-fit" variant="secondary">
+                                <UsersIcon /> See users associated with this policy
+                            </Button>
+                        </Link>
                     </>
                 ) : null}
             </section>

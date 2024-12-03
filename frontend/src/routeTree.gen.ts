@@ -24,8 +24,8 @@ import { Route as IamUsersIndexImport } from "./routes/iam/users/index"
 import { Route as IamPoliciesIndexImport } from "./routes/iam/policies/index"
 import { Route as IamUsersNewImport } from "./routes/iam/users/new"
 import { Route as IamUsersUserIdImport } from "./routes/iam/users/$userId"
-import { Route as IamPoliciesUsersImport } from "./routes/iam/policies/users"
-import { Route as IamPoliciesPolicyIdImport } from "./routes/iam/policies/$policyId"
+import { Route as IamPoliciesPolicyIdIndexImport } from "./routes/iam/policies/$policyId/index"
+import { Route as IamPoliciesPolicyIdUsersImport } from "./routes/iam/policies/$policyId/users"
 
 // Create/Update Routes
 
@@ -107,15 +107,15 @@ const IamUsersUserIdRoute = IamUsersUserIdImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const IamPoliciesUsersRoute = IamPoliciesUsersImport.update({
-  id: "/iam/policies/users",
-  path: "/iam/policies/users",
+const IamPoliciesPolicyIdIndexRoute = IamPoliciesPolicyIdIndexImport.update({
+  id: "/iam/policies/$policyId/",
+  path: "/iam/policies/$policyId/",
   getParentRoute: () => rootRoute,
 } as any)
 
-const IamPoliciesPolicyIdRoute = IamPoliciesPolicyIdImport.update({
-  id: "/iam/policies/$policyId",
-  path: "/iam/policies/$policyId",
+const IamPoliciesPolicyIdUsersRoute = IamPoliciesPolicyIdUsersImport.update({
+  id: "/iam/policies/$policyId/users",
+  path: "/iam/policies/$policyId/users",
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -186,20 +186,6 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof WorkspaceIndexImport
       parentRoute: typeof rootRoute
     }
-    "/iam/policies/$policyId": {
-      id: "/iam/policies/$policyId"
-      path: "/iam/policies/$policyId"
-      fullPath: "/iam/policies/$policyId"
-      preLoaderRoute: typeof IamPoliciesPolicyIdImport
-      parentRoute: typeof rootRoute
-    }
-    "/iam/policies/users": {
-      id: "/iam/policies/users"
-      path: "/iam/policies/users"
-      fullPath: "/iam/policies/users"
-      preLoaderRoute: typeof IamPoliciesUsersImport
-      parentRoute: typeof rootRoute
-    }
     "/iam/users/$userId": {
       id: "/iam/users/$userId"
       path: "/iam/users/$userId"
@@ -228,6 +214,20 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof IamUsersIndexImport
       parentRoute: typeof rootRoute
     }
+    "/iam/policies/$policyId/users": {
+      id: "/iam/policies/$policyId/users"
+      path: "/iam/policies/$policyId/users"
+      fullPath: "/iam/policies/$policyId/users"
+      preLoaderRoute: typeof IamPoliciesPolicyIdUsersImport
+      parentRoute: typeof rootRoute
+    }
+    "/iam/policies/$policyId/": {
+      id: "/iam/policies/$policyId/"
+      path: "/iam/policies/$policyId"
+      fullPath: "/iam/policies/$policyId"
+      preLoaderRoute: typeof IamPoliciesPolicyIdIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -243,12 +243,12 @@ export interface FileRoutesByFullPath {
   "/workspace/$workspaceId": typeof WorkspaceWorkspaceIdRoute
   "/iam": typeof IamIndexRoute
   "/workspace": typeof WorkspaceIndexRoute
-  "/iam/policies/$policyId": typeof IamPoliciesPolicyIdRoute
-  "/iam/policies/users": typeof IamPoliciesUsersRoute
   "/iam/users/$userId": typeof IamUsersUserIdRoute
   "/iam/users/new": typeof IamUsersNewRoute
   "/iam/policies": typeof IamPoliciesIndexRoute
   "/iam/users": typeof IamUsersIndexRoute
+  "/iam/policies/$policyId/users": typeof IamPoliciesPolicyIdUsersRoute
+  "/iam/policies/$policyId": typeof IamPoliciesPolicyIdIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -261,12 +261,12 @@ export interface FileRoutesByTo {
   "/workspace/$workspaceId": typeof WorkspaceWorkspaceIdRoute
   "/iam": typeof IamIndexRoute
   "/workspace": typeof WorkspaceIndexRoute
-  "/iam/policies/$policyId": typeof IamPoliciesPolicyIdRoute
-  "/iam/policies/users": typeof IamPoliciesUsersRoute
   "/iam/users/$userId": typeof IamUsersUserIdRoute
   "/iam/users/new": typeof IamUsersNewRoute
   "/iam/policies": typeof IamPoliciesIndexRoute
   "/iam/users": typeof IamUsersIndexRoute
+  "/iam/policies/$policyId/users": typeof IamPoliciesPolicyIdUsersRoute
+  "/iam/policies/$policyId": typeof IamPoliciesPolicyIdIndexRoute
 }
 
 export interface FileRoutesById {
@@ -280,12 +280,12 @@ export interface FileRoutesById {
   "/workspace/$workspaceId": typeof WorkspaceWorkspaceIdRoute
   "/iam/": typeof IamIndexRoute
   "/workspace/": typeof WorkspaceIndexRoute
-  "/iam/policies/$policyId": typeof IamPoliciesPolicyIdRoute
-  "/iam/policies/users": typeof IamPoliciesUsersRoute
   "/iam/users/$userId": typeof IamUsersUserIdRoute
   "/iam/users/new": typeof IamUsersNewRoute
   "/iam/policies/": typeof IamPoliciesIndexRoute
   "/iam/users/": typeof IamUsersIndexRoute
+  "/iam/policies/$policyId/users": typeof IamPoliciesPolicyIdUsersRoute
+  "/iam/policies/$policyId/": typeof IamPoliciesPolicyIdIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -300,12 +300,12 @@ export interface FileRouteTypes {
     | "/workspace/$workspaceId"
     | "/iam"
     | "/workspace"
-    | "/iam/policies/$policyId"
-    | "/iam/policies/users"
     | "/iam/users/$userId"
     | "/iam/users/new"
     | "/iam/policies"
     | "/iam/users"
+    | "/iam/policies/$policyId/users"
+    | "/iam/policies/$policyId"
   fileRoutesByTo: FileRoutesByTo
   to:
     | "/"
@@ -317,12 +317,12 @@ export interface FileRouteTypes {
     | "/workspace/$workspaceId"
     | "/iam"
     | "/workspace"
-    | "/iam/policies/$policyId"
-    | "/iam/policies/users"
     | "/iam/users/$userId"
     | "/iam/users/new"
     | "/iam/policies"
     | "/iam/users"
+    | "/iam/policies/$policyId/users"
+    | "/iam/policies/$policyId"
   id:
     | "__root__"
     | "/"
@@ -334,12 +334,12 @@ export interface FileRouteTypes {
     | "/workspace/$workspaceId"
     | "/iam/"
     | "/workspace/"
-    | "/iam/policies/$policyId"
-    | "/iam/policies/users"
     | "/iam/users/$userId"
     | "/iam/users/new"
     | "/iam/policies/"
     | "/iam/users/"
+    | "/iam/policies/$policyId/users"
+    | "/iam/policies/$policyId/"
   fileRoutesById: FileRoutesById
 }
 
@@ -353,12 +353,12 @@ export interface RootRouteChildren {
   WorkspaceWorkspaceIdRoute: typeof WorkspaceWorkspaceIdRoute
   IamIndexRoute: typeof IamIndexRoute
   WorkspaceIndexRoute: typeof WorkspaceIndexRoute
-  IamPoliciesPolicyIdRoute: typeof IamPoliciesPolicyIdRoute
-  IamPoliciesUsersRoute: typeof IamPoliciesUsersRoute
   IamUsersUserIdRoute: typeof IamUsersUserIdRoute
   IamUsersNewRoute: typeof IamUsersNewRoute
   IamPoliciesIndexRoute: typeof IamPoliciesIndexRoute
   IamUsersIndexRoute: typeof IamUsersIndexRoute
+  IamPoliciesPolicyIdUsersRoute: typeof IamPoliciesPolicyIdUsersRoute
+  IamPoliciesPolicyIdIndexRoute: typeof IamPoliciesPolicyIdIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -371,12 +371,12 @@ const rootRouteChildren: RootRouteChildren = {
   WorkspaceWorkspaceIdRoute: WorkspaceWorkspaceIdRoute,
   IamIndexRoute: IamIndexRoute,
   WorkspaceIndexRoute: WorkspaceIndexRoute,
-  IamPoliciesPolicyIdRoute: IamPoliciesPolicyIdRoute,
-  IamPoliciesUsersRoute: IamPoliciesUsersRoute,
   IamUsersUserIdRoute: IamUsersUserIdRoute,
   IamUsersNewRoute: IamUsersNewRoute,
   IamPoliciesIndexRoute: IamPoliciesIndexRoute,
   IamUsersIndexRoute: IamUsersIndexRoute,
+  IamPoliciesPolicyIdUsersRoute: IamPoliciesPolicyIdUsersRoute,
+  IamPoliciesPolicyIdIndexRoute: IamPoliciesPolicyIdIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -400,12 +400,12 @@ export const routeTree = rootRoute
         "/workspace/$workspaceId",
         "/iam/",
         "/workspace/",
-        "/iam/policies/$policyId",
-        "/iam/policies/users",
         "/iam/users/$userId",
         "/iam/users/new",
         "/iam/policies/",
-        "/iam/users/"
+        "/iam/users/",
+        "/iam/policies/$policyId/users",
+        "/iam/policies/$policyId/"
       ]
     },
     "/": {
@@ -435,12 +435,6 @@ export const routeTree = rootRoute
     "/workspace/": {
       "filePath": "workspace/index.tsx"
     },
-    "/iam/policies/$policyId": {
-      "filePath": "iam/policies/$policyId.tsx"
-    },
-    "/iam/policies/users": {
-      "filePath": "iam/policies/users.tsx"
-    },
     "/iam/users/$userId": {
       "filePath": "iam/users/$userId.tsx"
     },
@@ -452,6 +446,12 @@ export const routeTree = rootRoute
     },
     "/iam/users/": {
       "filePath": "iam/users/index.tsx"
+    },
+    "/iam/policies/$policyId/users": {
+      "filePath": "iam/policies/$policyId/users.tsx"
+    },
+    "/iam/policies/$policyId/": {
+      "filePath": "iam/policies/$policyId/index.tsx"
     }
   }
 }
