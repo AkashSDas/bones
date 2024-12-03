@@ -15,7 +15,10 @@ import {
     IAM_SERVICE,
     NewIAMPermission,
 } from "../models/iam-permission";
-import { iamPermissionUser } from "../models/iam-permission-user";
+import {
+    IAMPermissionAccessType,
+    iamPermissionUser,
+} from "../models/iam-permission-user";
 import { type UserClient, UserClientSchema, UserPk, user } from "../models/user";
 import { WorkspacePk } from "../models/workspace";
 import { BaseDAL } from "./base";
@@ -113,8 +116,8 @@ class IAMPermissionDAL extends BaseDAL {
 
         const patch: Partial<NewIAMPermission> = {};
         if (body.name) patch.name = body.name;
-        if (body.readAll) patch.readAll = body.readAll;
-        if (body.writeAll) patch.writeAll = body.writeAll;
+        if (body.readAll !== undefined) patch.readAll = body.readAll;
+        if (body.writeAll !== undefined) patch.writeAll = body.writeAll;
 
         const result = await ctx
             .update(iamPermission)
@@ -214,7 +217,13 @@ class IAMPermissionDAL extends BaseDAL {
         permissionId: IAMPermissionId,
         accountPk: AccountPk,
     ): Promise<
-        [IAMPermissionPk, IAMPermissionClient & { users: UserClient[] }] | null
+        | [
+              IAMPermissionPk,
+              IAMPermissionClient & {
+                  users: (UserClient & { accessType: IAMPermissionAccessType })[];
+              },
+          ]
+        | null
     > {
         const permissions = await this.db
             .select(this.permissionSelect)
@@ -237,16 +246,23 @@ class IAMPermissionDAL extends BaseDAL {
         const iamPermissionUsers = await this.db
             .select({
                 permissionId: iamPermissionUser.permissionId,
+                accessType: iamPermissionUser.accessType,
                 users: sql<UserClient[]>`ARRAY_AGG(${user})`,
             })
             .from(user)
             .innerJoin(iamPermissionUser, eq(iamPermissionUser.userId, user.id))
             .where(eq(iamPermissionUser.permissionId, permission.id))
-            .groupBy(iamPermissionUser.permissionId);
+            .groupBy(iamPermissionUser.permissionId, iamPermissionUser.accessType);
 
         return [
             permission.id,
-            { ...permission, users: iamPermissionUsers.map((u) => u.users)[0] },
+            {
+                ...permission,
+                users: iamPermissionUsers.map((u) => ({
+                    ...u.users[0],
+                    accessType: u.accessType,
+                })),
+            },
         ];
     }
 
@@ -255,7 +271,14 @@ class IAMPermissionDAL extends BaseDAL {
         search: string | undefined,
         limit: number = 20,
         offset: number = 0,
-    ): Promise<[number, (IAMPermissionClient & { users: UserClient[] })[]]> {
+    ): Promise<
+        [
+            number,
+            (IAMPermissionClient & {
+                users: (UserClient & { accessType: IAMPermissionAccessType })[];
+            })[],
+        ]
+    > {
         if (search === undefined) {
             const totalPermissions = await this.db
                 .select({ count: sql<number>`COUNT(DISTINCT ${iamPermission.id})` })
@@ -273,6 +296,7 @@ class IAMPermissionDAL extends BaseDAL {
             const iamPermissionUsers = await this.db
                 .select({
                     permissionId: iamPermissionUser.permissionId,
+                    accessType: iamPermissionUser.accessType,
                     users: sql<UserClient[]>`ARRAY_AGG(${user})`,
                 })
                 .from(user)
@@ -283,16 +307,18 @@ class IAMPermissionDAL extends BaseDAL {
                         permissions.map((p) => p.id),
                     ),
                 )
-                .groupBy(iamPermissionUser.permissionId);
+                .groupBy(iamPermissionUser.permissionId, iamPermissionUser.accessType);
 
-            const results: (IAMPermissionClient & { users: UserClient[] })[] = [];
+            const results: (IAMPermissionClient & {
+                users: (UserClient & { accessType: IAMPermissionAccessType })[];
+            })[] = [];
 
             for (const perm of permissions) {
                 const users = iamPermissionUsers
                     .filter((u) => u.permissionId === perm.id)
-                    .map((u) => u.users);
+                    .map((u) => ({ ...u.users[0], accessType: u.accessType }));
 
-                results.push({ ...perm, users: users[0] });
+                results.push({ ...perm, users });
             }
 
             return [totalPermissions, results];
@@ -324,6 +350,7 @@ class IAMPermissionDAL extends BaseDAL {
             const iamPermissionUsers = await this.db
                 .select({
                     permissionId: iamPermissionUser.permissionId,
+                    accessType: iamPermissionUser.accessType,
                     users: sql<UserClient[]>`ARRAY_AGG(${user})`,
                 })
                 .from(user)
@@ -334,16 +361,18 @@ class IAMPermissionDAL extends BaseDAL {
                         permissions.map((p) => p.id),
                     ),
                 )
-                .groupBy(iamPermissionUser.permissionId);
+                .groupBy(iamPermissionUser.permissionId, iamPermissionUser.accessType);
 
-            const results: (IAMPermissionClient & { users: UserClient[] })[] = [];
+            const results: (IAMPermissionClient & {
+                users: (UserClient & { accessType: IAMPermissionAccessType })[];
+            })[] = [];
 
             for (const perm of permissions) {
                 const users = iamPermissionUsers
-                    .filter((u) => u.permissionId === perm.id)
-                    .map((u) => u.users);
+                    .filter((p) => p.permissionId === perm.id)
+                    .map((p) => ({ ...p.users[0], accessType: p.accessType }));
 
-                results.push({ ...perm, users: users[0] });
+                results.push({ ...perm, users });
             }
 
             return [totalPermissions, results];

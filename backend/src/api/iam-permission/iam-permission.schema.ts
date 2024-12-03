@@ -1,6 +1,7 @@
 import { z } from "@hono/zod-openapi";
 
-import { IAMPermissionClientSchema, IAM_SERVICE } from "@/db/models/iam-permission";
+import { IAMPermissionClientSchema } from "@/db/models/iam-permission";
+import { IAM_PERMISSION_ACCESS_TYPE } from "@/db/models/iam-permission-user";
 import { UserClientSchema } from "@/db/models/user";
 
 // ===================================
@@ -49,7 +50,13 @@ const GetManyIAMPermissionsResponseBody = z.object({
         .array(
             IAMPermissionClientSchema.merge(
                 z.object({
-                    users: z.array(UserClientSchema),
+                    users: z.array(
+                        UserClientSchema.merge(
+                            z.object({
+                                accessType: z.nativeEnum(IAM_PERMISSION_ACCESS_TYPE),
+                            }),
+                        ),
+                    ),
                 }),
             ),
         )
@@ -67,7 +74,13 @@ const GetIAMPermissionParams = z.object({
 const GetIAMPermissionResponseBody = z.object({
     permission: IAMPermissionClientSchema.merge(
         z.object({
-            users: z.array(UserClientSchema),
+            users: z.array(
+                UserClientSchema.merge(
+                    z.object({
+                        accessType: z.nativeEnum(IAM_PERMISSION_ACCESS_TYPE),
+                    }),
+                ),
+            ),
         }),
     ),
 });
@@ -85,6 +98,7 @@ const UpdateIAMPermissionRequestBody = z.object({
         .string()
         .min(3)
         .max(255)
+        .optional()
         .openapi({ description: "Name of the IAM permission" }),
     readAll: z.boolean().optional().openapi({ description: "Read all flag" }),
     writeAll: z.boolean().optional().openapi({ description: "Write all flag" }),

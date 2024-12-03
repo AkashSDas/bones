@@ -1,7 +1,14 @@
 import { dal } from "@/db/dal";
 import type { AccountClient, AccountPk } from "@/db/models/account";
-import type { IAMPermissionClient, IAMPermissionId } from "@/db/models/iam-permission";
-import { IAM_PERMISSION_ACCESS_TYPE } from "@/db/models/iam-permission-user";
+import type {
+    IAMPermissionClient,
+    IAMPermissionId,
+    IAMPermissionPk,
+} from "@/db/models/iam-permission";
+import {
+    IAMPermissionAccessType,
+    IAM_PERMISSION_ACCESS_TYPE,
+} from "@/db/models/iam-permission-user";
 import { type UserClient, UserPk } from "@/db/models/user";
 import { type WorkspacePk } from "@/db/models/workspace";
 import { log } from "@/lib/logger";
@@ -148,7 +155,9 @@ export class RBACValidator {
         try {
             this.validateWorkspaceServiceWide({ read, write });
             hasAccess = true;
-        } catch (e) {}
+        } catch (e) {
+            log.error(`Workspace service wide access failed: ${e}`);
+        }
 
         if (hasAccess) {
             return;
@@ -214,7 +223,14 @@ export class RBACValidator {
     static async validateIAMPermissionAccess(
         accountPk: AccountPk,
         permissionId: IAMPermissionId,
-    ): Promise<[number, IAMPermissionClient & { users: UserClient[] }]> {
+    ): Promise<
+        [
+            IAMPermissionPk,
+            IAMPermissionClient & {
+                users: (UserClient & { accessType: IAMPermissionAccessType })[];
+            },
+        ]
+    > {
         const perm = await dal.iamPermission.findById(permissionId, accountPk);
 
         if (perm === null) {
