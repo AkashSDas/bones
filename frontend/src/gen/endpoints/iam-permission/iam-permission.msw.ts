@@ -31,6 +31,7 @@ export const getGetApiV1IamPermissionResponseMock = (
             { length: faker.number.int({ min: 1, max: 10 }) },
             (_, i) => i + 1,
         ).map(() => ({
+            accessType: faker.helpers.arrayElement(["read", "write"] as const),
             createdAt: faker.word.sample(),
             isBlocked: faker.datatype.boolean(),
             lastLoggedInAt: faker.word.sample(),
@@ -88,6 +89,7 @@ export const getGetApiV1IamPermissionPermissionIdResponseMock = (
             { length: faker.number.int({ min: 1, max: 10 }) },
             (_, i) => i + 1,
         ).map(() => ({
+            accessType: faker.helpers.arrayElement(["read", "write"] as const),
             createdAt: faker.word.sample(),
             isBlocked: faker.datatype.boolean(),
             lastLoggedInAt: faker.word.sample(),

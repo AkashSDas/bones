@@ -4,8 +4,10 @@
  * Bones
  * OpenAPI spec version: 1.0.0
  */
+import type { GetApiV1IamPermissionPermissionId200PermissionUsersItemAccessType } from "./getApiV1IamPermissionPermissionId200PermissionUsersItemAccessType";
 
 export type GetApiV1IamPermissionPermissionId200PermissionUsersItem = {
+    accessType: GetApiV1IamPermissionPermissionId200PermissionUsersItemAccessType;
     createdAt: string;
     isBlocked: boolean;
     lastLoggedInAt: string;

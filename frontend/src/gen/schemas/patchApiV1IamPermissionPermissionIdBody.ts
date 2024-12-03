@@ -14,7 +14,7 @@ export type PatchApiV1IamPermissionPermissionIdBody = {
      * @minLength 3
      * @maxLength 255
      */
-    name: string;
+    name?: string;
     /** Read all flag */
     readAll?: boolean;
     /** Write all flag */

@@ -2354,6 +2354,13 @@
                                                                 },
                                                                 "updatedAt": {
                                                                     "type": "string"
+                                                                },
+                                                                "accessType": {
+                                                                    "type": "string",
+                                                                    "enum": [
+                                                                        "read",
+                                                                        "write"
+                                                                    ]
                                                                 }
                                                             },
                                                             "required": [
@@ -2363,7 +2370,8 @@
                                                                 "passwordAge",
                                                                 "lastLoggedInAt",
                                                                 "createdAt",
-                                                                "updatedAt"
+                                                                "updatedAt",
+                                                                "accessType"
                                                             ]
                                                         }
                                                     }
@@ -2564,8 +2572,7 @@
                                         ],
                                         "description": "Data to change users"
                                     }
-                                },
-                                "required": ["name"]
+                                }
                             }
                         }
                     }
@@ -2837,6 +2844,13 @@
                                                             },
                                                             "updatedAt": {
                                                                 "type": "string"
+                                                            },
+                                                            "accessType": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "read",
+                                                                    "write"
+                                                                ]
                                                             }
                                                         },
                                                         "required": [
@@ -2846,7 +2860,8 @@
                                                             "passwordAge",
                                                             "lastLoggedInAt",
                                                             "createdAt",
-                                                            "updatedAt"
+                                                            "updatedAt",
+                                                            "accessType"
                                                         ]
                                                     }
                                                 }

@@ -231,3 +231,5 @@ export * from "./postApiV1WorkspaceInitialize400";
 export * from "./postApiV1WorkspaceInitialize401";
 export * from "./postApiV1WorkspaceInitialize403";
 export * from "./postApiV1WorkspaceInitialize500";
+export * from "./getApiV1IamPermission200PermissionsItemUsersItemAccessType";
+export * from "./getApiV1IamPermissionPermissionId200PermissionUsersItemAccessType";
