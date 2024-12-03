@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { PolicyUsers } from "@/components/iam-permission/PolicyUsers";
 import { AuthProtected } from "@/components/shared/AuthProtected";
 
 export const Route = createFileRoute("/iam/policies/$policyId/users")({
@@ -11,5 +12,7 @@ export const Route = createFileRoute("/iam/policies/$policyId/users")({
 });
 
 function IAMPolicyUsersView() {
-    return <span>Policy Users</span>;
+    const { policyId } = Route.useParams();
+
+    return <PolicyUsers policyId={policyId} />;
 }
