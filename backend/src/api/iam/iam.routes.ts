@@ -350,7 +350,8 @@ export const getUsers = createRoute({
     method: "get",
     path: "/user",
     tags: [TAGS.USER],
-    middleware: [authenticate, rbac.iamServiceWideRead],
+    // middleware: [authenticate, rbac.iamServiceWideRead],
+    middleware: [authenticate],
     request: {
         query: IAMSchemas.GetManyUsersQuery,
     },
