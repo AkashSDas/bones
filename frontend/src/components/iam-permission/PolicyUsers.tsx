@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import {
+    type RowSelectionState,
     createColumnHelper,
     flexRender,
     getCoreRowModel,
@@ -13,18 +14,24 @@ import {
     PlusIcon,
     RotateCwIcon,
     SearchIcon,
+    TrashIcon,
 } from "lucide-react";
-import { type ChangeEvent, useMemo, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 import { useDebounceCallback, useMediaQuery } from "usehooks-ts";
 
-import { useGetApiV1IamPermissionPermissionId } from "@/gen/endpoints/iam-permission/iam-permission";
+import {
+    useGetApiV1IamPermissionPermissionId,
+    usePatchApiV1IamPermissionPermissionId,
+} from "@/gen/endpoints/iam-permission/iam-permission";
 import { type GetApiV1IamPermissionPermissionId200 } from "@/gen/schemas";
 import { useAuth } from "@/hooks/auth";
+import { useToast } from "@/hooks/toast";
 import { iamKeys } from "@/utils/react-query";
 import { cn } from "@/utils/styles";
 
 import { Button } from "../shared/Button";
 import { Checkbox } from "../shared/Checkbox";
+import { DialogTrigger } from "../shared/Dialog";
 import { Input } from "../shared/Input";
 import { Loader } from "../shared/Loader";
 
@@ -40,8 +47,13 @@ const columnHelper = createColumnHelper<IAMUserRow>();
 
 const columns = [
     columnHelper.accessor("userId", {
-        header: () => (
+        header: ({ table }) => (
             <span className="flex gap-2 items-center">
+                <Checkbox
+                    checked={table.getIsAllRowsSelected()}
+                    // onChange={table.getToggleAllRowsSelectedHandler()} TODO: Not working
+                    onClick={table.getToggleAllRowsSelectedHandler()}
+                />
                 <IdCardIcon size="16px" />
                 User ID
             </span>
@@ -51,7 +63,11 @@ const columns = [
 
             return (
                 <div className="flex relative gap-2 items-center min-w-full group">
-                    <Checkbox />
+                    <Checkbox
+                        checked={info.row.getIsSelected()}
+                        // onChange={info.row.getToggleSelectedHandler()} TODO: Not working
+                        onClick={info.row.getToggleSelectedHandler()}
+                    />
 
                     <span className="select-all">{info.getValue()}</span>
 
@@ -98,6 +114,8 @@ const columns = [
 ];
 
 export function PolicyUsers({ policyId }: Props): React.JSX.Element {
+    const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
     const { authHeader } = useAuth();
 
     const query = useGetApiV1IamPermissionPermissionId(policyId, {
@@ -106,12 +124,17 @@ export function PolicyUsers({ policyId }: Props): React.JSX.Element {
     });
 
     const data = query.data?.data;
-    const users = data?.permission.users ?? [];
+    const users = useMemo(() => data?.permission.users ?? [], [data]);
     const policyName = data?.permission.name ?? "";
 
-    console.log({ data });
-
     const [filteredUsers, setFilteredUsers] = useState<IAMUser[]>(users);
+
+    useEffect(
+        function syncFilteredUsers() {
+            setFilteredUsers(users);
+        },
+        [users],
+    );
 
     const tableData = useMemo(
         function (): IAMUserRow[] {
@@ -126,13 +149,20 @@ export function PolicyUsers({ policyId }: Props): React.JSX.Element {
                 updatedAt: user.updatedAt,
             }));
         },
-        [filteredUsers],
+        [filteredUsers, query.isFetched],
     );
 
     const table = useReactTable<IAMUserRow>({
         columns,
         data: tableData,
         debugTable: true,
+        enableRowSelection: true,
+        enableMultiRowSelection: true,
+        onRowSelectionChange: setRowSelection,
+        state: {
+            rowSelection,
+        },
+        getRowId: (row) => `${row.userId}_${row.accessType}`,
         getCoreRowModel: getCoreRowModel(),
         columnResizeMode: "onChange",
     });
@@ -153,6 +183,12 @@ export function PolicyUsers({ policyId }: Props): React.JSX.Element {
     const [showSearchInput, setShowSearchInput] = useState(false);
     const matches = useMediaQuery("(max-width: 768px)");
     const searchByNameDebounced = useDebounceCallback(searchByName, 300);
+
+    const removeUsersMutation = usePatchApiV1IamPermissionPermissionId({
+        axios: { headers: authHeader, withCredentials: true },
+    });
+
+    const { toast } = useToast();
 
     return (
         <main className="my-5 md:my-6 px-8 md:py-8 mx-auto w-full max-w-[1440px] space-y-2">
@@ -228,12 +264,87 @@ export function PolicyUsers({ policyId }: Props): React.JSX.Element {
                             </Button>
 
                             <Button
+                                variant="ghost"
                                 size="icon"
                                 className="!h-8 !w-8"
-                                aria-label="Add users to policy"
+                                aria-label="Remove users from policy"
+                                disabled={Object.keys(rowSelection).length === 0}
+                                onClick={async function removeUsersFromPolicy() {
+                                    const users = Object.keys(rowSelection).map((k) => {
+                                        const [userId, accessType] = k.split("_");
+                                        return { userId, accessType };
+                                    });
+
+                                    // Key is access type and value is an array of user ids
+                                    const groupedUsers = users.reduce(
+                                        (acc, user) => {
+                                            if (!acc[user.accessType]) {
+                                                acc[user.accessType] = [];
+                                            }
+                                            acc[user.accessType].push(user.userId);
+                                            return acc;
+                                        },
+                                        {} as Record<string, string[]>,
+                                    );
+
+                                    const promises: Promise<unknown>[] = [];
+
+                                    if (groupedUsers["read"]) {
+                                        promises.push(
+                                            removeUsersMutation.mutateAsync({
+                                                permissionId: policyId,
+                                                data: {
+                                                    changeUsers: {
+                                                        changeType: "remove",
+                                                        permissionType: "read",
+                                                        userIds: groupedUsers["read"],
+                                                    },
+                                                },
+                                            }),
+                                        );
+                                    }
+
+                                    if (groupedUsers["write"]) {
+                                        promises.push(
+                                            removeUsersMutation.mutateAsync({
+                                                permissionId: policyId,
+                                                data: {
+                                                    changeUsers: {
+                                                        changeType: "remove",
+                                                        permissionType: "write",
+                                                        userIds: groupedUsers["write"],
+                                                    },
+                                                },
+                                            }),
+                                        );
+                                    }
+
+                                    await Promise.all(promises);
+                                    await query.refetch();
+
+                                    toast({
+                                        title: "Success",
+                                        description: "Users removed from policy",
+                                        variant: "success",
+                                    });
+                                }}
                             >
-                                <PlusIcon />
+                                {removeUsersMutation.isPending ? (
+                                    <Loader />
+                                ) : (
+                                    <TrashIcon />
+                                )}
                             </Button>
+
+                            <DialogTrigger asChild>
+                                <Button
+                                    size="icon"
+                                    className="!h-8 !w-8"
+                                    aria-label="Add users to policy"
+                                >
+                                    <PlusIcon />
+                                </Button>
+                            </DialogTrigger>
                         </div>
                     </div>
 
