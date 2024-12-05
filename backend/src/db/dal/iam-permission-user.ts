@@ -52,17 +52,31 @@ class IAMPermissionUserDAL extends BaseDAL {
         if (foundUsersSet.size !== insertUsers.size) {
             throw new BadRequestError({ message: "Some users do not exist" });
         }
-        if (foundUsersSet.difference(insertUsers).size > 0) {
+        if (Array.from(insertUsers).filter((x) => !foundUsersSet.has(x)).length > 0) {
             throw new BadRequestError({ message: "Some users do not exist" });
         }
 
-        await this.db.insert(iamPermissionUser).values(
-            Array.from(insertUsers).map((userId) => ({
-                permissionId,
-                userId: foundUsers.find((u) => u.userId === userId)?.id!,
-                accessType,
-            })),
-        );
+        const update = Array.from(insertUsers)
+            .map((userId) => {
+                const uid = foundUsers.find((u) => u.userId === userId)?.id;
+
+                if (uid === undefined) {
+                    return null;
+                }
+
+                return {
+                    permissionId,
+                    userId: uid,
+                    accessType,
+                };
+            })
+            .filter((u) => u !== null);
+
+        if (update.length === 0) {
+            return;
+        }
+
+        await this.db.insert(iamPermissionUser).values(update);
     }
 
     // ==================================
