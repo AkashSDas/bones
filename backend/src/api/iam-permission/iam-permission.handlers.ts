@@ -41,8 +41,6 @@ export const updateIAMPermission: PermHandler["UpdateIAMPermission"] = async (c)
         permissionId,
     );
 
-    await dal.iamPermission.update(accountPk, permissionId, body);
-
     if (body.changeUsers) {
         if (body.changeUsers.changeType === "remove") {
             await dal.iamPermissionUser.deleteInBatch(
@@ -60,6 +58,12 @@ export const updateIAMPermission: PermHandler["UpdateIAMPermission"] = async (c)
             log.error(`Invalid change type: ${body.changeUsers.changeType}`);
             throw new InternalServerError({});
         }
+
+        delete body.changeUsers;
+    }
+
+    if (Object.keys(body).length > 0) {
+        await dal.iamPermission.update(accountPk, permissionId, body);
     }
 
     const updatedPerm = (await dal.iamPermission.findById(permissionId, accountPk))!;
