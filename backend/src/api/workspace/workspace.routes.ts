@@ -12,6 +12,24 @@ const TAGS = {
     WORKSPACE: "Workspace",
 } as const;
 
+export const checkWorkspaceInitialization = createRoute({
+    method: "get",
+    path: "/check-initialization",
+    tags: [TAGS.WORKSPACE],
+    middleware: [authenticate],
+    responses: {
+        ...OpenApiResponses.protectedRoute,
+        [status.OK]: {
+            description: "Account initialized successfully",
+            content: {
+                "application/json": {
+                    schema: WorkspaceSchemas.CheckWorkspaceInitializationResponseBody,
+                },
+            },
+        },
+    },
+});
+
 export const initializeWorkspace = createRoute({
     method: "post",
     path: "/initialize",
@@ -145,6 +163,11 @@ export const getWorkspaces = createRoute({
         ...OpenApiResponses.rbacRoute,
         [status.OK]: {
             description: "List of workspaces",
+            content: {
+                "application/json": {
+                    schema: WorkspaceSchemas.GetWorkspacesResponseBody,
+                },
+            },
         },
     },
 });
@@ -154,6 +177,7 @@ export const getWorkspaces = createRoute({
 // ===============================
 
 export type WorkspaceHandler = {
+    CheckWorkspaceInitialization: Handler<typeof checkWorkspaceInitialization>;
     InitializeWorkspace: Handler<typeof initializeWorkspace>;
     DeinitializeWorkspace: Handler<typeof deinitializeWorkspace>;
 

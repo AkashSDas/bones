@@ -5,6 +5,18 @@ import { WorkspaceManager } from "@/utils/workspace";
 
 import { type WorkspaceHandler } from "./workspace.routes";
 
+export const checkInitialization: WorkspaceHandler["CheckWorkspaceInitialization"] =
+    async (c) => {
+        const account = c.get("account")!;
+
+        const manager = new WorkspaceManager(account.accountId);
+
+        return c.json(
+            { isInitialized: await manager.checkInitialization() },
+            status.OK,
+        );
+    };
+
 export const initialize: WorkspaceHandler["InitializeWorkspace"] = async (c) => {
     const account = c.get("account")!;
     const accountPk = c.get("accountPk")!;

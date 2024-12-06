@@ -26,6 +26,18 @@ const SERVICE_NAME = "workspace";
 export class WorkspaceManager {
     constructor(private accountId: string) {}
 
+    /** Check workspace initialized for account */
+    async checkInitialization(): Promise<boolean> {
+        const namespace = k8sNames.workspaceNamespace(this.accountId);
+
+        try {
+            await k8sApi.readNamespace(namespace);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     /**
      * Create a namespace for this account. This is will keep all of kubernetes resources
      * under same namespace. Also, if I delete the namespace, all resources in it will be
@@ -103,8 +115,6 @@ export class WorkspaceManager {
         >,
     ): Promise<{ workspaceURL: string; workspace: WorkspaceClient }> {
         const namespace = k8sNames.workspaceNamespace(this.accountId);
-        const workspaceId = uuid();
-        const workspaceDomain = k8sNames.workspaceDomain(workspaceId);
         let workspacePk: WorkspacePk | null = null;
 
         try {
@@ -123,6 +133,9 @@ export class WorkspaceManager {
             log.info(`Workspace created: ${workspacePk}`);
 
             // These operations must be done in the same order without running them concurrently
+
+            const workspaceId = workspace.workspaceId;
+            const workspaceDomain = k8sNames.workspaceDomain(workspaceId);
 
             const pod = await k8sApi.createNamespacedPod(
                 namespace,
@@ -242,7 +255,6 @@ export class WorkspaceManager {
                 },
             },
             spec: {
-                terminationGracePeriodSeconds: 30, // Give some time for workspace main container to terminate gracefully
                 containers: [
                     {
                         name: k8sNames.workspaceMainContainer(config.workspaceId),
@@ -262,49 +274,7 @@ export class WorkspaceManager {
                             },
                         ],
 
-                        resources: {
-                            // CPU limits: 1 core maximum, 200 millicores (0.2 cores) minimum request
-                            // Memory limits: 2GB maximum, 512MB minimum request
-                            // Storage limits: 1GB maximum, 500MB minimum request
-                            limits: {
-                                cpu: "1",
-                                memory: "2Gi",
-                                "ephemeral-storage": "1Gi",
-                            },
-                            requests: {
-                                cpu: "200m",
-                                memory: "512Mi",
-                                "ephemeral-storage": "500Mi",
-                            },
-                        },
-                        securityContext: {
-                            // This will allow workspace main container to run as non-root user
-                            // which is required for nginx to run
-                            runAsNonRoot: true,
-                            capabilities: {
-                                drop: ["ALL"], // Drop all capabilities from workspace main container
-                            },
-                            readOnlyRootFilesystem: true, // Make workspace main container to have a read-only root filesystem
-                            allowPrivilegeEscalation: false, // Disable privilege escalation
-                        },
-                        livenessProbe: {
-                            httpGet: {
-                                path: "/",
-                                port: 80,
-                            },
-                            // initialDelaySeconds: 30,
-                            periodSeconds: 10, // Check every 10 seconds
-                            timeoutSeconds: 5, // Timeout after 5 seconds
-                            failureThreshold: 3, // Consider the pod as unhealthy after 3 consecutive failures
-                        },
-                        readinessProbe: {
-                            // initialDelaySeconds: 30,
-                            periodSeconds: 5, // Check every 5 seconds
-                            httpGet: {
-                                path: "/",
-                                port: 80,
-                            },
-                        },
+                        // TODO: add constraints to CPU and memory
                     },
                 ],
                 volumes: [

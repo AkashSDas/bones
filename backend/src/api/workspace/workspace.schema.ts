@@ -3,6 +3,16 @@ import { z } from "@hono/zod-openapi";
 import { WorkspaceClientSchema } from "@/db/models/workspace";
 
 // ===============================================
+// Check Workspace feature initialized for Account
+// ===============================================
+
+const CheckWorkspaceInitializationResponseBody = z.object({
+    isInitialized: z.boolean().openapi({
+        example: true,
+    }),
+});
+
+// ===============================================
 // Initialize Workspace feature for Account
 // ===============================================
 
@@ -34,6 +44,7 @@ const CreateWorkspaceRequestBody = z.object({
 
 const CreateWorkspaceResponseBody = z.object({
     workspaceURL: z.string().url().openapi({ example: "Workspace URL" }),
+    workspace: WorkspaceClientSchema,
 });
 
 // ===============================================
@@ -134,6 +145,8 @@ const UpdateWorkspaceResponseBody = z.object({
 
 /** Workspace Open API Zod Schemas */
 export const WorkspaceSchemas = {
+    CheckWorkspaceInitializationResponseBody,
+
     InitializeWorkspaceRequestBody,
     InitializeWorkspaceResponseBody,
 

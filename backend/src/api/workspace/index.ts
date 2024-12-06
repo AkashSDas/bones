@@ -6,6 +6,7 @@ import * as routes from "./workspace.routes";
 const app = createHonoApp();
 
 const router = app
+    .openapi(routes.checkWorkspaceInitialization, handlers.checkInitialization)
     .openapi(routes.initializeWorkspace, handlers.initialize)
     .openapi(routes.deinitializeWorkspace, handlers.deinitialize)
     .openapi(routes.createWorkspace, handlers.createWorkspace)
