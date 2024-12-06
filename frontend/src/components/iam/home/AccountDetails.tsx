@@ -72,6 +72,16 @@ export function AccountDetails() {
                         )
                     }
                 />
+
+                <Card
+                    title="IAM Permissions"
+                    description="All IAM policies are managed here"
+                    action={
+                        <Link to="/iam/policies">
+                            <Button variant="secondary">Manage</Button>
+                        </Link>
+                    }
+                />
             </div>
         </section>
     );
