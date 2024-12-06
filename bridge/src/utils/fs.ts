@@ -1,9 +1,14 @@
 import { z } from "npm:zod";
-import { expandGlob, ensureDir, emptyDir, copy } from "jsr:@std/fs";
-import { basename, extname, join, dirname } from "jsr:@std/path";
+import { copy, emptyDir, ensureDir, expandGlob } from "jsr:@std/fs";
+import { basename, dirname, extname, join } from "jsr:@std/path";
 import { levenshteinDistance } from "jsr:@std/text";
 
-const LEVENSHTEIN_DISTANCE_THRESHOLD = 3;
+function queryExistsInFileName(fileName: string, query: string): boolean {
+    // Escape special regex characters in the query to prevent unintended behavior
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(escapedQuery.toLowerCase(), "i"); // 'i' for case-insensitive match
+    return regex.test(fileName.toLowerCase());
+}
 
 type File = {
     name: string;
@@ -48,6 +53,7 @@ type SearchFileResult = {
 class FileSystemManager {
     /** Absolute path of workspace */
     private readonly rootDir: "/usr/workspace" = "/usr/workspace";
+    // private readonly rootDir = "../containers/vite-react18";
 
     /** These directories will be excluded for search (text, file/directory) */
     private readonly excludedDirs: string[] = [".git", "node_modules", ".venv"];
@@ -137,18 +143,45 @@ class FileSystemManager {
     ): Promise<File | Error> {
         try {
             const newAbsolutePath = join(dirname(absolutePath), newName);
+            const oldPathStats = await Deno.lstat(absolutePath);
 
-            const exists = await Deno.lstat(newAbsolutePath);
-            if (exists) {
-                return new Error(
-                    `Target path ${newAbsolutePath} already exists.`
-                );
+            try {
+                const exists = await Deno.lstat(newAbsolutePath);
+
+                // Else it'll throw error
+                if (exists) {
+                    return new Error(
+                        `Target path ${newAbsolutePath} already exists.`
+                    );
+                }
+            } catch {
+                //
+            }
+
+            if (oldPathStats.isDirectory) {
+                const entries = expandGlob(join(absolutePath, "*"), {
+                    includeDirs: true,
+                });
+
+                let emptyDir = true;
+                for await (const _entry of entries) {
+                    emptyDir = false;
+                    break;
+                }
+
+                if (emptyDir) {
+                    await Deno.remove(absolutePath);
+                    await ensureDir(newAbsolutePath);
+
+                    const stats = await Deno.lstat(newAbsolutePath);
+                    return this.createFileObject(newAbsolutePath, stats);
+                }
             }
 
             await Deno.rename(absolutePath, newAbsolutePath);
 
-            const stats = await Deno.lstat(absolutePath);
-            return this.createFileObject(absolutePath, stats);
+            const stats = await Deno.lstat(newAbsolutePath);
+            return this.createFileObject(newAbsolutePath, stats);
         } catch (e) {
             return new Error(`Failed to rename file or folder: ${e}`);
         }
@@ -191,9 +224,40 @@ class FileSystemManager {
     ): Promise<File | Error> {
         try {
             const newAbsolutePath = join(
-                dirname(absoluteDestinationPath),
+                absoluteDestinationPath,
                 basename(absoluteSourcePath)
             );
+
+            try {
+                const exists = await Deno.lstat(newAbsolutePath);
+                if (exists) {
+                    return new Error(`File or folder with same name exists`);
+                }
+            } catch {
+                //
+            }
+
+            const oldPathStats = await Deno.lstat(absoluteSourcePath);
+
+            if (oldPathStats.isDirectory) {
+                const entries = expandGlob(join(absoluteSourcePath, "*"), {
+                    includeDirs: true,
+                });
+
+                let emptyDir = true;
+                for await (const _entry of entries) {
+                    emptyDir = false;
+                    break;
+                }
+
+                if (emptyDir) {
+                    await Deno.remove(absoluteSourcePath);
+                    await ensureDir(newAbsolutePath);
+
+                    const stats = await Deno.lstat(newAbsolutePath);
+                    return this.createFileObject(newAbsolutePath, stats);
+                }
+            }
 
             await Deno.rename(absoluteSourcePath, newAbsolutePath);
 
@@ -304,6 +368,7 @@ class FileSystemManager {
         total: number;
     }> {
         const results: SearchTextResult[] = [];
+        const rootAbsolutePath = await Deno.realPath(this.rootDir);
 
         const files = (await this.flatWorkspaceFileTree()).filter((file) => {
             if (file.isDirectory) {
@@ -312,7 +377,7 @@ class FileSystemManager {
 
             const ignoreFilesInDir = this.excludedDirs.some((dir) => {
                 const ignore = file.absolutePath.startsWith(
-                    join(this.rootDir, dir)
+                    join(rootAbsolutePath, dir)
                 );
 
                 return ignore;
@@ -384,7 +449,9 @@ class FileSystemManager {
     // Search files
     // ==============================================
 
-    async searchFilesByName(query: string): Promise<SearchFileResult[]> {
+    async searchFileByName(query: string): Promise<SearchFileResult[]> {
+        const rootAbsolutePath = await Deno.realPath(this.rootDir);
+
         const files = (await this.flatWorkspaceFileTree()).filter((file) => {
             if (file.isDirectory) {
                 return false;
@@ -392,7 +459,7 @@ class FileSystemManager {
 
             const ignoreFilesInDir = this.excludedDirs.some((dir) => {
                 const ignore = file.absolutePath.startsWith(
-                    join(this.rootDir, dir)
+                    join(rootAbsolutePath, dir)
                 );
 
                 return ignore;
@@ -404,12 +471,16 @@ class FileSystemManager {
         const results: SearchFileResult[] = [];
 
         for (const file of files) {
+            const exists = queryExistsInFileName(
+                file.name.toLowerCase(),
+                query.toLowerCase()
+            );
             const distance = levenshteinDistance(
                 file.name.toLowerCase(),
                 query.toLowerCase()
             );
 
-            if (distance < LEVENSHTEIN_DISTANCE_THRESHOLD) {
+            if (exists) {
                 const previewContent = await this.previewInitialContentOfFile(
                     file.absolutePath
                 );
@@ -419,25 +490,6 @@ class FileSystemManager {
         }
 
         return results.sort((a, b) => a.matchScore - b.matchScore).slice(0, 20);
-    }
-
-    // ==============================================
-    // Export workspace
-    // ==============================================
-
-    async exportWorkspace(): Promise<string> {
-        const src = await Deno.open(this.rootDir, { read: true });
-
-        const dest = await Deno.open(`/usr/workspace.tar.gz`, {
-            create: true,
-            write: true,
-        });
-
-        await src.readable
-            .pipeThrough(new CompressionStream("gzip"))
-            .pipeTo(dest.writable);
-
-        return `/usr/workspace.tar.gz`;
     }
 
     // ==============================================
