@@ -5,6 +5,7 @@ env:
 
     # This is dependent on the external IP given by nginx-ingress LoadBalancer
     # For this project only this is need and not localhost (i.e. 127.0.0.1)
+    # │ nginx-ingress-ingress-nginx-controller            LoadBalancer  xx.xx.xx.xx  172.20.0.5  http:80►30325 https:443►30560 2m56s │
     LOCAL_DNS_RESOLVER_IP: "172.20.0.5"
     LOCAL_HOST_DNS_RESOLVER_IP: "127.0.0.1"
 
@@ -49,6 +50,8 @@ tasks:
         cmds:
             # For MacOS dnsmasq.conf file is at /opt/homebrew/etc/dnsmasq.conf
             # cat /opt/homebrew/etc/dnsmasq.conf
+            # Remove the line of "address=/.${LOCAL_CUSTOM_TLD}/${LOCAL_DNS_RESOLVER_IP}" from the
+            # file "dnsmasq.conf" manually if failed
             - echo "This teardown is for MacOS (not working)."
             - echo "Removing .${LOCAL_CUSTOM_TLD} TLD configuration from dnsmasq.conf..."
             - sudo sed -i '' "/address=\/.${LOCAL_CUSTOM_TLD}\/${LOCAL_HOST_DNS_RESOLVER_IP}/d" $(brew --prefix)/etc/dnsmasq.conf
@@ -64,6 +67,8 @@ tasks:
         cmds:
             # For MacOS dnsmasq.conf file is at /opt/homebrew/etc/dnsmasq.conf
             # cat /opt/homebrew/etc/dnsmasq.conf
+            # Remove the line of "address=/.${LOCAL_CUSTOM_TLD}/${LOCAL_DNS_RESOLVER_IP}" from the
+            # file "dnsmasq.conf" manually if failed
             - echo "This teardown is for MacOS (not working)."
             - echo "Removing .${LOCAL_CUSTOM_TLD} TLD configuration from dnsmasq.conf..."
             - sudo sed -i '' "/address=\/.${LOCAL_CUSTOM_TLD}\/${LOCAL_DNS_RESOLVER_IP}/d" $(brew --prefix)/etc/dnsmasq.conf
