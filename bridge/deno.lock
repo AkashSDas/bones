@@ -8,8 +8,10 @@
     "jsr:@std/path@*": "1.0.8",
     "jsr:@std/path@^1.0.7": "1.0.8",
     "jsr:@std/path@^1.0.8": "1.0.8",
+    "jsr:@std/text@*": "1.0.8",
     "jsr:@std/text@^1.0.8": "1.0.8",
     "npm:hono@*": "4.6.9",
+    "npm:zod@*": "3.23.8",
     "npm:zod@^3.23.8": "3.23.8"
   },
   "jsr": {

@@ -152,7 +152,7 @@ class PortMappingManager {
     /**
      * When port mapping for external port 80 is removed, this will be it's content
      * as Bridge run on port 4000
-     **/
+     */
     private buildEmptyPort80NginxConfig(): string {
         return `
         server {
@@ -180,7 +180,7 @@ class PortMappingManager {
     /**
      * When port mapping for external port 80 is added, we will have to add port mapping
      * as well as Bridge port mapping as Bridge run on port 4000
-     **/
+     */
     private buildPort80NginxConfig(internalPort: number): string {
         return `
         server {
