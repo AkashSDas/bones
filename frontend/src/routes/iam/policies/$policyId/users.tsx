@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { IAMUsersDialog } from "@/components/iam-permission/IAMUsersDialog";
-import { PolicyUsers } from "@/components/iam-permission/PolicyUsers";
+import { IAMUsersDialog } from "@/components/iam/permission/IAMUsersDialog";
+import { PolicyUsers } from "@/components/iam/permission/PolicyUsers";
 import { AuthProtected } from "@/components/shared/AuthProtected";
 import { Dialog } from "@/components/shared/Dialog";
 import { useGetApiV1IamPermissionPermissionId } from "@/gen/endpoints/iam-permission/iam-permission";

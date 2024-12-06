@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { UsersIcon } from "lucide-react";
 
-import { PolicyUpdateForm } from "@/components/iam-permission/PolicyUpdateForm";
+import { PolicyUpdateForm } from "@/components/iam/permission/PolicyUpdateForm";
 import { AuthProtected } from "@/components/shared/AuthProtected";
 import { Button } from "@/components/shared/Button";
 import { Loader } from "@/components/shared/Loader";
