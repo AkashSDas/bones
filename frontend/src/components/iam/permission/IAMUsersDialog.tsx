@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/toast";
 import { iamKeys } from "@/utils/react-query";
 import { cn } from "@/utils/styles";
 
-import { Button } from "../shared/Button";
+import { Button } from "../../shared/Button";
 import {
     DialogClose,
     DialogContent,
@@ -28,7 +28,7 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "../shared/Dialog";
+} from "../../shared/Dialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -37,9 +37,9 @@ import {
     DropdownMenuRadioItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "../shared/DropdownMenu";
-import { Input } from "../shared/Input";
-import { Loader } from "../shared/Loader";
+} from "../../shared/DropdownMenu";
+import { Input } from "../../shared/Input";
+import { Loader } from "../../shared/Loader";
 
 const LIMIT = 20;
 

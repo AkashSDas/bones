@@ -29,11 +29,11 @@ import { useToast } from "@/hooks/toast";
 import { iamKeys } from "@/utils/react-query";
 import { cn } from "@/utils/styles";
 
-import { Button } from "../shared/Button";
-import { Checkbox } from "../shared/Checkbox";
-import { DialogTrigger } from "../shared/Dialog";
-import { Input } from "../shared/Input";
-import { Loader } from "../shared/Loader";
+import { Button } from "../../shared/Button";
+import { Checkbox } from "../../shared/Checkbox";
+import { DialogTrigger } from "../../shared/Dialog";
+import { Input } from "../../shared/Input";
+import { Loader } from "../../shared/Loader";
 
 type IAMUser = GetApiV1IamPermissionPermissionId200["permission"]["users"][number];
 

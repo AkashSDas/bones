@@ -8,8 +8,8 @@ import { type GetApiV1IamPermissionPermissionId200 } from "@/gen/schemas";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/toast";
 
-import { Button } from "../shared/Button";
-import { Checkbox } from "../shared/Checkbox";
+import { Button } from "../../shared/Button";
+import { Checkbox } from "../../shared/Checkbox";
 import {
     Form,
     FormControl,
@@ -18,8 +18,8 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-} from "../shared/Form";
-import { Input } from "../shared/Input";
+} from "../../shared/Form";
+import { Input } from "../../shared/Input";
 
 type Props = {
     permission: GetApiV1IamPermissionPermissionId200["permission"];
