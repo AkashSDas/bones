@@ -2996,6 +2996,72 @@
                 }
             }
         },
+        "/api/v1/workspace/check-initialization": {
+            "get": {
+                "tags": ["Workspace"],
+                "responses": {
+                    "200": {
+                        "description": "Account initialized successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "isInitialized": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "required": ["isInitialized"]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string",
+                                            "description": "Reason for validation error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Detailed error message"
+                                        }
+                                    },
+                                    "required": ["reason", "message"]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/workspace/initialize": {
             "post": {
                 "tags": ["Workspace"],
@@ -3270,9 +3336,47 @@
                                             "type": "string",
                                             "format": "uri",
                                             "example": "Workspace URL"
+                                        },
+                                        "workspace": {
+                                            "type": "object",
+                                            "properties": {
+                                                "workspaceId": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "maxLength": 255
+                                                },
+                                                "accountId": { "type": "number" },
+                                                "containerImage": {
+                                                    "type": "string",
+                                                    "maxLength": 255
+                                                },
+                                                "containerImageTag": {
+                                                    "type": "string",
+                                                    "maxLength": 255
+                                                },
+                                                "createdAt": { "type": "string" },
+                                                "updatedAt": { "type": "string" },
+                                                "createdByUserId": {
+                                                    "type": "number",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "required": [
+                                                "workspaceId",
+                                                "name",
+                                                "accountId",
+                                                "containerImage",
+                                                "containerImageTag",
+                                                "createdAt",
+                                                "updatedAt",
+                                                "createdByUserId"
+                                            ]
                                         }
                                     },
-                                    "required": ["workspaceURL"]
+                                    "required": ["workspaceURL", "workspace"]
                                 }
                             }
                         }
@@ -3423,7 +3527,66 @@
                     }
                 ],
                 "responses": {
-                    "200": { "description": "List of workspaces" },
+                    "200": {
+                        "description": "List of workspaces",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "workspaces": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "workspaceId": {
+                                                        "type": "string",
+                                                        "format": "uuid"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "maxLength": 255
+                                                    },
+                                                    "accountId": { "type": "number" },
+                                                    "containerImage": {
+                                                        "type": "string",
+                                                        "maxLength": 255
+                                                    },
+                                                    "containerImageTag": {
+                                                        "type": "string",
+                                                        "maxLength": 255
+                                                    },
+                                                    "createdAt": { "type": "string" },
+                                                    "updatedAt": { "type": "string" },
+                                                    "createdByUserId": {
+                                                        "type": "number",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "required": [
+                                                    "workspaceId",
+                                                    "name",
+                                                    "accountId",
+                                                    "containerImage",
+                                                    "containerImageTag",
+                                                    "createdAt",
+                                                    "updatedAt",
+                                                    "createdByUserId"
+                                                ]
+                                            },
+                                            "description": "List of workspaces"
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "description": "Total number of workspaces"
+                                        }
+                                    },
+                                    "required": ["workspaces", "total"]
+                                }
+                            }
+                        }
+                    },
                     "400": {
                         "description": "Validation error",
                         "content": {

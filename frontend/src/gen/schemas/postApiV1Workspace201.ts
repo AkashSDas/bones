@@ -4,7 +4,9 @@
  * Bones
  * OpenAPI spec version: 1.0.0
  */
+import type { PostApiV1Workspace201Workspace } from "./postApiV1Workspace201Workspace";
 
 export type PostApiV1Workspace201 = {
+    workspace: PostApiV1Workspace201Workspace;
     workspaceURL: string;
 };

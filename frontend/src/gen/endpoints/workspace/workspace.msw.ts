@@ -8,9 +8,18 @@ import { faker } from "@faker-js/faker";
 import { HttpResponse, delay, http } from "msw";
 
 import type {
+    GetApiV1Workspace200,
+    GetApiV1WorkspaceCheckInitialization200,
     PostApiV1Workspace201,
     PostApiV1WorkspaceInitialize200,
 } from "../../schemas";
+
+export const getGetApiV1WorkspaceCheckInitializationResponseMock = (
+    overrideResponse: Partial<GetApiV1WorkspaceCheckInitialization200> = {},
+): GetApiV1WorkspaceCheckInitialization200 => ({
+    isInitialized: faker.datatype.boolean(),
+    ...overrideResponse,
+});
 
 export const getPostApiV1WorkspaceInitializeResponseMock = (
     overrideResponse: Partial<PostApiV1WorkspaceInitialize200> = {},
@@ -22,9 +31,70 @@ export const getPostApiV1WorkspaceInitializeResponseMock = (
 export const getPostApiV1WorkspaceResponseMock = (
     overrideResponse: Partial<PostApiV1Workspace201> = {},
 ): PostApiV1Workspace201 => ({
+    workspace: {
+        accountId: faker.number.int({ min: undefined, max: undefined }),
+        containerImage: faker.word.sample(),
+        containerImageTag: faker.word.sample(),
+        createdAt: faker.word.sample(),
+        createdByUserId: faker.helpers.arrayElement([
+            faker.number.int({ min: undefined, max: undefined }),
+            null,
+        ]),
+        name: faker.word.sample(),
+        updatedAt: faker.word.sample(),
+        workspaceId: faker.string.uuid(),
+    },
     workspaceURL: faker.internet.url(),
     ...overrideResponse,
 });
+
+export const getGetApiV1WorkspaceResponseMock = (
+    overrideResponse: Partial<GetApiV1Workspace200> = {},
+): GetApiV1Workspace200 => ({
+    total: faker.number.int({ min: 0, max: undefined }),
+    workspaces: Array.from(
+        { length: faker.number.int({ min: 1, max: 10 }) },
+        (_, i) => i + 1,
+    ).map(() => ({
+        accountId: faker.number.int({ min: undefined, max: undefined }),
+        containerImage: faker.word.sample(),
+        containerImageTag: faker.word.sample(),
+        createdAt: faker.word.sample(),
+        createdByUserId: faker.helpers.arrayElement([
+            faker.number.int({ min: undefined, max: undefined }),
+            null,
+        ]),
+        name: faker.word.sample(),
+        updatedAt: faker.word.sample(),
+        workspaceId: faker.string.uuid(),
+    })),
+    ...overrideResponse,
+});
+
+export const getGetApiV1WorkspaceCheckInitializationMockHandler = (
+    overrideResponse?:
+        | GetApiV1WorkspaceCheckInitialization200
+        | ((
+              info: Parameters<Parameters<typeof http.get>[1]>[0],
+          ) =>
+              | Promise<GetApiV1WorkspaceCheckInitialization200>
+              | GetApiV1WorkspaceCheckInitialization200),
+) => {
+    return http.get("*/api/v1/workspace/check-initialization", async (info) => {
+        await delay(1000);
+
+        return new HttpResponse(
+            JSON.stringify(
+                overrideResponse !== undefined
+                    ? typeof overrideResponse === "function"
+                        ? await overrideResponse(info)
+                        : overrideResponse
+                    : getGetApiV1WorkspaceCheckInitializationResponseMock(),
+            ),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+    });
+};
 
 export const getPostApiV1WorkspaceInitializeMockHandler = (
     overrideResponse?:
@@ -92,17 +162,24 @@ export const getPostApiV1WorkspaceMockHandler = (
 
 export const getGetApiV1WorkspaceMockHandler = (
     overrideResponse?:
-        | void
+        | GetApiV1Workspace200
         | ((
               info: Parameters<Parameters<typeof http.get>[1]>[0],
-          ) => Promise<void> | void),
+          ) => Promise<GetApiV1Workspace200> | GetApiV1Workspace200),
 ) => {
     return http.get("*/api/v1/workspace", async (info) => {
         await delay(1000);
-        if (typeof overrideResponse === "function") {
-            await overrideResponse(info);
-        }
-        return new HttpResponse(null, { status: 200 });
+
+        return new HttpResponse(
+            JSON.stringify(
+                overrideResponse !== undefined
+                    ? typeof overrideResponse === "function"
+                        ? await overrideResponse(info)
+                        : overrideResponse
+                    : getGetApiV1WorkspaceResponseMock(),
+            ),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+        );
     });
 };
 
@@ -154,6 +231,7 @@ export const getGetApiV1WorkspaceWorkspaceIdMockHandler = (
     });
 };
 export const getWorkspaceMock = () => [
+    getGetApiV1WorkspaceCheckInitializationMockHandler(),
     getPostApiV1WorkspaceInitializeMockHandler(),
     getDeleteApiV1WorkspaceDeinitializeMockHandler(),
     getPostApiV1WorkspaceMockHandler(),

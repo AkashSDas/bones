@@ -29,10 +29,14 @@ import type {
     DeleteApiV1WorkspaceWorkspaceId401,
     DeleteApiV1WorkspaceWorkspaceId403,
     DeleteApiV1WorkspaceWorkspaceId500,
+    GetApiV1Workspace200,
     GetApiV1Workspace400,
     GetApiV1Workspace401,
     GetApiV1Workspace403,
     GetApiV1Workspace500,
+    GetApiV1WorkspaceCheckInitialization200,
+    GetApiV1WorkspaceCheckInitialization401,
+    GetApiV1WorkspaceCheckInitialization500,
     GetApiV1WorkspaceParams,
     GetApiV1WorkspaceWorkspaceId400,
     GetApiV1WorkspaceWorkspaceId401,
@@ -55,6 +59,151 @@ import type {
     PostApiV1WorkspaceInitialize403,
     PostApiV1WorkspaceInitialize500,
 } from "../../schemas";
+
+export const getApiV1WorkspaceCheckInitialization = (
+    options?: AxiosRequestConfig,
+): Promise<AxiosResponse<GetApiV1WorkspaceCheckInitialization200>> => {
+    return axios.default.get(
+        `http://localhost:5050/api/v1/workspace/check-initialization`,
+        options,
+    );
+};
+
+export const getGetApiV1WorkspaceCheckInitializationQueryKey = () => {
+    return [`http://localhost:5050/api/v1/workspace/check-initialization`] as const;
+};
+
+export const getGetApiV1WorkspaceCheckInitializationQueryOptions = <
+    TData = Awaited<ReturnType<typeof getApiV1WorkspaceCheckInitialization>>,
+    TError = AxiosError<
+        | GetApiV1WorkspaceCheckInitialization401
+        | GetApiV1WorkspaceCheckInitialization500
+    >,
+>(options?: {
+    query?: Partial<
+        UseQueryOptions<
+            Awaited<ReturnType<typeof getApiV1WorkspaceCheckInitialization>>,
+            TError,
+            TData
+        >
+    >;
+    axios?: AxiosRequestConfig;
+}) => {
+    const { query: queryOptions, axios: axiosOptions } = options ?? {};
+
+    const queryKey =
+        queryOptions?.queryKey ?? getGetApiV1WorkspaceCheckInitializationQueryKey();
+
+    const queryFn: QueryFunction<
+        Awaited<ReturnType<typeof getApiV1WorkspaceCheckInitialization>>
+    > = ({ signal }) =>
+        getApiV1WorkspaceCheckInitialization({ signal, ...axiosOptions });
+
+    return { queryKey, queryFn, staleTime: 600000, ...queryOptions } as UseQueryOptions<
+        Awaited<ReturnType<typeof getApiV1WorkspaceCheckInitialization>>,
+        TError,
+        TData
+    > & { queryKey: QueryKey };
+};
+
+export type GetApiV1WorkspaceCheckInitializationQueryResult = NonNullable<
+    Awaited<ReturnType<typeof getApiV1WorkspaceCheckInitialization>>
+>;
+export type GetApiV1WorkspaceCheckInitializationQueryError = AxiosError<
+    GetApiV1WorkspaceCheckInitialization401 | GetApiV1WorkspaceCheckInitialization500
+>;
+
+export function useGetApiV1WorkspaceCheckInitialization<
+    TData = Awaited<ReturnType<typeof getApiV1WorkspaceCheckInitialization>>,
+    TError = AxiosError<
+        | GetApiV1WorkspaceCheckInitialization401
+        | GetApiV1WorkspaceCheckInitialization500
+    >,
+>(options: {
+    query: Partial<
+        UseQueryOptions<
+            Awaited<ReturnType<typeof getApiV1WorkspaceCheckInitialization>>,
+            TError,
+            TData
+        >
+    > &
+        Pick<
+            DefinedInitialDataOptions<
+                Awaited<ReturnType<typeof getApiV1WorkspaceCheckInitialization>>,
+                TError,
+                TData
+            >,
+            "initialData"
+        >;
+    axios?: AxiosRequestConfig;
+}): DefinedUseQueryResult<TData, TError> & { queryKey: QueryKey };
+export function useGetApiV1WorkspaceCheckInitialization<
+    TData = Awaited<ReturnType<typeof getApiV1WorkspaceCheckInitialization>>,
+    TError = AxiosError<
+        | GetApiV1WorkspaceCheckInitialization401
+        | GetApiV1WorkspaceCheckInitialization500
+    >,
+>(options?: {
+    query?: Partial<
+        UseQueryOptions<
+            Awaited<ReturnType<typeof getApiV1WorkspaceCheckInitialization>>,
+            TError,
+            TData
+        >
+    > &
+        Pick<
+            UndefinedInitialDataOptions<
+                Awaited<ReturnType<typeof getApiV1WorkspaceCheckInitialization>>,
+                TError,
+                TData
+            >,
+            "initialData"
+        >;
+    axios?: AxiosRequestConfig;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey };
+export function useGetApiV1WorkspaceCheckInitialization<
+    TData = Awaited<ReturnType<typeof getApiV1WorkspaceCheckInitialization>>,
+    TError = AxiosError<
+        | GetApiV1WorkspaceCheckInitialization401
+        | GetApiV1WorkspaceCheckInitialization500
+    >,
+>(options?: {
+    query?: Partial<
+        UseQueryOptions<
+            Awaited<ReturnType<typeof getApiV1WorkspaceCheckInitialization>>,
+            TError,
+            TData
+        >
+    >;
+    axios?: AxiosRequestConfig;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+export function useGetApiV1WorkspaceCheckInitialization<
+    TData = Awaited<ReturnType<typeof getApiV1WorkspaceCheckInitialization>>,
+    TError = AxiosError<
+        | GetApiV1WorkspaceCheckInitialization401
+        | GetApiV1WorkspaceCheckInitialization500
+    >,
+>(options?: {
+    query?: Partial<
+        UseQueryOptions<
+            Awaited<ReturnType<typeof getApiV1WorkspaceCheckInitialization>>,
+            TError,
+            TData
+        >
+    >;
+    axios?: AxiosRequestConfig;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+    const queryOptions = getGetApiV1WorkspaceCheckInitializationQueryOptions(options);
+
+    const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+        queryKey: QueryKey;
+    };
+
+    query.queryKey = queryOptions.queryKey;
+
+    return query;
+}
 
 export const postApiV1WorkspaceInitialize = (
     options?: AxiosRequestConfig,
@@ -304,7 +453,7 @@ export const usePostApiV1Workspace = <
 export const getApiV1Workspace = (
     params?: GetApiV1WorkspaceParams,
     options?: AxiosRequestConfig,
-): Promise<AxiosResponse<void>> => {
+): Promise<AxiosResponse<GetApiV1Workspace200>> => {
     return axios.default.get(`http://localhost:5050/api/v1/workspace`, {
         ...options,
         params: { ...params, ...options?.params },
