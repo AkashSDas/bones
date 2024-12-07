@@ -2,7 +2,7 @@
 # Bones configuration goes here
 # ==============================
 
-# Commans to run where the container is started i.e. workspace is started
+# Commands to run where the container is started i.e. workspace is started
 # These commands are ran inside /usr/workspace
 [[start_commands]]
 run = "deno task start"

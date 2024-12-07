@@ -57,7 +57,7 @@ COPY . .
 # Workspace final image setup
 # ===========================================
 
-# Delete unnescessary files
+# Delete unnecessary files
 RUN rm ./nginx.conf ./supervisord.conf ./port-5173-80.conf
 
 # Run Supervisor to manage the services

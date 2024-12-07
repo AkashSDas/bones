@@ -5,7 +5,12 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
     plugins: [react()],
     server: {
-        // IMPORTANT: This port is required in order to make Vite-React working in the Workspace
+        // By default it uses "localhost" and it creates issue in workspace Nginx config
+        // because there 127.0.0.1 is used. Also, the port forwarding which happens
+        // via 127.0.0.1. If we want to use localhost as host then we'll have to use
+        // the "--host" flag while starting Vite server, but then it will cause issue
+        // in port forward, hence not recommended
+        host: "127.0.0.1",
         port: 5173,
     },
 });
