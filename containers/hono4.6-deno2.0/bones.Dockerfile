@@ -10,7 +10,8 @@ FROM denoland/deno:alpine-2.0.6
 
 # Install required dependencies for workspace setup/execution
 RUN apk update \
-    && apk add --no-cache nginx supervisor curl neovim
+    && apk add --no-cache nginx supervisor curl neovim lsof \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the Nginx and Supervisor configuration files
 COPY ./nginx.conf /etc/nginx/nginx.conf

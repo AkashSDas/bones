@@ -10,7 +10,7 @@ FROM golang:1.23-bullseye AS go-base
 
 # Install required dependencies for workspace setup/execution
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nginx supervisor curl neovim \
+    && apt-get install -y --no-install-recommends nginx supervisor curl neovim lsof \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the Nginx and Supervisor configuration files
