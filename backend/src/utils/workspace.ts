@@ -1,13 +1,11 @@
 import { env } from "./env";
 
 import * as k8s from "@kubernetes/client-node";
-import { v4 as uuid } from "uuid";
 import { z } from "zod";
 
 import { WorkspaceSchemas } from "@/api/workspace/workspace.schema";
-import { db } from "@/db";
 import { dal } from "@/db/dal";
-import { type AccountPk } from "@/db/models/account";
+import { type AccountId, type AccountPk } from "@/db/models/account";
 import { UserPk } from "@/db/models/user";
 import { WorkspaceClient, WorkspaceId, WorkspacePk } from "@/db/models/workspace";
 import { k8sApi, k8sKind, k8sNames, k8sNetworkingApi } from "@/lib/k8s";
@@ -24,7 +22,7 @@ const SERVICE_NAME = "workspace";
 
 /** This class takes care of all of management related to workspaces */
 export class WorkspaceManager {
-    constructor(private accountId: string) {}
+    constructor(private accountId: AccountId) {}
 
     /** Check workspace initialized for account */
     async checkInitialization(): Promise<boolean> {
@@ -267,20 +265,7 @@ export class WorkspaceManager {
                             containerPort: port,
                         })),
 
-                        volumeMounts: [
-                            {
-                                name: "nginx-config",
-                                mountPath: "/etc/nginx/conf.d",
-                            },
-                        ],
-
                         // TODO: add constraints to CPU and memory
-                    },
-                ],
-                volumes: [
-                    {
-                        name: "nginx-config",
-                        emptyDir: {},
                     },
                 ],
             },
