@@ -3979,7 +3979,58 @@
                     }
                 ],
                 "responses": {
-                    "200": { "description": "Workspace details" },
+                    "200": {
+                        "description": "Workspace details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "workspace": {
+                                            "type": "object",
+                                            "properties": {
+                                                "workspaceId": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "maxLength": 255
+                                                },
+                                                "accountId": { "type": "number" },
+                                                "containerImage": {
+                                                    "type": "string",
+                                                    "maxLength": 255
+                                                },
+                                                "containerImageTag": {
+                                                    "type": "string",
+                                                    "maxLength": 255
+                                                },
+                                                "createdAt": { "type": "string" },
+                                                "updatedAt": { "type": "string" },
+                                                "createdByUserId": {
+                                                    "type": "number",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "required": [
+                                                "workspaceId",
+                                                "name",
+                                                "accountId",
+                                                "containerImage",
+                                                "containerImageTag",
+                                                "createdAt",
+                                                "updatedAt",
+                                                "createdByUserId"
+                                            ],
+                                            "description": "Workspace details"
+                                        }
+                                    },
+                                    "required": ["workspace"]
+                                }
+                            }
+                        }
+                    },
                     "400": {
                         "description": "Validation error",
                         "content": {

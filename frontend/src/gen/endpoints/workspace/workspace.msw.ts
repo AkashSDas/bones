@@ -10,6 +10,7 @@ import { HttpResponse, delay, http } from "msw";
 import type {
     GetApiV1Workspace200,
     GetApiV1WorkspaceCheckInitialization200,
+    GetApiV1WorkspaceWorkspaceId200,
     PostApiV1Workspace201,
     PostApiV1WorkspaceInitialize200,
 } from "../../schemas";
@@ -68,6 +69,25 @@ export const getGetApiV1WorkspaceResponseMock = (
         updatedAt: faker.word.sample(),
         workspaceId: faker.string.uuid(),
     })),
+    ...overrideResponse,
+});
+
+export const getGetApiV1WorkspaceWorkspaceIdResponseMock = (
+    overrideResponse: Partial<GetApiV1WorkspaceWorkspaceId200> = {},
+): GetApiV1WorkspaceWorkspaceId200 => ({
+    workspace: {
+        accountId: faker.number.int({ min: undefined, max: undefined }),
+        containerImage: faker.word.sample(),
+        containerImageTag: faker.word.sample(),
+        createdAt: faker.word.sample(),
+        createdByUserId: faker.helpers.arrayElement([
+            faker.number.int({ min: undefined, max: undefined }),
+            null,
+        ]),
+        name: faker.word.sample(),
+        updatedAt: faker.word.sample(),
+        workspaceId: faker.string.uuid(),
+    },
     ...overrideResponse,
 });
 
@@ -217,17 +237,26 @@ export const getPatchApiV1WorkspaceWorkspaceIdMockHandler = (
 
 export const getGetApiV1WorkspaceWorkspaceIdMockHandler = (
     overrideResponse?:
-        | void
+        | GetApiV1WorkspaceWorkspaceId200
         | ((
               info: Parameters<Parameters<typeof http.get>[1]>[0],
-          ) => Promise<void> | void),
+          ) =>
+              | Promise<GetApiV1WorkspaceWorkspaceId200>
+              | GetApiV1WorkspaceWorkspaceId200),
 ) => {
     return http.get("*/api/v1/workspace/:workspaceId", async (info) => {
         await delay(1000);
-        if (typeof overrideResponse === "function") {
-            await overrideResponse(info);
-        }
-        return new HttpResponse(null, { status: 200 });
+
+        return new HttpResponse(
+            JSON.stringify(
+                overrideResponse !== undefined
+                    ? typeof overrideResponse === "function"
+                        ? await overrideResponse(info)
+                        : overrideResponse
+                    : getGetApiV1WorkspaceWorkspaceIdResponseMock(),
+            ),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+        );
     });
 };
 export const getWorkspaceMock = () => [

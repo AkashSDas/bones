@@ -38,6 +38,7 @@ import type {
     GetApiV1WorkspaceCheckInitialization401,
     GetApiV1WorkspaceCheckInitialization500,
     GetApiV1WorkspaceParams,
+    GetApiV1WorkspaceWorkspaceId200,
     GetApiV1WorkspaceWorkspaceId400,
     GetApiV1WorkspaceWorkspaceId401,
     GetApiV1WorkspaceWorkspaceId403,
@@ -797,7 +798,7 @@ export const usePatchApiV1WorkspaceWorkspaceId = <
 export const getApiV1WorkspaceWorkspaceId = (
     workspaceId: string,
     options?: AxiosRequestConfig,
-): Promise<AxiosResponse<void>> => {
+): Promise<AxiosResponse<GetApiV1WorkspaceWorkspaceId200>> => {
     return axios.default.get(
         `http://localhost:5050/api/v1/workspace/${workspaceId}`,
         options,
