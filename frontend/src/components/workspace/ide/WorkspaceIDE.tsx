@@ -1,12 +1,31 @@
-import { useGetApiV1WorkspaceWorkspaceId } from "@/gen/endpoints/workspace/workspace";
-import { useAuth } from "@/hooks/auth";
+import {
+    ResizableHandle,
+    ResizablePanel,
+    ResizablePanelGroup,
+} from "@/components/shared/Resizable";
+import { useWorkspaceBridgeConnection } from "@/hooks/workspace";
 
-type Props = {
-    workspaceId: string;
-};
+import { Dock } from "./Dock";
+import { FileTree } from "./FileTree";
 
-function IDEAccess(props: Pick<Props, "workspaceId">) {}
+export function WorkspaceIDE(props: { workspaceId: string }) {
+    useWorkspaceBridgeConnection();
 
-export function WorkspaceIDE(props: Props) {
-    return <div>IDE</div>;
+    return (
+        <section className="w-full flex h-[calc(100vh-48px)] md:h-[calc(100vh-56px)] overflow-hidden">
+            <Dock />
+
+            <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel order={1} defaultSize={20} minSize={10} maxSize={80}>
+                    <FileTree />
+                </ResizablePanel>
+
+                <ResizableHandle withHandle />
+
+                <ResizablePanel order={2} minSize={20}>
+                    <div className="w-full h-full">Editor</div>
+                </ResizablePanel>
+            </ResizablePanelGroup>
+        </section>
+    );
 }
