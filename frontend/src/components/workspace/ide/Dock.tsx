@@ -13,6 +13,7 @@ import {
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { ZapIcon, ZapOffIcon } from "lucide-react";
 import { useEffect } from "react";
 
 import { Button } from "@/components/shared/Button";
@@ -22,6 +23,8 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/shared/Tooltip";
+import { useWorkspaceFileTree } from "@/hooks/workspace";
+import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
 import { DOCK_ITEMS, DockItemKey, useWorkspaceDockStore } from "@/store/workspace-dock";
 
 export function Dock() {
@@ -54,12 +57,32 @@ export function Dock() {
             sensors={sensors}
             collisionDetection={closestCorners}
             onDragEnd={handleDragEnd}
-            // modifiers={[restrictToVerticalAxis]}
         >
             <SortableContext items={order} strategy={verticalListSortingStrategy}>
                 <Droppable />
             </SortableContext>
         </DndContext>
+    );
+}
+
+function BridgeConnectionStatus() {
+    const { connectionStatus } = useWorkspaceBridgeStore();
+
+    return (
+        <Tooltip>
+            <TooltipTrigger asChild>
+                {connectionStatus === "connected" ? (
+                    <ZapIcon size={18} className="text-brand-400" />
+                ) : (
+                    <ZapOffIcon size={18} className="text-grey-400" />
+                )}
+            </TooltipTrigger>
+
+            <TooltipContent side="right">
+                Bridge{" "}
+                {`${connectionStatus[0].toUpperCase()}${connectionStatus.slice(1)}`}
+            </TooltipContent>
+        </Tooltip>
     );
 }
 
@@ -69,6 +92,8 @@ function Droppable() {
     return (
         <TooltipProvider>
             <div className="flex flex-col items-center h-full min-h-full gap-12 px-6 py-6 border-r w-14 border-r-grey-900 no-scrollbar">
+                <BridgeConnectionStatus />
+
                 {order.map((item) => {
                     const { icon: Icon, label } = DOCK_ITEMS[item];
 
@@ -99,8 +124,14 @@ function SortableItem(props: {
         disabled: !allowLayoutChange,
     });
 
+    const { getFileTree } = useWorkspaceFileTree();
+
     function handleClick() {
         switch (props.id) {
+            case "files": {
+                getFileTree();
+                break;
+            }
             case "resetDock": {
                 resetOrder();
                 break;
