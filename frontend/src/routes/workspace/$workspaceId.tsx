@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import { AuthProtected } from "@/components/shared/AuthProtected";
 import { Button } from "@/components/shared/Button";
@@ -6,6 +7,7 @@ import { Loader } from "@/components/shared/Loader";
 import { WorkspaceIDE } from "@/components/workspace/ide/WorkspaceIDE";
 import { useGetApiV1WorkspaceWorkspaceId } from "@/gen/endpoints/workspace/workspace";
 import { useAuth } from "@/hooks/auth";
+import { useWorkspaceStore } from "@/store/workspace";
 
 export const Route = createFileRoute("/workspace/$workspaceId")({
     component: function () {
@@ -29,6 +31,18 @@ function Workspace() {
     const status = query.data?.status;
     const hasAccess = status === 200;
     const forbidden = status === 403;
+    const res = query.data?.data;
+
+    const { setWorkspace } = useWorkspaceStore();
+
+    useEffect(
+        function initWorkspaceStore() {
+            if (hasAccess && res) {
+                setWorkspace(res.workspace);
+            }
+        },
+        [res, hasAccess],
+    );
 
     return (
         <main className="w-full max-w-[1440px]">
