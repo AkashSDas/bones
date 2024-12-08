@@ -8,7 +8,6 @@ import {
     Terminal,
     TextSearchIcon,
     Tv2Icon,
-    UnlockIcon,
 } from "lucide-react";
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
