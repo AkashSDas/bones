@@ -34,6 +34,38 @@ body {
         -ms-overflow-style: none; /* IE and Edge */
         scrollbar-width: none; /* Firefox */
     }
+
+    /* ===================================== */
+    /* File Tree Styles */
+    /* ===================================== */
+}
+
+.rct-tree-root {
+    @apply no-scrollbar h-full overflow-y-auto overflow-x-hidden border-r border-r-grey-900 !pb-12;
+}
+
+.rct-tree-items-container {
+    @apply font-body;
+}
+
+.rct-tree-item-button {
+    @apply w-full !text-base font-normal !text-grey-400;
+}
+
+.rct-tree-item-button:hover {
+    @apply !bg-grey-800;
+}
+
+.rct-tree-item-button-selected {
+    @apply !bg-grey-700;
+}
+
+.rct-tree-item-arrow:hover {
+    @apply !bg-grey-800;
+}
+
+.rct-tree-item-arrow svg {
+    @apply stroke-grey-400;
 }
 
 /* ======================================== */
