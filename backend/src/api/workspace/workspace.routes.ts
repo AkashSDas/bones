@@ -147,6 +147,11 @@ export const getWorkspace = createRoute({
         ...OpenApiResponses.rbacRoute,
         [status.OK]: {
             description: "Workspace details",
+            content: {
+                "application/json": {
+                    schema: WorkspaceSchemas.GetWorkspaceResponseBody,
+                },
+            },
         },
     },
 });
