@@ -62,6 +62,19 @@ class FileSystemManager {
     // List file tree in the workspace
     // ==============================================
 
+    async getFile(
+        absolutePath: string
+    ): Promise<{ file: File; content: string } | Error> {
+        try {
+            const stats = await Deno.lstat(absolutePath);
+            const file = this.createFileObject(absolutePath, stats);
+            const content = await Deno.readTextFile(absolutePath);
+            return { file, content };
+        } catch (e) {
+            return new Error(`Failed to get file: ${e}`);
+        }
+    }
+
     async listWorkspaceFileTree(): Promise<File | Error> {
         try {
             const absolutePath = await Deno.realPath(this.rootDir);

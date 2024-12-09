@@ -7,6 +7,7 @@ import { z } from "npm:zod";
 // ==========================================
 
 const EventSchema = z.union([
+    z.literal("get-file"),
     z.literal("list"),
     z.literal("create"),
     z.literal("rename"),
@@ -16,6 +17,10 @@ const EventSchema = z.union([
     z.literal("search-text-in-files"),
     z.literal("search-file"),
 ]);
+
+const GetFilePayloadSchema = z.object({
+    absolutePath: z.string(),
+});
 
 const CreateFileOrFolderPayloadSchema = z.object({
     name: z.string().min(3),
@@ -70,6 +75,9 @@ export class FileSystemWs {
 
     async handleWsRequest() {
         switch (this.event) {
+            case "get-file":
+                this.ws.send(await this.getFile());
+                break;
             case "list":
                 this.ws.send(await this.listFileTree());
                 break;
@@ -96,10 +104,10 @@ export class FileSystemWs {
                 break;
             default:
                 this.ws.send(
-                    JSON.stringify({
+                    this.returnResult({
                         success: false,
                         error: `Invalid event type`,
-                    }),
+                    })
                 );
                 break;
         }
@@ -115,6 +123,46 @@ export class FileSystemWs {
      * ```json
      * {
      *     "type": "fs",
+     *     "event": "get-file",
+     *     "payload": {
+     *         "absolutePath": "/usr/workspace"
+     *     }
+     * }
+     * ```
+     */
+    private async getFile(): Promise<string> {
+        const { success, data } = await GetFilePayloadSchema.safeParseAsync(
+            this.payload
+        );
+
+        if (success) {
+            const res = await fileSystemManager.getFile(data.absolutePath);
+
+            if (res instanceof Error) {
+                return this.returnResult({
+                    success: false,
+                    error: res.message,
+                });
+            } else {
+                return this.returnResult({
+                    success: true,
+                    ...res,
+                });
+            }
+        } else {
+            return this.returnResult({
+                success: false,
+                error: "Invalid payload",
+            });
+        }
+    }
+
+    /**
+     * Required incoming WS data:
+     *
+     * ```json
+     * {
+     *     "type": "fs",
      *     "event": "list"
      * }
      * ```
@@ -123,9 +171,9 @@ export class FileSystemWs {
         const res = await fileSystemManager.listWorkspaceFileTree();
 
         if (res instanceof Error) {
-            return JSON.stringify({ success: false, error: res.message });
+            return this.returnResult({ success: false, error: res.message });
         } else {
-            return JSON.stringify({ success: true, fileTree: res });
+            return this.returnResult({ success: true, fileTree: res });
         }
     }
 
@@ -145,24 +193,32 @@ export class FileSystemWs {
      * ```
      */
     private async createFileOrFolder(): Promise<string> {
-        const { success, data } = await CreateFileOrFolderPayloadSchema.safeParseAsync(
-            this.payload,
-        );
+        const { success, data } =
+            await CreateFileOrFolderPayloadSchema.safeParseAsync(this.payload);
 
         if (success) {
             const res = await fileSystemManager.createFileOrFolder(
                 data.name,
                 data.absolutePath,
-                data.isDirectory,
+                data.isDirectory
             );
 
             if (res instanceof Error) {
-                return JSON.stringify({ success: false, error: res.message });
+                return this.returnResult({
+                    success: false,
+                    error: res.message,
+                });
             } else {
-                return JSON.stringify({ success: true, newFileOrFolder: res });
+                return this.returnResult({
+                    success: true,
+                    newFileOrFolder: res,
+                });
             }
         } else {
-            return JSON.stringify({ success: false, error: "Invalid payload" });
+            return this.returnResult({
+                success: false,
+                error: "Invalid payload",
+            });
         }
     }
 
@@ -181,26 +237,31 @@ export class FileSystemWs {
      * ```
      */
     private async renameFileOrFolder(): Promise<string> {
-        const { success, data } = await RenameFileOrFolderPayloadSchema.safeParseAsync(
-            this.payload,
-        );
+        const { success, data } =
+            await RenameFileOrFolderPayloadSchema.safeParseAsync(this.payload);
 
         if (success) {
             const res = await fileSystemManager.renameFileOrFolder(
                 data.absolutePath,
-                data.name,
+                data.name
             );
 
             if (res instanceof Error) {
-                return JSON.stringify({ success: false, error: res.message });
+                return this.returnResult({
+                    success: false,
+                    error: res.message,
+                });
             } else {
-                return JSON.stringify({
+                return this.returnResult({
                     success: true,
                     updatedFileOrFolder: res,
                 });
             }
         } else {
-            return JSON.stringify({ success: false, error: "Invalid payload" });
+            return this.returnResult({
+                success: false,
+                error: "Invalid payload",
+            });
         }
     }
 
@@ -218,15 +279,17 @@ export class FileSystemWs {
      * ```
      */
     private async deleteFilesOrFolders(): Promise<string> {
-        const { success, data } = await DeleteFileOrFolderPayloadSchema.safeParseAsync(
-            this.payload,
-        );
+        const { success, data } =
+            await DeleteFileOrFolderPayloadSchema.safeParseAsync(this.payload);
 
         if (success) {
             await fileSystemManager.deleteFilesOrFolders(data.absolutePaths);
-            return JSON.stringify({ success: true });
+            return this.returnResult({ success: true });
         } else {
-            return JSON.stringify({ success: false, error: "Invalid payload" });
+            return this.returnResult({
+                success: false,
+                error: "Invalid payload",
+            });
         }
     }
 
@@ -245,21 +308,23 @@ export class FileSystemWs {
      * ```
      */
     private async moveFilesOrFolders(): Promise<string> {
-        const { success, data } = await MoveFileOrFolderPayloadSchema.safeParseAsync(
-            this.payload,
-        );
+        const { success, data } =
+            await MoveFileOrFolderPayloadSchema.safeParseAsync(this.payload);
 
         if (success) {
             const res = await fileSystemManager.moveFilesOrFolders(
                 data.absoluteSourcePaths,
-                data.absoluteDestinationPath,
+                data.absoluteDestinationPath
             );
 
             if (res instanceof Error) {
-                return JSON.stringify({ success: false, error: res.message });
+                return this.returnResult({
+                    success: false,
+                    error: res.message,
+                });
             }
 
-            return JSON.stringify({
+            return this.returnResult({
                 success: true,
                 movedFilesOrFolders: res.map((v) => {
                     if (v instanceof Error) {
@@ -270,7 +335,10 @@ export class FileSystemWs {
                 }),
             });
         } else {
-            return JSON.stringify({ success: false, error: "Invalid payload" });
+            return this.returnResult({
+                success: false,
+                error: "Invalid payload",
+            });
         }
     }
 
@@ -289,21 +357,23 @@ export class FileSystemWs {
      * ```
      */
     private async copyFilesOrFolders(): Promise<string> {
-        const { success, data } = await CopyFileOrFolderPayloadSchema.safeParseAsync(
-            this.payload,
-        );
+        const { success, data } =
+            await CopyFileOrFolderPayloadSchema.safeParseAsync(this.payload);
 
         if (success) {
             const res = await fileSystemManager.copyFilesOrFolders(
                 data.absoluteSourcePaths,
-                data.absoluteDestinationPath,
+                data.absoluteDestinationPath
             );
 
             if (res instanceof Error) {
-                return JSON.stringify({ success: false, error: res.message });
+                return this.returnResult({
+                    success: false,
+                    error: res.message,
+                });
             }
 
-            return JSON.stringify({
+            return this.returnResult({
                 success: true,
                 copiedFilesOrFolders: res.map((v) => {
                     if (v instanceof Error) {
@@ -314,7 +384,10 @@ export class FileSystemWs {
                 }),
             });
         } else {
-            return JSON.stringify({ success: false, error: "Invalid payload" });
+            return this.returnResult({
+                success: false,
+                error: "Invalid payload",
+            });
         }
     }
 
@@ -336,9 +409,8 @@ export class FileSystemWs {
      * ```
      */
     private async searchTextInFiles(): Promise<string> {
-        const { success, data } = await SearchTextInFilesPayloadSchema.safeParseAsync(
-            this.payload,
-        );
+        const { success, data } =
+            await SearchTextInFilesPayloadSchema.safeParseAsync(this.payload);
 
         if (success) {
             const res = await fileSystemManager.searchTextInFiles(data.query, {
@@ -348,16 +420,22 @@ export class FileSystemWs {
             });
 
             if (res instanceof Error) {
-                return JSON.stringify({ success: false, error: res.message });
+                return this.returnResult({
+                    success: false,
+                    error: res.message,
+                });
             }
 
-            return JSON.stringify({
+            return this.returnResult({
                 success: true,
                 total: res.total,
                 results: res.results,
             });
         } else {
-            return JSON.stringify({ success: false, error: "Invalid payload" });
+            return this.returnResult({
+                success: false,
+                error: "Invalid payload",
+            });
         }
     }
 
@@ -371,28 +449,39 @@ export class FileSystemWs {
      *     "payload": {
      *     "useRegex": false
      *        "query": "App",
-     *        "matchCase": false,
-     *        "matchWholeWord": false,
-     *        "useRegex": false
      *     }
      * }
      * ```
      */
     private async searchFile(): Promise<string> {
         const { success, data } = await SearchFilePayloadSchema.safeParseAsync(
-            this.payload,
+            this.payload
         );
 
         if (success) {
             const res = await fileSystemManager.searchFileByName(data.query);
 
             if (res instanceof Error) {
-                return JSON.stringify({ success: false, error: res.message });
+                return this.returnResult({
+                    success: false,
+                    error: res.message,
+                });
             }
 
-            return JSON.stringify({ success: true, results: res });
+            return this.returnResult({ success: true, results: res });
         } else {
-            return JSON.stringify({ success: false, error: "Invalid payload" });
+            return this.returnResult({
+                success: false,
+                error: "Invalid payload",
+            });
         }
+    }
+
+    private returnResult(res: Record<string, unknown>): string {
+        return JSON.stringify({
+            type: "fs",
+            event: this.event,
+            ...res,
+        });
     }
 }
