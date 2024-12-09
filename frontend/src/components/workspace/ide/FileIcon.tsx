@@ -1,10 +1,12 @@
-import { Icon } from "@iconify/react";
+import { Icon, enableCache } from "@iconify/react";
 import { useMemo } from "react";
 import {
     getIconForFile,
     getIconForFolder,
     getIconForOpenFolder,
 } from "vscode-icons-js";
+
+enableCache("local");
 
 function convertSnakeCaseToKebabCase(str: string): string {
     return str.replace(/_/g, "-");
