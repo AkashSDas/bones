@@ -1,10 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReconnectingWebSocket from "reconnecting-websocket";
 import { useDebounceCallback } from "usehooks-ts";
 
 import { useWorkspaceStore } from "@/store/workspace";
 import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
-import { fileTreeManger } from "@/utils/workspace-file-tree";
+import { useWorkspaceFileTreeStore } from "@/store/workspace-file-tree";
+import {
+    FileTreeEventSchema,
+    ListFileTreeResponseSchema,
+    fileTreeManger,
+} from "@/utils/workspace-file-tree";
 
 /** Derives workspace URL from current workspace state */
 export function useWorkspaceURL(): {
@@ -33,26 +38,60 @@ export function useWorkspaceURL(): {
     };
 }
 
-export function useWorkspaceFileTree() {
+export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean }) {
     const { bridgeWsURL } = useWorkspaceURL();
     const { bridgeSocket, connectionStatus } = useWorkspaceBridgeStore();
+    const { setFileTree, setIsFetching, isFetching } = useWorkspaceFileTreeStore();
 
     const wasDisconnected = useRef(true);
 
+    // ==========================================
+    // Send request
+    // ==========================================
+
     const getFileTree = useCallback(
         function () {
-            if (bridgeSocket && bridgeWsURL) {
-                bridgeSocket.send(JSON.stringify(fileTreeManger.listFileTree()));
+            if (bridgeSocket && bridgeWsURL && !isFetching) {
+                setIsFetching(true);
+                bridgeSocket.send(JSON.stringify(fileTreeManger.listFileTreeRequest()));
             }
         },
-        [bridgeWsURL, bridgeSocket],
+        [bridgeWsURL, bridgeSocket, isFetching, setIsFetching],
     );
 
-    const handleGetFileTreeResponse = useCallback(function (_evt: MessageEvent) {}, []);
+    // ==========================================
+    // Handlers
+    // ==========================================
+
+    const mapRequestToHandler = useCallback(function (data: Record<string, unknown>) {
+        const { data: event } = FileTreeEventSchema.safeParse(data.event);
+
+        switch (event) {
+            case "list":
+                handleGetFileTreeResponse(data);
+        }
+    }, []);
+
+    const handleGetFileTreeResponse = useCallback(
+        function (data: Record<string, unknown>) {
+            const parsed = ListFileTreeResponseSchema.parse(data);
+
+            if (parsed?.success) {
+                setFileTree(parsed.fileTree);
+            }
+
+            setIsFetching(false);
+        },
+        [setIsFetching, setFileTree],
+    );
 
     useEffect(
         function syncStatus() {
-            if (wasDisconnected.current && connectionStatus === "connected") {
+            if (
+                wasDisconnected.current &&
+                connectionStatus === "connected" &&
+                opts?.implicitlyGetFileTree
+            ) {
                 wasDisconnected.current = false;
                 getFileTree();
             }
@@ -60,19 +99,21 @@ export function useWorkspaceFileTree() {
         [connectionStatus, getFileTree],
     );
 
-    const getFileTreeDebounced = useDebounceCallback(getFileTree, 300);
-
     return {
-        getFileTree: getFileTreeDebounced,
-        handleGetFileTreeResponse,
+        getFileTree,
+        mapRequestToHandler,
     };
 }
 
-/** Handle the workspace bridge connection */
+/** Handle the workspace bridge connection. Should be used in one place only */
 export function useWorkspaceBridgeConnection() {
     const { bridgeWsURL } = useWorkspaceURL();
 
     const { setBridgeSocket, setConnectionStatus } = useWorkspaceBridgeStore();
+
+    const { mapRequestToHandler } = useWorkspaceFileTree({
+        implicitlyGetFileTree: true,
+    });
 
     const handleOpen = useCallback(
         function handleBridgeOpen() {
@@ -93,12 +134,15 @@ export function useWorkspaceBridgeConnection() {
 
         try {
             const { data } = evt;
-            const _parsed = JSON.parse(data.toString());
+            const parsed: Record<string, unknown> = JSON.parse(data);
 
-            // switch (parsed.type) {
-            //     case "fs": {
-            //     }
-            // }
+            if (parsed.type && parsed.event) {
+                switch (parsed.type) {
+                    case "fs": {
+                        mapRequestToHandler(parsed);
+                    }
+                }
+            }
         } catch (e) {
             console.error(e);
         }
