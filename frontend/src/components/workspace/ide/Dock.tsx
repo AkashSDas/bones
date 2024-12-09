@@ -23,9 +23,10 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/shared/Tooltip";
-import { useWorkspaceFileTree } from "@/hooks/workspace";
+import { useWorkspaceStore } from "@/store/workspace";
 import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
 import { DOCK_ITEMS, DockItemKey, useWorkspaceDockStore } from "@/store/workspace-dock";
+import { useWorkspaceFileTreeStore } from "@/store/workspace-file-tree";
 
 export function Dock() {
     const { order, updateOrder, stopLayoutChange } = useWorkspaceDockStore();
@@ -124,12 +125,20 @@ function SortableItem(props: {
         disabled: !allowLayoutChange,
     });
 
-    const { getFileTree } = useWorkspaceFileTree();
+    const { setContextWindow } = useWorkspaceStore();
 
     function handleClick() {
         switch (props.id) {
             case "files": {
-                getFileTree();
+                setContextWindow("files");
+                break;
+            }
+            case "fileSearch": {
+                setContextWindow("fileSearch");
+                break;
+            }
+            case "textSearch": {
+                setContextWindow("textSearch");
                 break;
             }
             case "resetDock": {
