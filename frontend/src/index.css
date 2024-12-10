@@ -40,10 +40,6 @@ body {
     /* ===================================== */
 }
 
-.rct-tree-root {
-    @apply no-scrollbar h-full overflow-y-auto overflow-x-hidden border-r border-r-grey-900 !pb-12;
-}
-
 .rct-tree-items-container {
     @apply font-body;
 }
@@ -53,15 +49,15 @@ body {
 }
 
 .rct-tree-item-button:hover {
-    @apply !bg-grey-800;
+    @apply !bg-grey-900;
 }
 
 .rct-tree-item-button-selected {
-    @apply !bg-grey-700;
+    @apply !bg-grey-800;
 }
 
 .rct-tree-item-arrow:hover {
-    @apply !bg-grey-800;
+    @apply !bg-grey-900;
 }
 
 .rct-tree-item-arrow svg {
