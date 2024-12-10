@@ -26,7 +26,6 @@ import {
 import { useWorkspaceStore } from "@/store/workspace";
 import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
 import { DOCK_ITEMS, DockItemKey, useWorkspaceDockStore } from "@/store/workspace-dock";
-import { useWorkspaceFileTreeStore } from "@/store/workspace-file-tree";
 
 export function Dock() {
     const { order, updateOrder, stopLayoutChange } = useWorkspaceDockStore();
