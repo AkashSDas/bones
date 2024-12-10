@@ -6,6 +6,8 @@ import { useWorkspaceStore } from "@/store/workspace";
 import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
 import { useWorkspaceFileTreeStore } from "@/store/workspace-file-tree";
 import {
+    CreateFileOrFolderResponseSchema,
+    DeleteFilesOrFoldersResponseSchema,
     FileTreeEventSchema,
     ListFileTreeResponseSchema,
     fileTreeManger,
@@ -41,7 +43,16 @@ export function useWorkspaceURL(): {
 export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean }) {
     const { bridgeWsURL } = useWorkspaceURL();
     const { bridgeSocket, connectionStatus } = useWorkspaceBridgeStore();
-    const { setFileTree, setIsFetching, isFetching } = useWorkspaceFileTreeStore();
+    const {
+        setFileTree,
+        setIsFetching,
+        isFetching,
+        isCreatingFileOrFolder,
+        setIsCreatingFileOrFolder,
+        setAddFileOrFolderInDirectory,
+        setIsDeletingFilesOrFolders,
+        isDeletingFilesOrFolders,
+    } = useWorkspaceFileTreeStore();
 
     const wasDisconnected = useRef(true);
 
@@ -51,7 +62,7 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
 
     const getFileTree = useCallback(
         function () {
-            if (bridgeSocket && bridgeWsURL && !isFetching) {
+            if (bridgeWsURL && bridgeSocket && !isFetching) {
                 setIsFetching(true);
                 bridgeSocket.send(JSON.stringify(fileTreeManger.listFileTreeRequest()));
             }
@@ -59,18 +70,60 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
         [bridgeWsURL, bridgeSocket, isFetching, setIsFetching],
     );
 
+    const createFileOrFolder = useCallback(
+        function (name: string, absolutePath: string, isDirectory: boolean) {
+            if (
+                bridgeSocket &&
+                bridgeWsURL &&
+                !isFetching &&
+                !isCreatingFileOrFolder &&
+                !isDeletingFilesOrFolders
+            ) {
+                setIsCreatingFileOrFolder(true);
+                bridgeSocket.send(
+                    JSON.stringify(
+                        fileTreeManger.createFileOrFolderRequest(
+                            name,
+                            absolutePath,
+                            isDirectory,
+                        ),
+                    ),
+                );
+            }
+        },
+        [
+            bridgeWsURL,
+            bridgeSocket,
+            isFetching,
+            isCreatingFileOrFolder,
+            isDeletingFilesOrFolders,
+            setIsCreatingFileOrFolder,
+        ],
+    );
+
+    const deleteFilesOrFolders = useCallback(
+        function (absolutePaths: string[]) {
+            if (bridgeSocket && bridgeWsURL && !isFetching && !isCreatingFileOrFolder) {
+                setIsDeletingFilesOrFolders(true);
+                bridgeSocket.send(
+                    JSON.stringify(
+                        fileTreeManger.deleteFilesOrFoldersRequest(absolutePaths),
+                    ),
+                );
+            }
+        },
+        [
+            bridgeWsURL,
+            bridgeSocket,
+            isFetching,
+            isCreatingFileOrFolder,
+            setIsCreatingFileOrFolder,
+        ],
+    );
+
     // ==========================================
     // Handlers
     // ==========================================
-
-    const mapRequestToHandler = useCallback(function (data: Record<string, unknown>) {
-        const { data: event } = FileTreeEventSchema.safeParse(data.event);
-
-        switch (event) {
-            case "list":
-                handleGetFileTreeResponse(data);
-        }
-    }, []);
 
     const handleGetFileTreeResponse = useCallback(
         function (data: Record<string, unknown>) {
@@ -81,8 +134,75 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
             }
 
             setIsFetching(false);
+
+            setIsCreatingFileOrFolder(false);
+            setAddFileOrFolderInDirectory(null);
+
+            setIsDeletingFilesOrFolders(false);
         },
         [setIsFetching, setFileTree],
+    );
+
+    const handleCreateFileOrFolderResponse = useCallback(
+        function (data: Record<string, unknown>) {
+            const parsed = CreateFileOrFolderResponseSchema.parse(data);
+
+            if (parsed?.success && bridgeSocket) {
+                // TODO: not working and there using useEffect duckTapeLoadFileTreeOnAddingFileOrFolder
+                getFileTree();
+            } else {
+                setIsCreatingFileOrFolder(false);
+                setAddFileOrFolderInDirectory(null);
+            }
+        },
+        [
+            getFileTree,
+            setIsCreatingFileOrFolder,
+            bridgeSocket,
+            setAddFileOrFolderInDirectory,
+        ],
+    );
+
+    const handleDeleteFilesOrFoldersResponse = useCallback(
+        function (data: Record<string, unknown>) {
+            const parsed = DeleteFilesOrFoldersResponseSchema.parse(data);
+
+            if (parsed?.success && bridgeSocket) {
+                // TODO: not working and there using useEffect duckTapeLoadFileTreeOnAddingFileOrFolder
+                getFileTree();
+            } else {
+                setIsDeletingFilesOrFolders(false);
+            }
+        },
+        [
+            getFileTree,
+            setIsCreatingFileOrFolder,
+            bridgeSocket,
+            setAddFileOrFolderInDirectory,
+        ],
+    );
+
+    const mapRequestToHandler = useCallback(
+        function (data: Record<string, unknown>) {
+            const { data: event } = FileTreeEventSchema.safeParse(data.event);
+
+            switch (event) {
+                case "list":
+                    handleGetFileTreeResponse(data);
+                    break;
+                case "create":
+                    handleCreateFileOrFolderResponse(data);
+                    break;
+                case "delete":
+                    handleDeleteFilesOrFoldersResponse(data);
+                    break;
+            }
+        },
+        [
+            handleGetFileTreeResponse,
+            handleCreateFileOrFolderResponse,
+            handleDeleteFilesOrFoldersResponse,
+        ],
     );
 
     useEffect(
@@ -90,17 +210,32 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
             if (
                 wasDisconnected.current &&
                 connectionStatus === "connected" &&
-                opts?.implicitlyGetFileTree
+                opts?.implicitlyGetFileTree &&
+                !isCreatingFileOrFolder
             ) {
                 wasDisconnected.current = false;
                 getFileTree();
             }
         },
-        [connectionStatus, getFileTree],
+        [connectionStatus, getFileTree, isCreatingFileOrFolder],
+    );
+
+    useEffect(
+        function duckTapeLoadFileTreeOnAddingFileOrFolder() {
+            if (
+                !wasDisconnected.current &&
+                (!isCreatingFileOrFolder || !isDeletingFilesOrFolders)
+            ) {
+                getFileTree();
+            }
+        },
+        [isCreatingFileOrFolder, isDeletingFilesOrFolders],
     );
 
     return {
         getFileTree,
+        createFileOrFolder,
+        deleteFilesOrFolders,
         mapRequestToHandler,
     };
 }
