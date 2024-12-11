@@ -8,6 +8,7 @@ import { useWorkspaceStore } from "@/store/workspace";
 
 import { Dock } from "./Dock";
 import { FileTree } from "./FileTree";
+import { MainSection } from "./MainSection";
 
 export function WorkspaceIDE() {
     useWorkspaceBridgeConnection();
@@ -33,7 +34,9 @@ export function WorkspaceIDE() {
                     order={contextWindow ? 2 : 1}
                     minSize={contextWindow ? 25 : 100}
                 >
-                    <div className="w-full h-full">Editor</div>
+                    <div className="w-full h-full">
+                        <MainSection />
+                    </div>
                 </ResizablePanel>
             </ResizablePanelGroup>
         </section>
