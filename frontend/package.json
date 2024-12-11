@@ -48,6 +48,7 @@
         "cmdk": "1.0.0",
         "ldrs": "^1.0.2",
         "lucide-react": "^0.445.0",
+        "nanoid": "^5.0.9",
         "react": "18.3.1",
         "react-complex-tree": "^2.4.6",
         "react-dom": "18.3.1",
