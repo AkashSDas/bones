@@ -12,6 +12,7 @@ import { Button } from "@/components/shared/Button";
 import { Dialog, DialogTrigger } from "@/components/shared/Dialog";
 import { Loader } from "@/components/shared/Loader";
 import { useWorkspaceFileTree } from "@/hooks/workspace";
+import { useWorkspacePane } from "@/hooks/workspace-pane";
 import { useWorkspaceStore } from "@/store/workspace";
 import { findParentFile, useWorkspaceFileTreeStore } from "@/store/workspace-file-tree";
 import { cn } from "@/utils/styles";
@@ -41,6 +42,8 @@ export function FileTree() {
     } = useWorkspaceFileTreeStore();
     const { getFileTree, deleteFilesOrFolders } = useWorkspaceFileTree();
     const { contextWindow } = useWorkspaceStore();
+
+    const { addTab } = useWorkspacePane();
 
     if (!fileTree) return null;
 
@@ -246,6 +249,11 @@ export function FileTree() {
                 onExpandItem={setExpandedFileTreeItems}
                 onCollapseItem={setCollapsedFileTreeItems}
                 onSelectItems={setSelectedFileTreeItems}
+                onPrimaryAction={(item) => {
+                    if (item.data.isFile) {
+                        addTab({ file: item.data, type: "codeFile" });
+                    }
+                }}
                 renderItemTitle={({ title, item, context }) => {
                     return (
                         <span className="flex items-center gap-2">
