@@ -44,6 +44,7 @@ export function useWorkspacePane() {
                 paneId,
                 tabs: tabs ?? {},
                 activeTab: tabs ? Object.keys(tabs)[0] : null,
+                orderedTabIds: tabs ? Object.keys(tabs) : [],
             };
 
             setPanes({ ...panes, [paneId]: pane });
@@ -85,6 +86,7 @@ export function useWorkspacePane() {
                             [tabId]: { tabId, ...payload },
                         },
                         activeTab: tabId,
+                        orderedTabIds: [...panes[paneId].orderedTabIds, tabId],
                     };
                 } else {
                     setActiveTab(paneId, tabId);
@@ -98,6 +100,7 @@ export function useWorkspacePane() {
                             [tabId]: { tabId, ...payload },
                         },
                         activeTab: tabId,
+                        orderedTabIds: [...panes[activePaneId].orderedTabIds, tabId],
                     };
                 } else {
                     setActiveTab(activePaneId, tabId);
@@ -113,6 +116,7 @@ export function useWorkspacePane() {
                             [tabId]: { tabId, ...payload },
                         },
                         activeTab: tabId,
+                        orderedTabIds: [...panes[paneId].orderedTabIds, tabId],
                     };
                 } else {
                     setActiveTab(paneId, tabId);

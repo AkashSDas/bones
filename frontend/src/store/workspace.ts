@@ -24,6 +24,7 @@ export type PaneTab = {
 export type PaneInfo = {
     paneId: PaneId;
     tabs: Record<TabId, PaneTab>;
+    orderedTabIds: TabId[];
     activeTab: TabId | null;
 };
 

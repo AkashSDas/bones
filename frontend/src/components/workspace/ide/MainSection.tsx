@@ -34,14 +34,20 @@ export function MainSection() {
                             return (
                                 <div className="flex items-center justify-between w-full h-full gap-1 px-2 border-b bg-grey-900 hover:bg-grey-900 border-b-grey-800">
                                     <span className="flex items-center overflow-x-auto no-scrollbar">
-                                        {Object.values(pane.tabs).map((tab) => (
-                                            <TabButton
-                                                key={tab.tabId}
-                                                tab={tab}
-                                                isActive={pane.activeTab === tab.tabId}
-                                                paneId={id}
-                                            />
-                                        ))}
+                                        {pane.orderedTabIds.map((tabId) => {
+                                            const tab = pane.tabs[tabId];
+
+                                            return (
+                                                <TabButton
+                                                    key={tab.tabId}
+                                                    tab={tab}
+                                                    isActive={
+                                                        pane.activeTab === tab.tabId
+                                                    }
+                                                    paneId={id}
+                                                />
+                                            );
+                                        })}
                                     </span>
 
                                     <span className="flex items-center gap-1">
