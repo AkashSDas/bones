@@ -85,7 +85,7 @@ body {
 }
 
 .mosaic .mosaic-window-toolbar {
-    @apply !h-9 !rounded-none !bg-grey-900 !text-grey-200;
+    @apply !z-0 !h-9 !rounded-none !bg-grey-900 !text-grey-200;
 }
 
 .mosaic .mosaic-window-toolbar:hover {
