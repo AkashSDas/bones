@@ -40,7 +40,7 @@ export function FileTree() {
         setCollapsedFileTreeAllItems,
         isDeletingFilesOrFolders,
     } = useWorkspaceFileTreeStore();
-    const { getFileTree, deleteFilesOrFolders } = useWorkspaceFileTree();
+    const { getFileTree, deleteFilesOrFolders, getFile } = useWorkspaceFileTree();
     const { contextWindow } = useWorkspaceStore();
 
     const { addTab } = useWorkspacePane();
@@ -252,6 +252,7 @@ export function FileTree() {
                 onPrimaryAction={(item) => {
                     if (item.data.isFile) {
                         addTab({ file: item.data, type: "codeFile" });
+                        getFile(item.data.absolutePath);
                     }
                 }}
                 renderItemTitle={({ title, item, context }) => {
