@@ -14,6 +14,7 @@ import { type PaneId, type PaneTab, useWorkspaceStore } from "@/store/workspace"
 import { cn } from "@/utils/styles";
 
 import { FileIcon } from "./FileIcon";
+import { MainSectionWindow } from "./MainSectionWindow";
 
 export function MainSection() {
     const { panes, setPanesTree, panesTree } = useWorkspaceStore();
@@ -28,6 +29,9 @@ export function MainSection() {
                 renderTile={(id, path) => (
                     <MosaicWindow<PaneId>
                         path={path}
+                        renderPreview={function (_props) {
+                            return <div></div>;
+                        }}
                         renderToolbar={function (_props, _draggable) {
                             const pane = panes[id];
 
@@ -36,6 +40,8 @@ export function MainSection() {
                                     <span className="flex items-center overflow-x-auto no-scrollbar">
                                         {pane.orderedTabIds.map((tabId) => {
                                             const tab = pane.tabs[tabId];
+
+                                            if (!tab) return null;
 
                                             return (
                                                 <TabButton
@@ -90,7 +96,7 @@ export function MainSection() {
                         }}
                         title={panes[id].paneId}
                     >
-                        Hello
+                        <MainSectionWindow paneId={id} />
                     </MosaicWindow>
                 )}
                 initialValue={null}
@@ -110,7 +116,10 @@ function TabButton(props: { tab: PaneTab; isActive: boolean; paneId: PaneId }) {
                     "flex items-center gap-2 px-2 text-sm text-grey-300 rounded-sm cursor-pointer",
                     props.isActive && "bg-grey-800",
                 )}
-                onClick={() => {
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
                     setActiveTab(props.paneId, props.tab.tabId);
                     setActivePaneId(props.paneId);
                 }}
