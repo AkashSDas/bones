@@ -30,6 +30,9 @@ export type PaneInfo = {
 
 export type PaneMap = Record<PaneId, PaneInfo>;
 
+export type AbsolutePath = string;
+export type FileContent = string;
+
 type WorkspaceState = {
     workspace: GetApiV1WorkspaceWorkspaceId200Workspace | null;
     setWorkspace: (v: GetApiV1WorkspaceWorkspaceId200Workspace) => void;
@@ -44,6 +47,14 @@ type WorkspaceState = {
     activePaneId: PaneId | null;
     setActivePaneId: (v: PaneId | null) => void;
     setActiveTab: (paneId: PaneId, tabId: TabId) => void;
+
+    loadingFiles: AbsolutePath[];
+    addLoadingFile: (v: AbsolutePath) => void;
+    removeLoadingFile: (v: AbsolutePath) => void;
+    emptyLoadingFiles: () => void;
+    files: Record<AbsolutePath, FileContent>;
+    upsertFile: (v: { absolutePath: AbsolutePath; content: FileContent }) => void;
+    deleteFile: (v: AbsolutePath) => void;
 };
 
 export const useWorkspaceStore = create<WorkspaceState>()(
@@ -92,6 +103,34 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     } else {
                         return state;
                     }
+                });
+            },
+
+            loadingFiles: [],
+            addLoadingFile(v) {
+                set((_state) => ({ loadingFiles: [..._state.loadingFiles, v] }));
+            },
+            removeLoadingFile(v) {
+                set((state) => ({
+                    loadingFiles: state.loadingFiles.filter((f) => f !== v),
+                }));
+            },
+            emptyLoadingFiles() {
+                set((_state) => ({ loadingFiles: [] }));
+            },
+
+            files: {},
+            upsertFile(v) {
+                set((_state) => ({
+                    files: { ..._state.files, [v.absolutePath]: v.content },
+                }));
+            },
+            deleteFile(v) {
+                set((state) => {
+                    const newFiles = { ...state.files };
+                    delete newFiles[v];
+
+                    return { files: newFiles };
                 });
             },
         };
