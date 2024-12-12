@@ -151,10 +151,13 @@ function getErrorSchema<T>(literal: z.ZodLiteral<T>) {
 export const GetFileResponseSchema = z.union([
     z.object({
         type: z.literal("fs"),
-        event: z.literal("get"),
+        event: z.literal("get-file"),
         success: z.literal(true),
-        file: FileSchema,
-        content: z.string(),
+        // TODO: fix this in Bridge and then change here
+        updatedFileOrFolder: z.object({
+            file: FileSchema,
+            content: z.string(),
+        }),
     }),
     getErrorSchema(z.literal("get")),
 ]);
