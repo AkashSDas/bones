@@ -9,6 +9,7 @@ import {
     CreateFileOrFolderResponseSchema,
     DeleteFilesOrFoldersResponseSchema,
     FileTreeEventSchema,
+    GetFileResponseSchema,
     ListFileTreeResponseSchema,
     fileTreeManger,
 } from "@/utils/workspace-file-tree";
@@ -53,6 +54,8 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
         setIsDeletingFilesOrFolders,
         isDeletingFilesOrFolders,
     } = useWorkspaceFileTreeStore();
+    const { loadingFiles, addLoadingFile, removeLoadingFile, upsertFile } =
+        useWorkspaceStore();
 
     const wasDisconnected = useRef(true);
 
@@ -99,6 +102,23 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
             isDeletingFilesOrFolders,
             setIsCreatingFileOrFolder,
         ],
+    );
+
+    const getFile = useCallback(
+        function (absolutePath: string) {
+            if (
+                bridgeSocket &&
+                bridgeWsURL &&
+                !isFetching &&
+                !loadingFiles.includes(absolutePath)
+            ) {
+                addLoadingFile(absolutePath);
+                bridgeSocket.send(
+                    JSON.stringify(fileTreeManger.getFileRequest(absolutePath)),
+                );
+            }
+        },
+        [bridgeWsURL, bridgeSocket, isFetching, loadingFiles, addLoadingFile],
     );
 
     const deleteFilesOrFolders = useCallback(
@@ -163,6 +183,21 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
         ],
     );
 
+    const handleGetFileResponse = useCallback(
+        function (data: Record<string, unknown>) {
+            const parsed = GetFileResponseSchema.parse(data);
+
+            if (parsed?.success) {
+                removeLoadingFile(parsed.updatedFileOrFolder.file.absolutePath);
+                upsertFile({
+                    absolutePath: parsed.updatedFileOrFolder.file.absolutePath,
+                    content: parsed.updatedFileOrFolder.content,
+                });
+            }
+        },
+        [removeLoadingFile, upsertFile],
+    );
+
     const handleDeleteFilesOrFoldersResponse = useCallback(
         function (data: Record<string, unknown>) {
             const parsed = DeleteFilesOrFoldersResponseSchema.parse(data);
@@ -196,12 +231,16 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
                 case "delete":
                     handleDeleteFilesOrFoldersResponse(data);
                     break;
+                case "get-file":
+                    handleGetFileResponse(data);
+                    break;
             }
         },
         [
             handleGetFileTreeResponse,
             handleCreateFileOrFolderResponse,
             handleDeleteFilesOrFoldersResponse,
+            handleGetFileResponse,
         ],
     );
 
@@ -234,6 +273,7 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
 
     return {
         getFileTree,
+        getFile,
         createFileOrFolder,
         deleteFilesOrFolders,
         mapRequestToHandler,

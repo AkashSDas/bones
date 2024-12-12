@@ -57,18 +57,20 @@ export function useWorkspacePane() {
     );
 
     const checkTabExistsInPane = useCallback(
-        function (payload: PaneTabPayload, paneId: PaneId) {
+        function (payload: PaneTabPayload, paneId: PaneId): PaneTab | null {
             if (panes[paneId]) {
                 if (payload.type === "codeFile") {
-                    return Object.values(panes[paneId].tabs).some(
+                    const tab = Object.values(panes[paneId].tabs).find(
                         (tab) => tab.file.name === payload.file.name,
                     );
-                } else {
-                    return false;
+
+                    if (tab) {
+                        return tab;
+                    }
                 }
-            } else {
-                return false;
             }
+
+            return null;
         },
         [panes],
     );
@@ -78,7 +80,9 @@ export function useWorkspacePane() {
             const tabId = nanoid();
 
             if (paneId && panes[paneId]) {
-                if (!checkTabExistsInPane(payload, paneId)) {
+                const exists = checkTabExistsInPane(payload, paneId);
+
+                if (!exists) {
                     panes[paneId] = {
                         paneId,
                         tabs: {
@@ -89,10 +93,14 @@ export function useWorkspacePane() {
                         orderedTabIds: [...panes[paneId].orderedTabIds, tabId],
                     };
                 } else {
-                    setActiveTab(paneId, tabId);
+                    setActiveTab(paneId, exists.tabId);
                 }
+
+                setActivePaneId(paneId);
             } else if (activePaneId) {
-                if (!checkTabExistsInPane(payload, activePaneId)) {
+                const exists = checkTabExistsInPane(payload, activePaneId);
+
+                if (!exists) {
                     panes[activePaneId] = {
                         paneId: activePaneId,
                         tabs: {
@@ -103,12 +111,13 @@ export function useWorkspacePane() {
                         orderedTabIds: [...panes[activePaneId].orderedTabIds, tabId],
                     };
                 } else {
-                    setActiveTab(activePaneId, tabId);
+                    setActiveTab(activePaneId, exists.tabId);
                 }
             } else if (Object.keys(panes).length > 0) {
                 const paneId = Object.keys(panes)[0];
+                const exists = checkTabExistsInPane(payload, paneId);
 
-                if (!checkTabExistsInPane(payload, paneId)) {
+                if (!exists) {
                     panes[paneId] = {
                         paneId,
                         tabs: {
@@ -119,7 +128,7 @@ export function useWorkspacePane() {
                         orderedTabIds: [...panes[paneId].orderedTabIds, tabId],
                     };
                 } else {
-                    setActiveTab(paneId, tabId);
+                    setActiveTab(paneId, exists.tabId);
                 }
 
                 setActivePaneId(paneId);
