@@ -58,7 +58,7 @@ COPY . .
 # ===========================================
 
 # Delete unnecessary files
-RUN rm ./nginx.conf ./supervisord.conf ./port-5173-80.conf
+RUN rm ./nginx.conf ./supervisord.conf ./port-5173-80.conf ./bones.Dockerfile ./dockerignore
 
 # Run Supervisor to manage the services
 CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
