@@ -40,6 +40,10 @@ body {
     /* ===================================== */
 }
 
+/* ======================================== */
+/* React Complex Tree */
+/* ======================================== */
+
 .rct-tree-items-container {
     @apply font-body;
 }
@@ -62,6 +66,42 @@ body {
 
 .rct-tree-item-arrow svg {
     @apply stroke-grey-400;
+}
+
+/* ======================================== */
+/* React Mosaic */
+/* ======================================== */
+
+.mosaic {
+    @apply !bg-grey-950;
+}
+
+.mosaic .mosaic-tile {
+    @apply !m-[1px] border-grey-900;
+}
+
+.mosaic .mosaic-window {
+    @apply !rounded-none;
+}
+
+.mosaic .mosaic-window-toolbar {
+    @apply !h-9 !rounded-none !bg-grey-900 !text-grey-200;
+}
+
+.mosaic .mosaic-window-toolbar:hover {
+    @apply !bg-grey-900;
+}
+
+.mosaic .mosaic-window-body {
+    @apply !bg-grey-900;
+}
+
+.mosaic .drop-target {
+    @apply !border-brand-400 !bg-brand-200 !bg-opacity-20;
+}
+
+.mosaic .mosaic-split:hover .mosaic-split-line {
+    @apply !shadow-[0_0_0_1px_theme(colors.brand.500)];
 }
 
 /* ======================================== */
