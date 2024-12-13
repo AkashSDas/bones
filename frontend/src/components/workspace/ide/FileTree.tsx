@@ -1,6 +1,7 @@
 import {
     FilePlusIcon,
     FolderPlusIcon,
+    LinkIcon,
     ListCollapseIcon,
     RotateCcwIcon,
     TrashIcon,
@@ -11,6 +12,7 @@ import "react-complex-tree/lib/style-modern.css";
 import { Button } from "@/components/shared/Button";
 import { Dialog, DialogTrigger } from "@/components/shared/Dialog";
 import { Loader } from "@/components/shared/Loader";
+import { useToast } from "@/hooks/toast";
 import { useWorkspaceFileTree } from "@/hooks/workspace";
 import { useWorkspacePane } from "@/hooks/workspace-pane";
 import { useWorkspaceStore } from "@/store/workspace";
@@ -42,6 +44,8 @@ export function FileTree() {
     } = useWorkspaceFileTreeStore();
     const { getFileTree, deleteFilesOrFolders, getFile } = useWorkspaceFileTree();
     const { contextWindow } = useWorkspaceStore();
+
+    const { toast } = useToast();
 
     const { addTab } = useWorkspacePane();
 
@@ -253,19 +257,42 @@ export function FileTree() {
                     if (item.data.isFile) {
                         addTab({ file: item.data, type: "codeFile" });
                         getFile(item.data.absolutePath);
+                    } else if (item.data.isSymlink) {
+                        toast({
+                            title: "Cannot open symlink",
+                            description: "The symlink is not supported yet",
+                            variant: "error",
+                        });
                     }
                 }}
                 renderItemTitle={({ title, item, context }) => {
                     return (
-                        <span className="flex items-center gap-2">
-                            <FileIcon
-                                filename={item.data.name}
-                                isDirectory={item.data.isDirectory}
-                                isFile={!item.data.isDirectory}
-                                isOpen={context.isExpanded}
-                                height={20}
-                                width={20}
-                            />
+                        <span
+                            className={cn(
+                                "flex items-center gap-2",
+                                item.data.isSymlink ? "opacity-50" : null,
+                            )}
+                        >
+                            <span className="relative">
+                                <FileIcon
+                                    filename={item.data.name}
+                                    isDirectory={item.data.isDirectory}
+                                    isFile={!item.data.isDirectory}
+                                    isOpen={context.isExpanded}
+                                    height={20}
+                                    width={20}
+                                />
+
+                                {item.data.isSymlink ? (
+                                    <span>
+                                        <LinkIcon
+                                            size={12}
+                                            className="absolute bottom-0 right-0 stroke-grey-300"
+                                        />
+                                    </span>
+                                ) : null}
+                            </span>
+
                             <span className="overflow-hidden whitespace-nowrap text-nowrap text-ellipsis">
                                 {title}
                             </span>
