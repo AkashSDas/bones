@@ -169,9 +169,9 @@ export const useWorkspaceFileTreeStore = create<WorkspaceFileTreeState>(function
         },
         setCollapsedFileTreeItems(item) {
             set((state) => ({
-                expandedFileTreeItems: state.expandedFileTreeItems.filter(
-                    (item) => item.index !== item.index,
-                ),
+                expandedFileTreeItems: state.expandedFileTreeItems.filter((i) => {
+                    return !i.data.absolutePath.startsWith(item.data.absolutePath);
+                }),
             }));
         },
         setCollapsedFileTreeAllItems(items) {
