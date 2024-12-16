@@ -153,11 +153,8 @@ export const GetFileResponseSchema = z.union([
         type: z.literal("fs"),
         event: z.literal("get-file"),
         success: z.literal(true),
-        // TODO: fix this in Bridge and then change here
-        updatedFileOrFolder: z.object({
-            file: FileSchema,
-            content: z.string(),
-        }),
+        file: FileSchema,
+        content: z.string(),
     }),
     getErrorSchema(z.literal("get")),
 ]);
