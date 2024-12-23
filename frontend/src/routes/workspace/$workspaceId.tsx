@@ -58,7 +58,7 @@ function Workspace() {
                 </section>
             ) : null}
 
-            {hasAccess ? <WorkspaceIDE workspaceId={workspaceId} /> : null}
+            {hasAccess ? <WorkspaceIDE /> : null}
         </main>
     );
 }
