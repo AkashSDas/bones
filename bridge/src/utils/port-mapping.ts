@@ -87,7 +87,7 @@ class PortMappingManager {
     async delete(
         internalPort: number,
         externalPort: number,
-        reloadNginx: boolean = true
+        reloadNginx: boolean = true,
     ): Promise<undefined | Error> {
         try {
             const absolutePath = await this.basePath();
@@ -114,7 +114,7 @@ class PortMappingManager {
     async create(
         internalPort: number,
         externalPort: number,
-        reloadNginx: boolean = true
+        reloadNginx: boolean = true,
     ): Promise<undefined | Error> {
         try {
             const absolutePath = await this.basePath();
@@ -125,13 +125,13 @@ class PortMappingManager {
 
             if (externalPort == 80) {
                 const data = encoder.encode(
-                    this.buildPort80NginxConfig(internalPort)
+                    this.buildPort80NginxConfig(internalPort),
                 );
 
                 await Deno.writeFile(filePath, data, { createNew: true });
             } else {
                 const data = encoder.encode(
-                    this.buildOtherPortNginxConfig(internalPort, externalPort)
+                    this.buildOtherPortNginxConfig(internalPort, externalPort),
                 );
 
                 await Deno.writeFile(filePath, data, { createNew: true });
@@ -228,7 +228,7 @@ class PortMappingManager {
     /** Build nginx config for internal-external port where external port is not 80 */
     private buildOtherPortNginxConfig(
         internalPort: number,
-        externalPort: number
+        externalPort: number,
     ): string {
         return `
         server {
