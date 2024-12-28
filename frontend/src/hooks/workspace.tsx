@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import ReconnectingWebSocket from "reconnecting-websocket";
-import { useDebounceCallback } from "usehooks-ts";
 
 import { useWorkspaceStore } from "@/store/workspace";
 import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
@@ -13,6 +12,15 @@ import {
     ListFileTreeResponseSchema,
     fileTreeManger,
 } from "@/utils/workspace-file-tree";
+import {
+    InstallLSPResponseSchema,
+    LSPEventSchema,
+    ListLSsPResponseSchema,
+    type SupportedLSP,
+    lspManger,
+} from "@/utils/workspace-lsp";
+
+import { useToast } from "./toast";
 
 /** Derives workspace URL from current workspace state */
 export function useWorkspaceURL(): {
@@ -188,10 +196,10 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
             const parsed = GetFileResponseSchema.parse(data);
 
             if (parsed?.success) {
-                removeLoadingFile(parsed.updatedFileOrFolder.file.absolutePath);
+                removeLoadingFile(parsed.file.absolutePath);
                 upsertFile({
-                    absolutePath: parsed.updatedFileOrFolder.file.absolutePath,
-                    content: parsed.updatedFileOrFolder.content,
+                    absolutePath: parsed.file.absolutePath,
+                    content: parsed.content,
                 });
             }
         },
@@ -280,10 +288,91 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
     };
 }
 
+export function useWorkspaceLSP() {
+    const { bridgeWsURL } = useWorkspaceURL();
+    const { bridgeSocket, connectionStatus } = useWorkspaceBridgeStore();
+    const { toast } = useToast();
+
+    // ==========================================
+    // Send request
+    // ==========================================
+
+    const listLSPs = useCallback(
+        function () {
+            if (bridgeSocket && bridgeWsURL && connectionStatus === "connected") {
+                bridgeSocket.send(JSON.stringify(lspManger.list()));
+            }
+        },
+        [bridgeWsURL, bridgeSocket, connectionStatus],
+    );
+
+    const installLSP = useCallback(
+        function (lsp: SupportedLSP) {
+            if (bridgeSocket && bridgeWsURL && connectionStatus === "connected") {
+                bridgeSocket.send(JSON.stringify(lspManger.install(lsp)));
+            }
+        },
+        [bridgeWsURL, bridgeSocket, connectionStatus],
+    );
+
+    // ==========================================
+    // Handle response
+    // ==========================================
+
+    const handleListLSPsResponse = useCallback(
+        function (data: Record<string, unknown>) {
+            const parsed = ListLSsPResponseSchema.parse(data);
+
+            if (parsed?.success && bridgeSocket) {
+                // TODO: set LSP list of items
+            }
+        },
+        [bridgeSocket],
+    );
+
+    const handleInstallLSPResponse = useCallback(
+        function (data: Record<string, unknown>) {
+            const parsed = InstallLSPResponseSchema.parse(data);
+
+            if (parsed?.success && bridgeSocket) {
+                toast({
+                    title: "Installation Success",
+                    description: parsed.message,
+                    variant: "success",
+                });
+            }
+        },
+        [bridgeSocket, toast],
+    );
+
+    const mapRequestToHandler = useCallback(
+        function (data: Record<string, unknown>) {
+            const { data: event } = LSPEventSchema.safeParse(data.event);
+
+            switch (event) {
+                case "list":
+                    handleListLSPsResponse(data);
+                    break;
+                case "install":
+                    handleInstallLSPResponse(data);
+                    break;
+                default:
+                    break;
+            }
+        },
+        [handleListLSPsResponse, handleInstallLSPResponse],
+    );
+
+    return {
+        mapRequestToHandler,
+        listLSPs,
+        installLSP,
+    };
+}
+
 /** Handle the workspace bridge connection. Should be used in one place only */
 export function useWorkspaceBridgeConnection() {
     const { bridgeWsURL } = useWorkspaceURL();
-
     const { setBridgeSocket, setConnectionStatus } = useWorkspaceBridgeStore();
 
     const { mapRequestToHandler } = useWorkspaceFileTree({
