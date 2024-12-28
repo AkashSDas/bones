@@ -4,18 +4,7 @@ import { z } from "zod";
 // Schemas
 // ==========================================
 
-export const LSPEventSchema = z.literal("install");
-
-const SupportedLanguageSchema = z.union([
-    z.literal("go"),
-    z.literal("python"),
-    z.literal("typescript"),
-    z.literal("json"),
-    z.literal("html"),
-    z.literal("toml"),
-    z.literal("css"),
-    z.literal("rust"),
-]);
+export const LSPEventSchema = z.union([z.literal("list"), z.literal("install")]);
 
 const SupportedLSPSchema = z.union([
     z.literal("gopls"),
@@ -27,6 +16,8 @@ const SupportedLSPSchema = z.union([
     z.literal("tomlLanguageServer"),
     z.literal("rustLanguageServer"),
 ]);
+
+export type SupportedLSP = z.infer<typeof SupportedLSPSchema>;
 
 // =====================================
 // Request Body
@@ -40,10 +31,7 @@ const ListLSPsRequestSchema = z.object({
 const InstallLSPRequestSchema = z.object({
     type: z.literal("lsp"),
     event: z.literal("install"),
-    payload: z.object({
-        language: SupportedLanguageSchema,
-        lsp: SupportedLSPSchema,
-    }),
+    payload: z.object({ lsp: SupportedLSPSchema }),
 });
 
 // =====================================
@@ -103,15 +91,11 @@ class WorkspaceLSPManager {
         };
     }
 
-    install(
-        language: z.infer<typeof SupportedLanguageSchema>,
-        lsp: z.infer<typeof SupportedLSPSchema>,
-    ): z.infer<typeof InstallLSPRequestSchema> {
+    install(lsp: SupportedLSP): z.infer<typeof InstallLSPRequestSchema> {
         return {
             type: "lsp",
             event: "install",
             payload: {
-                language,
                 lsp,
             },
         };
