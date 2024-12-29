@@ -5,7 +5,13 @@ import { devtools } from "zustand/middleware";
 import { type GetApiV1WorkspaceWorkspaceId200Workspace } from "@/gen/schemas";
 import { type File } from "@/utils/workspace-file-tree";
 
-type ContextWindow = "files" | "textSearch" | "fileSearch" | "networking" | null;
+type ContextWindow =
+    | "files"
+    | "textSearch"
+    | "fileSearch"
+    | "networking"
+    | "lsp"
+    | null;
 
 export type PaneId = string;
 export type TabId = string;

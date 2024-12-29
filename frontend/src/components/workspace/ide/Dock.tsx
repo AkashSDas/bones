@@ -26,6 +26,7 @@ import {
 import { useWorkspaceStore } from "@/store/workspace";
 import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
 import { DOCK_ITEMS, DockItemKey, useWorkspaceDockStore } from "@/store/workspace-dock";
+import { cn } from "@/utils/styles";
 
 export function Dock() {
     const { order, updateOrder, stopLayoutChange } = useWorkspaceDockStore();
@@ -72,7 +73,7 @@ function BridgeConnectionStatus() {
         <Tooltip>
             <TooltipTrigger asChild>
                 {connectionStatus === "connected" ? (
-                    <ZapIcon size={18} className="text-brand-400" />
+                    <ZapIcon size={18} className="text-brand-400 min-h-9" />
                 ) : (
                     <ZapOffIcon size={18} className="text-grey-400" />
                 )}
@@ -91,7 +92,7 @@ function Droppable() {
 
     return (
         <TooltipProvider>
-            <div className="flex flex-col items-center h-full min-h-full gap-12 px-6 py-6 border-r w-14 border-r-grey-900 no-scrollbar">
+            <div className="flex flex-col items-center h-full min-h-full gap-12 pt-6 pb-16 overflow-y-auto border-r no-scrollbar w-14 border-r-grey-900">
                 <BridgeConnectionStatus />
 
                 {order.map((item) => {
@@ -140,6 +141,10 @@ function SortableItem(props: {
                 setContextWindow("textSearch");
                 break;
             }
+            case "lsp": {
+                setContextWindow("lsp");
+                break;
+            }
             case "resetDock": {
                 resetOrder();
                 break;
@@ -164,9 +169,10 @@ function SortableItem(props: {
                         transform: CSS.Translate.toString(transform),
                         transition,
                     }}
-                    className={
-                        allowLayoutChange ? "border border-info-500 border-dashed" : ""
-                    }
+                    className={cn(
+                        allowLayoutChange ? "border border-info-500 border-dashed" : "",
+                        "min-h-9",
+                    )}
                     onClick={handleClick}
                 >
                     {props.icon}
