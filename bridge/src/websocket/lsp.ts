@@ -39,7 +39,8 @@ const InstallPayloadSchema = z.object({
 const lspCommandMapping: Record<
     SupportedLSP,
     {
-        serverName: string;
+        lspName: SupportedLSP;
+        lspReadableName: string;
         runCommand: string[];
         installCommand: string[];
         installationPrerequisite: {
@@ -51,7 +52,8 @@ const lspCommandMapping: Record<
     }
 > = {
     gopls: {
-        serverName: "gopls",
+        lspName: "gopls",
+        lspReadableName: "Gopls",
         runCommand: ["gopls"],
         installCommand: ["go", "install", "golang.org/x/tools/gopls@latest"],
         installationPrerequisite: [
@@ -64,7 +66,8 @@ const lspCommandMapping: Record<
         extension: "go",
     },
     pyrightLangserver: {
-        serverName: "pyright",
+        lspName: "pyrightLangserver",
+        lspReadableName: "Pyright",
         runCommand: ["pyright-langserver", "--stdio"],
         installCommand: ["pip", "install", "pyright"],
         installationPrerequisite: [
@@ -77,7 +80,8 @@ const lspCommandMapping: Record<
         extension: "py",
     },
     typescriptLanguageServer: {
-        serverName: "typescript",
+        lspName: "typescriptLanguageServer",
+        lspReadableName: "TypeScript Language Server",
         runCommand: [
             "typescript-language-server",
             "--stdio",
@@ -102,13 +106,14 @@ const lspCommandMapping: Record<
         extension: "ts",
     },
     jsonLanguageServer: {
-        serverName: "json",
+        lspName: "jsonLanguageServer",
+        lspReadableName: "JSON",
         runCommand: ["vscode-json-languageserver", "--stdio"],
         installCommand: [
             "npm",
             "install",
             "-g",
-            "json-language-server",
+            "vscode-json-languageserver",
             "--no-update-notifier",
         ],
         installationPrerequisite: [
@@ -121,13 +126,14 @@ const lspCommandMapping: Record<
         extension: "json",
     },
     cssLanguageServer: {
-        serverName: "css",
+        lspName: "cssLanguageServer",
+        lspReadableName: "CSS",
         runCommand: ["css-languageserver", "--stdio"],
         installCommand: [
             "npm",
             "install",
             "-g",
-            "css-languageserver",
+            "vscode-css-languageserver-bin",
             "--no-update-notifier",
         ],
         installationPrerequisite: [
@@ -140,13 +146,14 @@ const lspCommandMapping: Record<
         extension: "css",
     },
     htmlLanguageServer: {
-        serverName: "html",
+        lspName: "htmlLanguageServer",
+        lspReadableName: "HTML",
         runCommand: ["html-languageserver", "--stdio"],
         installCommand: [
             "npm",
             "install",
             "-g",
-            "html-languageserver",
+            "vscode-html-languageserver-bin",
             "--no-update-notifier",
         ],
         installationPrerequisite: [
@@ -159,7 +166,8 @@ const lspCommandMapping: Record<
         extension: "html",
     },
     tomlLanguageServer: {
-        serverName: "toml",
+        lspName: "tomlLanguageServer",
+        lspReadableName: "Toml",
         runCommand: ["taplo-lsp", "stdio"],
         installCommand: ["cargo", "install", "taplo-cli"],
         installationPrerequisite: [
@@ -172,7 +180,8 @@ const lspCommandMapping: Record<
         extension: "toml",
     },
     rustLanguageServer: {
-        serverName: "rust",
+        lspName: "rustLanguageServer",
+        lspReadableName: "Rust Language Server",
         runCommand: ["rust-analyzer"],
         installCommand: ["rustup", "component", "add", "rust-analyzer"],
         installationPrerequisite: [
@@ -210,7 +219,7 @@ export class LanguageServerWs {
                     this.returnResult({
                         success: false,
                         error: `Invalid event type`,
-                    }),
+                    })
                 );
                 break;
         }
@@ -237,14 +246,14 @@ export class LanguageServerWs {
      */
     private async install(): Promise<string> {
         const { success, data } = await InstallPayloadSchema.safeParseAsync(
-            this.payload,
+            this.payload
         );
 
         if (success) {
             const config = lspCommandMapping[data.lsp];
 
             const isSetupValid = await this.validateToolInstalled(
-                config.installCommand[0],
+                config.installCommand[0]
             );
             if (!isSetupValid) {
                 return this.returnResult({
@@ -266,7 +275,9 @@ export class LanguageServerWs {
             } else {
                 return this.returnResult({
                     success: true,
-                    message: `${data.lsp} language server installed successfully`,
+                    message: `${
+                        lspCommandMapping[data.lsp].lspReadableName
+                    } installed successfully`,
                 });
             }
         } else {
@@ -292,7 +303,8 @@ export class LanguageServerWs {
         return this.returnResult({
             success: true,
             languageServers: Object.values(lspCommandMapping).map((lsp) => ({
-                serverName: lsp.serverName,
+                lspName: lsp.lspName,
+                lspReadableName: lsp.lspReadableName,
                 installationPrerequisite: lsp.installationPrerequisite,
                 extension: lsp.extension,
             })),
@@ -347,20 +359,18 @@ export class LanguageServerPool {
         const reader = new rpc.WebSocketMessageReader(socket);
         const writer = new rpc.WebSocketMessageWriter(socket);
 
-        const socketConnection = server.createConnection(
-            reader,
-            writer,
-            () => socket.dispose(),
+        const socketConnection = server.createConnection(reader, writer, () =>
+            socket.dispose()
         );
 
         const config = lspCommandMapping[lsp];
         const serverConnection = server.createServerProcess(
-            config.serverName,
+            config.lspReadableName,
             config.runCommand[0],
-            config.runCommand.slice(1),
+            config.runCommand.slice(1)
         );
 
-        console.log(`${config.serverName} server started`);
+        console.log(`${config.lspReadableName} server started`);
 
         if (socketConnection && serverConnection) {
             server.forward(
@@ -369,26 +379,27 @@ export class LanguageServerPool {
                 function forwardOrReceiveMessageToLSP(message: Message) {
                     if (Message.isRequest(message)) {
                         console.log(
-                            `${config.serverName} Server received: ${message}`,
+                            `${config.lspReadableName} Server received: ${message}`
                         );
 
                         if (message.method === InitializeRequest.type.method) {
-                            const initializeParams = message.params as InitializeParams;
+                            const initializeParams =
+                                message.params as InitializeParams;
                             initializeParams.processId = Deno.pid;
                         }
                     }
 
                     if (Message.isResponse(message)) {
                         console.log(
-                            `${config.serverName} Server sent: ${message}`,
+                            `${config.lspReadableName} Server sent: ${message}`
                         );
                     }
 
                     return message;
-                },
+                }
             );
 
-            console.log(`${config.serverName} Server connected`);
+            console.log(`${config.lspReadableName} Server connected`);
         }
     }
 }
