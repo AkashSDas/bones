@@ -13,12 +13,18 @@ import { Button } from "@/components/shared/Button";
 import { Dialog, DialogTrigger } from "@/components/shared/Dialog";
 import { Loader } from "@/components/shared/Loader";
 import { useToast } from "@/hooks/toast";
-import { useWorkspaceFileTree } from "@/hooks/workspace";
+import { useWorkspaceFileTree, useWorkspaceURL } from "@/hooks/workspace";
 import { useWorkspacePane } from "@/hooks/workspace-pane";
 import { useWorkspaceStore } from "@/store/workspace";
 import { findParentFile, useWorkspaceFileTreeStore } from "@/store/workspace-file-tree";
+import { useWorkspaceLSPStore } from "@/store/workspace-lsp";
 import { cn } from "@/utils/styles";
+import { getEditorLanguage } from "@/utils/workspace-editor";
 import { type File } from "@/utils/workspace-file-tree";
+import {
+    LanguageLSPMapping,
+    initLSPWebsocketAndStartLanguageClient,
+} from "@/utils/workspace-lsp";
 
 import { AddFileOrFolderDialog } from "./AddFileOrFolderDialog";
 import { FileIcon } from "./FileIcon";
@@ -44,10 +50,10 @@ export function FileTree() {
     } = useWorkspaceFileTreeStore();
     const { getFileTree, deleteFilesOrFolders, getFile } = useWorkspaceFileTree();
     const { contextWindow } = useWorkspaceStore();
-
-    const { toast } = useToast();
-
     const { addTab } = useWorkspacePane();
+    const { initializedLSPs, installedLSPs } = useWorkspaceLSPStore();
+    const { bridgeWsURL } = useWorkspaceURL();
+    const { toast } = useToast();
 
     if (!fileTree) return null;
 
@@ -257,6 +263,26 @@ export function FileTree() {
                     if (item.data.isFile) {
                         addTab({ file: item.data, type: "codeFile" });
                         getFile(item.data.absolutePath);
+
+                        const language = getEditorLanguage(item.data.name);
+                        const lsp = LanguageLSPMapping[language];
+
+                        if (lsp) {
+                            if (!installedLSPs.includes(lsp)) {
+                                toast({
+                                    title: "LSP not installed",
+                                    description: `Please install ${lsp}`,
+                                    variant: "default",
+                                });
+                            } else if (!initializedLSPs.includes(lsp)) {
+                                console.log(`Initializing ${lsp}`);
+                                initLSPWebsocketAndStartLanguageClient(
+                                    `${bridgeWsURL}/lsp/${lsp}`,
+                                    language,
+                                    lsp,
+                                );
+                            }
+                        }
                     } else if (item.data.isSymlink) {
                         toast({
                             title: "Cannot open symlink",
