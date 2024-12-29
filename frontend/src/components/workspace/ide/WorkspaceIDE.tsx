@@ -8,6 +8,7 @@ import { useWorkspaceStore } from "@/store/workspace";
 
 import { Dock } from "./Dock";
 import { FileTree } from "./FileTree";
+import { LSPExtensions } from "./LSPExtensions";
 import { MainSection } from "./MainSection";
 
 export function WorkspaceIDE() {
@@ -26,6 +27,7 @@ export function WorkspaceIDE() {
                     maxSize={75}
                 >
                     <FileTree />
+                    <LSPExtensions />
                 </ResizablePanel>
 
                 {contextWindow && <ResizableHandle withHandle />}
