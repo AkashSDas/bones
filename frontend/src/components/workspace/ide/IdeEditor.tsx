@@ -23,12 +23,14 @@ self.MonacoEnvironment = {
 
 loader.config({ monaco: monaco });
 
-await initialize({
-    ...getLanguagesServiceOverride(),
-    ...getConfigurationServiceOverride(),
-}).then(() => {
-    loader.init().then(/* ... */);
-});
+(async function () {
+    await initialize({
+        ...getLanguagesServiceOverride(),
+        ...getConfigurationServiceOverride(),
+    }).then(() => {
+        loader.init().then(/* ... */);
+    });
+})();
 
 export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
     const { loadingFiles, files, setActivePaneId } = useWorkspaceStore();
