@@ -4,6 +4,7 @@ import ReconnectingWebSocket from "reconnecting-websocket";
 import { useWorkspaceStore } from "@/store/workspace";
 import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
 import { useWorkspaceFileTreeStore } from "@/store/workspace-file-tree";
+import { useWorkspaceLSPStore } from "@/store/workspace-lsp";
 import {
     CreateFileOrFolderResponseSchema,
     DeleteFilesOrFoldersResponseSchema,
@@ -15,7 +16,8 @@ import {
 import {
     InstallLSPResponseSchema,
     LSPEventSchema,
-    ListLSsPResponseSchema,
+    ListLSPsResponseSchema,
+    ReadableLSPNameToLSP,
     type SupportedLSP,
     lspManger,
 } from "@/utils/workspace-lsp";
@@ -290,7 +292,9 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
 
 export function useWorkspaceLSP() {
     const { bridgeWsURL } = useWorkspaceURL();
-    const { bridgeSocket, connectionStatus } = useWorkspaceBridgeStore();
+    const { bridgeSocket } = useWorkspaceBridgeStore();
+    const { setAvailableLSPs, installedLSPs, setInstalledLSPs } =
+        useWorkspaceLSPStore();
     const { toast } = useToast();
 
     // ==========================================
@@ -299,20 +303,20 @@ export function useWorkspaceLSP() {
 
     const listLSPs = useCallback(
         function () {
-            if (bridgeSocket && bridgeWsURL && connectionStatus === "connected") {
+            if (bridgeSocket && bridgeWsURL) {
                 bridgeSocket.send(JSON.stringify(lspManger.list()));
             }
         },
-        [bridgeWsURL, bridgeSocket, connectionStatus],
+        [bridgeWsURL, bridgeSocket],
     );
 
     const installLSP = useCallback(
         function (lsp: SupportedLSP) {
-            if (bridgeSocket && bridgeWsURL && connectionStatus === "connected") {
+            if (bridgeSocket && bridgeWsURL) {
                 bridgeSocket.send(JSON.stringify(lspManger.install(lsp)));
             }
         },
-        [bridgeWsURL, bridgeSocket, connectionStatus],
+        [bridgeWsURL, bridgeSocket],
     );
 
     // ==========================================
@@ -321,28 +325,48 @@ export function useWorkspaceLSP() {
 
     const handleListLSPsResponse = useCallback(
         function (data: Record<string, unknown>) {
-            const parsed = ListLSsPResponseSchema.parse(data);
+            const parsed = ListLSPsResponseSchema.parse(data);
 
-            if (parsed?.success && bridgeSocket) {
-                // TODO: set LSP list of items
+            if (parsed?.success) {
+                setAvailableLSPs(parsed.languageServers);
             }
         },
-        [bridgeSocket],
+        [setAvailableLSPs],
     );
 
     const handleInstallLSPResponse = useCallback(
         function (data: Record<string, unknown>) {
             const parsed = InstallLSPResponseSchema.parse(data);
 
-            if (parsed?.success && bridgeSocket) {
+            if (parsed?.success) {
+                let installedLsp: SupportedLSP | null = null;
+
+                Object.entries(ReadableLSPNameToLSP).forEach(([key, value]) => {
+                    if (parsed.message.includes(key)) {
+                        installedLsp = value;
+                    }
+                });
+
+                if (installedLsp) {
+                    setInstalledLSPs(
+                        Array.from(new Set(installedLSPs).add(installedLsp)),
+                    );
+
+                    toast({
+                        title: "Installation Success",
+                        description: parsed.message,
+                        variant: "success",
+                    });
+                }
+            } else {
                 toast({
-                    title: "Installation Success",
-                    description: parsed.message,
-                    variant: "success",
+                    title: "Installation Failed",
+                    description: "Failed to install LSP",
+                    variant: "error",
                 });
             }
         },
-        [bridgeSocket, toast],
+        [toast, installedLSPs, setInstalledLSPs],
     );
 
     const mapRequestToHandler = useCallback(
@@ -375,9 +399,10 @@ export function useWorkspaceBridgeConnection() {
     const { bridgeWsURL } = useWorkspaceURL();
     const { setBridgeSocket, setConnectionStatus } = useWorkspaceBridgeStore();
 
-    const { mapRequestToHandler } = useWorkspaceFileTree({
+    const { mapRequestToHandler: mapFileTreeRequestToHandler } = useWorkspaceFileTree({
         implicitlyGetFileTree: true,
     });
+    const { mapRequestToHandler: mapLSPRequestToHandler } = useWorkspaceLSP();
 
     const handleOpen = useCallback(
         function handleBridgeOpen() {
@@ -403,8 +428,15 @@ export function useWorkspaceBridgeConnection() {
             if (parsed.type && parsed.event) {
                 switch (parsed.type) {
                     case "fs": {
-                        mapRequestToHandler(parsed);
+                        mapFileTreeRequestToHandler(parsed);
+                        break;
                     }
+                    case "lsp": {
+                        mapLSPRequestToHandler(parsed);
+                        break;
+                    }
+                    default:
+                        break;
                 }
             }
         } catch (e) {
