@@ -1,4 +1,5 @@
 import {
+    BracesIcon,
     FileSearchIcon,
     FilesIcon,
     LockIcon,
@@ -25,6 +26,7 @@ export type DockItemKey =
     | "webview"
     | "networking"
     | "lockLayout"
+    | "lsp"
     | "resetDock";
 
 export const DOCK_ITEMS: Record<DockItemKey, DockItem | DockItem<{ isLock: boolean }>> =
@@ -75,6 +77,12 @@ export const DOCK_ITEMS: Record<DockItemKey, DockItem | DockItem<{ isLock: boole
             },
             label: "Lock Layout",
         },
+        lsp: {
+            icon: function () {
+                return <BracesIcon />;
+            },
+            label: "Language Server",
+        },
         resetDock: {
             icon: function () {
                 return <RotateCcwIcon />;
@@ -88,6 +96,7 @@ const INITIAL_ORDER: DockItemKey[] = [
     "textSearch",
     "fileSearch",
     "terminal",
+    "lsp",
     "webview",
     "networking",
     "lockLayout",
