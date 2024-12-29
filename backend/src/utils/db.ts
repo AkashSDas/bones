@@ -15,6 +15,10 @@ class ORM {
             .notNull();
     }
 
+    uuidNullable(columnName: string) {
+        return uuid(columnName).$defaultFn(() => uuid7());
+    }
+
     timestamp(columnName: string) {
         return timestamp(columnName, { mode: "string", withTimezone: true });
     }

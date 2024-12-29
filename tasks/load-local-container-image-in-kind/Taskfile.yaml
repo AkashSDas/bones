@@ -1,0 +1,32 @@
+version: "3"
+
+env:
+    LOCAL_CONTAINER_IMAGES:
+        - workspace:vite-react18
+        - workspace:hono4.6-deno2.0
+        - workspace:go1.23
+        - workspace:python3.13
+
+tasks:
+    list-kind-images:
+        desc: "List all images in KinD cluster"
+        cmds:
+            - docker exec -it kind-control-plane crictl images
+
+    remove-kind-image:
+        desc: "Remove a specific image from KinD cluster"
+        cmds:
+            - docker exec -it kind-control-plane crictl rmi workspace:vite-react18
+
+    prune-kind-images:
+        desc: "Remove unused images from KinD cluster"
+        cmds:
+            - docker exec -it kind-control-plane crictl rmi --prune
+
+    load-local-container-image-in-kind:
+        desc: "Load Local Container Images for Workspace in KinD"
+        cmds:
+            - echo "Removing old image if exists..."
+            - docker exec -it kind-control-plane crictl rmi workspace:vite-react18 || true
+            - echo "Loading local container image..."
+            - kind load docker-image workspace:vite-react18

@@ -25,7 +25,7 @@ import { useToast } from "@/hooks/toast";
 
 export const Route = createFileRoute("/iam/users/new")({
     component: () => (
-        <AuthProtected forRoles={["admin"]}>
+        <AuthProtected>
             <CreateIAMUser />
         </AuthProtected>
     ),
@@ -114,7 +114,7 @@ function CreateIAMUser() {
                         {newPwd.show ? (
                             <div className="flex items-center w-full gap-1 px-2 py-[1px] text-sm border rounded-card border-grey-800 bg-grey-900 text-grey-500">
                                 <span className="w-full">
-                                    <span className="font-medium text-gray-200">
+                                    <span className="font-medium text-grey-200">
                                         Generated password:{" "}
                                     </span>
                                     <span>{newPwd.pwd}</span>

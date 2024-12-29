@@ -74,6 +74,24 @@ export const EnvironmentVariablesSchema = z
                 return new Date(date);
             }
         }),
+
+        WORKSPACE_EXPOSED_PORTS: z.string().transform((v): number[] => {
+            try {
+                const ports = v.split(",");
+
+                if (!Array.isArray(ports)) {
+                    throw Error("WORKSPACE_EXPOSED_PORTS must be an array");
+                } else if (ports.length === 0) {
+                    throw Error("WORKSPACE_EXPOSED_PORTS must not be empty");
+                } else {
+                    return ports.map(validatePort);
+                }
+            } catch (e) {
+                throw Error(
+                    `Failed to parse WORKSPACE_EXPOSED_PORTS: ${e}. Received value: ${v}`,
+                );
+            }
+        }),
     })
     .transform((env) => ({
         APP_URL: env.APP_URL,
@@ -104,6 +122,8 @@ export const EnvironmentVariablesSchema = z
         ACCESS_TOKEN_AGE: env.ACCESS_TOKEN_AGE,
         REFRESH_TOKEN_AGE: env.REFRESH_TOKEN_AGE,
         REFRESH_TOKEN_AGE_IN_DATE: env.REFRESH_TOKEN_AGE_IN_DATE,
+
+        WORKSPACE_EXPOSED_PORTS: env.WORKSPACE_EXPOSED_PORTS,
     }));
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariablesSchema>;

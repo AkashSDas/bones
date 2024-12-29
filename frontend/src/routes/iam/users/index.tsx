@@ -21,7 +21,7 @@ import {
     SearchIcon,
     SignatureIcon,
 } from "lucide-react";
-import { ChangeEvent, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { useDebounceCallback, useMediaQuery } from "usehooks-ts";
 import { z } from "zod";
 
@@ -43,7 +43,7 @@ const SearchSchema = z.object({
 
 export const Route = createFileRoute("/iam/users/")({
     component: () => (
-        <AuthProtected forRoles={["admin"]}>
+        <AuthProtected>
             <IAMUsersView />
         </AuthProtected>
     ),
@@ -64,7 +64,7 @@ const columnHelper = createColumnHelper<IAMUserRow>();
 const columns = [
     columnHelper.accessor("userId", {
         header: () => (
-            <span className="flex items-center gap-2">
+            <span className="flex gap-2 items-center">
                 <IdCardIcon size="16px" />
                 User ID
             </span>
@@ -93,7 +93,7 @@ const columns = [
     }),
     columnHelper.accessor("username", {
         header: () => (
-            <span className="flex items-center gap-2">
+            <span className="flex gap-2 items-center">
                 <SignatureIcon size="16px" />
                 Username
             </span>
@@ -102,7 +102,7 @@ const columns = [
     }),
     columnHelper.accessor("passwordAge", {
         header: () => (
-            <span className="flex items-center gap-2">
+            <span className="flex gap-2 items-center">
                 <LockIcon size="16px" />
                 Password Age
             </span>
@@ -111,7 +111,7 @@ const columns = [
     }),
     columnHelper.accessor("lastLoggedInAt", {
         header: () => (
-            <span className="flex items-center gap-2">
+            <span className="flex gap-2 items-center">
                 <ClockIcon size="16px" />
                 Last Login
             </span>
@@ -120,7 +120,7 @@ const columns = [
     }),
     columnHelper.accessor("isBlocked", {
         header: () => (
-            <span className="flex items-center gap-2">
+            <span className="flex gap-2 items-center">
                 <BanIcon size="16px" />
                 Blocked
             </span>
@@ -139,7 +139,7 @@ const columns = [
     }),
     columnHelper.accessor("createdOn", {
         header: () => (
-            <span className="flex items-center gap-2">
+            <span className="flex gap-2 items-center">
                 <CalendarIcon size="16px" />
                 Created On
             </span>
@@ -218,20 +218,29 @@ function IAMUsersView() {
     const matches = useMediaQuery("(max-width: 768px)");
     const searchByNameDebounced = useDebounceCallback(searchByName, 300);
 
+    useEffect(
+        function openSearchInput() {
+            if (username !== "") {
+                setShowSearchInput(true);
+            }
+        },
+        [username],
+    );
+
     return (
         <main className="my-5 md:my-6 px-8 md:py-8 mx-auto w-full max-w-[1440px] space-y-4 md:space-y-12">
-            <div className="flex flex-col items-start justify-between w-full gap-1 mb-2 md:items-center md:flex-row">
+            <div className="flex flex-col gap-1 justify-between items-start mb-2 w-full md:items-center md:flex-row">
                 <h2 className="h3">IAM Users</h2>
 
                 <div
                     className={cn(
-                        "flex items-center self-end gap-2",
+                        "flex gap-2 items-center self-end",
                         matches ? "!w-full md:w-60" : null,
                     )}
                 >
                     <div
                         className={cn(
-                            "flex items-center gap-1",
+                            "flex gap-1 items-center",
                             matches ? "w-full md:w-60" : null,
                         )}
                     >
@@ -325,14 +334,14 @@ function IAMUsersView() {
                             return (
                                 <tr
                                     key={headerGroup.id}
-                                    className="divide-x text-start divide-grey-800 h-9"
+                                    className="h-9 divide-x text-start divide-grey-800"
                                 >
                                     {headerGroup.headers.map(function (header) {
                                         return (
                                             <th
                                                 key={header.id}
                                                 className={cn(
-                                                    "text-nowrap relative px-2 text-sm font-normal text-grey-500 text-start group",
+                                                    "relative px-2 text-sm font-normal text-nowrap text-grey-500 text-start group",
                                                 )}
                                                 style={{
                                                     width: `${header.getSize()}px`,
@@ -366,7 +375,7 @@ function IAMUsersView() {
                             return (
                                 <tr
                                     key={row.id}
-                                    className="divide-x text-start divide-grey-800 h-9"
+                                    className="h-9 divide-x text-start divide-grey-800"
                                 >
                                     {row.getVisibleCells().map(function (cell) {
                                         return (

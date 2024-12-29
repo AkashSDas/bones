@@ -1,0 +1,28 @@
+# three node (two workers) cluster config
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+    - role: control-plane
+      # Following control plane configuration will allow us to use local DNS server
+      # and this is in needed for features like Workspace and others
+      kubeadmConfigPatches:
+          - |
+              kind: InitConfiguration
+              nodeRegistration:
+                kubeletExtraArgs:
+                  node-labels: "ingress-ready=true"
+      extraPortMappings:
+          - containerPort: 80
+            hostPort: 80
+            protocol: TCP
+          - containerPort: 443
+            hostPort: 443
+            protocol: TCP
+    - role: worker
+      extraMounts:
+          - hostPath: /<PROJECT-PATH-IN-SYSTEM>/bones/tasks/setup-kind/kind-bind-mount-1
+            containerPath: /some/path/in/container
+    - role: worker
+      extraMounts:
+          - hostPath: /<PROJECT-PATH-IN-SYSTEM>/bones/tasks/setup-kind/kind-bind-mount-2
+            containerPath: /some/path/in/container

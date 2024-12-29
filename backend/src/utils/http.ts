@@ -28,6 +28,59 @@ export const status = {
 
 /** Common Zod Open API response utility */
 export const OpenApiResponses = {
+    // =========================================
+    // Public routes
+    // =========================================
+
+    publicValidatedRoute: {
+        [status.INTERNAL_SERVER_ERROR]: {
+            description: "Internal server error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.InternalServerErrorSchema,
+                },
+            },
+        },
+        [status.BAD_REQUEST]: {
+            description: "Validation error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.UserBadRequestSchemas,
+                },
+            },
+        },
+    },
+    publicValidatedNotFoundRoute: {
+        [status.INTERNAL_SERVER_ERROR]: {
+            description: "Internal server error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.InternalServerErrorSchema,
+                },
+            },
+        },
+        [status.BAD_REQUEST]: {
+            description: "Validation error",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.UserBadRequestSchemas,
+                },
+            },
+        },
+        [status.NOT_FOUND]: {
+            description: "Not found",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.NotFoundErrorSchema,
+                },
+            },
+        },
+    },
+
+    // =========================================
+    // Protected routes
+    // =========================================
+
     protectedRoute: {
         [status.UNAUTHORIZED]: {
             description: "Unauthorized",
@@ -46,7 +99,7 @@ export const OpenApiResponses = {
             },
         },
     },
-    protectedAndValidationRoute: {
+    protectedValidatedRoute: {
         [status.UNAUTHORIZED]: {
             description: "Unauthorized",
             content: {
@@ -72,17 +125,15 @@ export const OpenApiResponses = {
             },
         },
     },
-    publicRoute: {
-        [status.INTERNAL_SERVER_ERROR]: {
-            description: "Internal server error",
+    rbacRoute: {
+        [status.UNAUTHORIZED]: {
+            description: "Unauthorized",
             content: {
                 "application/json": {
-                    schema: HttpErrorSchemas.InternalServerErrorSchema,
+                    schema: HttpErrorSchemas.UnauthorizedErrorSchema,
                 },
             },
         },
-    },
-    publicAndValidationRoute: {
         [status.INTERNAL_SERVER_ERROR]: {
             description: "Internal server error",
             content: {
@@ -99,6 +150,14 @@ export const OpenApiResponses = {
                 },
             },
         },
+        [status.FORBIDDEN]: {
+            description: "Forbidden",
+            content: {
+                "application/json": {
+                    schema: HttpErrorSchemas.ForbiddenErrorSchema,
+                },
+            },
+        },
     },
 };
 
@@ -108,7 +167,7 @@ export const OpenApiResponses = {
 
 type HttpErrorOptions = {
     status: StatusCode;
-    message: string;
+    message?: string;
     reason: string;
     payload?: Record<string, unknown>;
     headers?: Record<string, string>;
@@ -150,10 +209,13 @@ export class BadRequestError extends HttpError {
     public status: StatusCode = status.BAD_REQUEST;
     public reason: string = "Bad Request";
 
-    constructor(options: Optional<Omit<HttpErrorOptions, "status">, "reason">) {
+    constructor(
+        options: Optional<Omit<HttpErrorOptions, "status">, "reason" | "message">,
+    ) {
         super({
             ...options,
             status: status.BAD_REQUEST,
+            message: options.message ?? "Bad Request",
             reason: options.reason ?? "Bad Request",
         });
     }
@@ -171,17 +233,22 @@ export class ConflictError extends HttpError {
     public status: StatusCode = status.CONFLICT;
     public reason: string = "Conflict";
 
-    constructor(options: Optional<Omit<HttpErrorOptions, "status">, "reason">) {
+    constructor(
+        options: Optional<Omit<HttpErrorOptions, "status">, "reason" | "message">,
+    ) {
         super({
             ...options,
             status: status.CONFLICT,
             reason: options.reason ?? "Conflict",
+            message: options.message ?? "Conflict",
         });
     }
 }
 
 export class InternalServerError extends HttpError {
-    constructor(options: Optional<Omit<HttpErrorOptions, "status">, "reason">) {
+    constructor(
+        options: Optional<Omit<HttpErrorOptions, "status">, "reason" | "message">,
+    ) {
         super({
             ...options,
             status: status.INTERNAL_SERVER_ERROR,
@@ -191,31 +258,40 @@ export class InternalServerError extends HttpError {
 }
 
 export class NotFoundError extends HttpError {
-    constructor(options: Optional<Omit<HttpErrorOptions, "status">, "reason">) {
+    constructor(
+        options: Optional<Omit<HttpErrorOptions, "status">, "reason" | "message">,
+    ) {
         super({
             ...options,
             status: status.NOT_FOUND,
             reason: options.reason ?? "Not Found",
+            message: options.message ?? "Not Found",
         });
     }
 }
 
 export class ForbiddenError extends HttpError {
-    constructor(options: Optional<Omit<HttpErrorOptions, "status">, "reason">) {
+    constructor(
+        options: Optional<Omit<HttpErrorOptions, "status">, "reason" | "message">,
+    ) {
         super({
             ...options,
             status: status.FORBIDDEN,
             reason: options.reason ?? "Forbidden",
+            message: options.message ?? "Forbidden",
         });
     }
 }
 
 export class UnauthorizedError extends HttpError {
-    constructor(options: Optional<Omit<HttpErrorOptions, "status">, "reason">) {
+    constructor(
+        options: Optional<Omit<HttpErrorOptions, "status">, "reason" | "message">,
+    ) {
         super({
             ...options,
             status: status.UNAUTHORIZED,
             reason: options.reason ?? "Unauthorized",
+            message: options.message ?? "Unauthorized",
         });
     }
 }

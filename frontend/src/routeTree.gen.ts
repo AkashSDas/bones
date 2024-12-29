@@ -12,15 +12,20 @@
 
 import { Route as rootRoute } from "./routes/__root"
 import { Route as IndexImport } from "./routes/index"
+import { Route as WorkspaceIndexImport } from "./routes/workspace/index"
 import { Route as IamIndexImport } from "./routes/iam/index"
+import { Route as WorkspaceWorkspaceIdImport } from "./routes/workspace/$workspaceId"
 import { Route as AuthSignupImport } from "./routes/auth/signup"
 import { Route as AuthResetPasswordImport } from "./routes/auth/reset-password"
 import { Route as AuthLoginImport } from "./routes/auth/login"
 import { Route as AuthForgotPasswordImport } from "./routes/auth/forgot-password"
 import { Route as AuthActivateImport } from "./routes/auth/activate"
 import { Route as IamUsersIndexImport } from "./routes/iam/users/index"
+import { Route as IamPoliciesIndexImport } from "./routes/iam/policies/index"
 import { Route as IamUsersNewImport } from "./routes/iam/users/new"
 import { Route as IamUsersUserIdImport } from "./routes/iam/users/$userId"
+import { Route as IamPoliciesPolicyIdIndexImport } from "./routes/iam/policies/$policyId/index"
+import { Route as IamPoliciesPolicyIdUsersImport } from "./routes/iam/policies/$policyId/users"
 
 // Create/Update Routes
 
@@ -30,9 +35,21 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const WorkspaceIndexRoute = WorkspaceIndexImport.update({
+  id: "/workspace/",
+  path: "/workspace/",
+  getParentRoute: () => rootRoute,
+} as any)
+
 const IamIndexRoute = IamIndexImport.update({
   id: "/iam/",
   path: "/iam/",
+  getParentRoute: () => rootRoute,
+} as any)
+
+const WorkspaceWorkspaceIdRoute = WorkspaceWorkspaceIdImport.update({
+  id: "/workspace/$workspaceId",
+  path: "/workspace/$workspaceId",
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -72,6 +89,12 @@ const IamUsersIndexRoute = IamUsersIndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const IamPoliciesIndexRoute = IamPoliciesIndexImport.update({
+  id: "/iam/policies/",
+  path: "/iam/policies/",
+  getParentRoute: () => rootRoute,
+} as any)
+
 const IamUsersNewRoute = IamUsersNewImport.update({
   id: "/iam/users/new",
   path: "/iam/users/new",
@@ -81,6 +104,18 @@ const IamUsersNewRoute = IamUsersNewImport.update({
 const IamUsersUserIdRoute = IamUsersUserIdImport.update({
   id: "/iam/users/$userId",
   path: "/iam/users/$userId",
+  getParentRoute: () => rootRoute,
+} as any)
+
+const IamPoliciesPolicyIdIndexRoute = IamPoliciesPolicyIdIndexImport.update({
+  id: "/iam/policies/$policyId/",
+  path: "/iam/policies/$policyId/",
+  getParentRoute: () => rootRoute,
+} as any)
+
+const IamPoliciesPolicyIdUsersRoute = IamPoliciesPolicyIdUsersImport.update({
+  id: "/iam/policies/$policyId/users",
+  path: "/iam/policies/$policyId/users",
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -130,11 +165,25 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AuthSignupImport
       parentRoute: typeof rootRoute
     }
+    "/workspace/$workspaceId": {
+      id: "/workspace/$workspaceId"
+      path: "/workspace/$workspaceId"
+      fullPath: "/workspace/$workspaceId"
+      preLoaderRoute: typeof WorkspaceWorkspaceIdImport
+      parentRoute: typeof rootRoute
+    }
     "/iam/": {
       id: "/iam/"
       path: "/iam"
       fullPath: "/iam"
       preLoaderRoute: typeof IamIndexImport
+      parentRoute: typeof rootRoute
+    }
+    "/workspace/": {
+      id: "/workspace/"
+      path: "/workspace"
+      fullPath: "/workspace"
+      preLoaderRoute: typeof WorkspaceIndexImport
       parentRoute: typeof rootRoute
     }
     "/iam/users/$userId": {
@@ -151,11 +200,32 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof IamUsersNewImport
       parentRoute: typeof rootRoute
     }
+    "/iam/policies/": {
+      id: "/iam/policies/"
+      path: "/iam/policies"
+      fullPath: "/iam/policies"
+      preLoaderRoute: typeof IamPoliciesIndexImport
+      parentRoute: typeof rootRoute
+    }
     "/iam/users/": {
       id: "/iam/users/"
       path: "/iam/users"
       fullPath: "/iam/users"
       preLoaderRoute: typeof IamUsersIndexImport
+      parentRoute: typeof rootRoute
+    }
+    "/iam/policies/$policyId/users": {
+      id: "/iam/policies/$policyId/users"
+      path: "/iam/policies/$policyId/users"
+      fullPath: "/iam/policies/$policyId/users"
+      preLoaderRoute: typeof IamPoliciesPolicyIdUsersImport
+      parentRoute: typeof rootRoute
+    }
+    "/iam/policies/$policyId/": {
+      id: "/iam/policies/$policyId/"
+      path: "/iam/policies/$policyId"
+      fullPath: "/iam/policies/$policyId"
+      preLoaderRoute: typeof IamPoliciesPolicyIdIndexImport
       parentRoute: typeof rootRoute
     }
   }
@@ -170,10 +240,15 @@ export interface FileRoutesByFullPath {
   "/auth/login": typeof AuthLoginRoute
   "/auth/reset-password": typeof AuthResetPasswordRoute
   "/auth/signup": typeof AuthSignupRoute
+  "/workspace/$workspaceId": typeof WorkspaceWorkspaceIdRoute
   "/iam": typeof IamIndexRoute
+  "/workspace": typeof WorkspaceIndexRoute
   "/iam/users/$userId": typeof IamUsersUserIdRoute
   "/iam/users/new": typeof IamUsersNewRoute
+  "/iam/policies": typeof IamPoliciesIndexRoute
   "/iam/users": typeof IamUsersIndexRoute
+  "/iam/policies/$policyId/users": typeof IamPoliciesPolicyIdUsersRoute
+  "/iam/policies/$policyId": typeof IamPoliciesPolicyIdIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -183,10 +258,15 @@ export interface FileRoutesByTo {
   "/auth/login": typeof AuthLoginRoute
   "/auth/reset-password": typeof AuthResetPasswordRoute
   "/auth/signup": typeof AuthSignupRoute
+  "/workspace/$workspaceId": typeof WorkspaceWorkspaceIdRoute
   "/iam": typeof IamIndexRoute
+  "/workspace": typeof WorkspaceIndexRoute
   "/iam/users/$userId": typeof IamUsersUserIdRoute
   "/iam/users/new": typeof IamUsersNewRoute
+  "/iam/policies": typeof IamPoliciesIndexRoute
   "/iam/users": typeof IamUsersIndexRoute
+  "/iam/policies/$policyId/users": typeof IamPoliciesPolicyIdUsersRoute
+  "/iam/policies/$policyId": typeof IamPoliciesPolicyIdIndexRoute
 }
 
 export interface FileRoutesById {
@@ -197,10 +277,15 @@ export interface FileRoutesById {
   "/auth/login": typeof AuthLoginRoute
   "/auth/reset-password": typeof AuthResetPasswordRoute
   "/auth/signup": typeof AuthSignupRoute
+  "/workspace/$workspaceId": typeof WorkspaceWorkspaceIdRoute
   "/iam/": typeof IamIndexRoute
+  "/workspace/": typeof WorkspaceIndexRoute
   "/iam/users/$userId": typeof IamUsersUserIdRoute
   "/iam/users/new": typeof IamUsersNewRoute
+  "/iam/policies/": typeof IamPoliciesIndexRoute
   "/iam/users/": typeof IamUsersIndexRoute
+  "/iam/policies/$policyId/users": typeof IamPoliciesPolicyIdUsersRoute
+  "/iam/policies/$policyId/": typeof IamPoliciesPolicyIdIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -212,10 +297,15 @@ export interface FileRouteTypes {
     | "/auth/login"
     | "/auth/reset-password"
     | "/auth/signup"
+    | "/workspace/$workspaceId"
     | "/iam"
+    | "/workspace"
     | "/iam/users/$userId"
     | "/iam/users/new"
+    | "/iam/policies"
     | "/iam/users"
+    | "/iam/policies/$policyId/users"
+    | "/iam/policies/$policyId"
   fileRoutesByTo: FileRoutesByTo
   to:
     | "/"
@@ -224,10 +314,15 @@ export interface FileRouteTypes {
     | "/auth/login"
     | "/auth/reset-password"
     | "/auth/signup"
+    | "/workspace/$workspaceId"
     | "/iam"
+    | "/workspace"
     | "/iam/users/$userId"
     | "/iam/users/new"
+    | "/iam/policies"
     | "/iam/users"
+    | "/iam/policies/$policyId/users"
+    | "/iam/policies/$policyId"
   id:
     | "__root__"
     | "/"
@@ -236,10 +331,15 @@ export interface FileRouteTypes {
     | "/auth/login"
     | "/auth/reset-password"
     | "/auth/signup"
+    | "/workspace/$workspaceId"
     | "/iam/"
+    | "/workspace/"
     | "/iam/users/$userId"
     | "/iam/users/new"
+    | "/iam/policies/"
     | "/iam/users/"
+    | "/iam/policies/$policyId/users"
+    | "/iam/policies/$policyId/"
   fileRoutesById: FileRoutesById
 }
 
@@ -250,10 +350,15 @@ export interface RootRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   AuthSignupRoute: typeof AuthSignupRoute
+  WorkspaceWorkspaceIdRoute: typeof WorkspaceWorkspaceIdRoute
   IamIndexRoute: typeof IamIndexRoute
+  WorkspaceIndexRoute: typeof WorkspaceIndexRoute
   IamUsersUserIdRoute: typeof IamUsersUserIdRoute
   IamUsersNewRoute: typeof IamUsersNewRoute
+  IamPoliciesIndexRoute: typeof IamPoliciesIndexRoute
   IamUsersIndexRoute: typeof IamUsersIndexRoute
+  IamPoliciesPolicyIdUsersRoute: typeof IamPoliciesPolicyIdUsersRoute
+  IamPoliciesPolicyIdIndexRoute: typeof IamPoliciesPolicyIdIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -263,10 +368,15 @@ const rootRouteChildren: RootRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   AuthSignupRoute: AuthSignupRoute,
+  WorkspaceWorkspaceIdRoute: WorkspaceWorkspaceIdRoute,
   IamIndexRoute: IamIndexRoute,
+  WorkspaceIndexRoute: WorkspaceIndexRoute,
   IamUsersUserIdRoute: IamUsersUserIdRoute,
   IamUsersNewRoute: IamUsersNewRoute,
+  IamPoliciesIndexRoute: IamPoliciesIndexRoute,
   IamUsersIndexRoute: IamUsersIndexRoute,
+  IamPoliciesPolicyIdUsersRoute: IamPoliciesPolicyIdUsersRoute,
+  IamPoliciesPolicyIdIndexRoute: IamPoliciesPolicyIdIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -287,10 +397,15 @@ export const routeTree = rootRoute
         "/auth/login",
         "/auth/reset-password",
         "/auth/signup",
+        "/workspace/$workspaceId",
         "/iam/",
+        "/workspace/",
         "/iam/users/$userId",
         "/iam/users/new",
-        "/iam/users/"
+        "/iam/policies/",
+        "/iam/users/",
+        "/iam/policies/$policyId/users",
+        "/iam/policies/$policyId/"
       ]
     },
     "/": {
@@ -311,8 +426,14 @@ export const routeTree = rootRoute
     "/auth/signup": {
       "filePath": "auth/signup.tsx"
     },
+    "/workspace/$workspaceId": {
+      "filePath": "workspace/$workspaceId.tsx"
+    },
     "/iam/": {
       "filePath": "iam/index.tsx"
+    },
+    "/workspace/": {
+      "filePath": "workspace/index.tsx"
     },
     "/iam/users/$userId": {
       "filePath": "iam/users/$userId.tsx"
@@ -320,8 +441,17 @@ export const routeTree = rootRoute
     "/iam/users/new": {
       "filePath": "iam/users/new.tsx"
     },
+    "/iam/policies/": {
+      "filePath": "iam/policies/index.tsx"
+    },
     "/iam/users/": {
       "filePath": "iam/users/index.tsx"
+    },
+    "/iam/policies/$policyId/users": {
+      "filePath": "iam/policies/$policyId/users.tsx"
+    },
+    "/iam/policies/$policyId/": {
+      "filePath": "iam/policies/$policyId/index.tsx"
     }
   }
 }

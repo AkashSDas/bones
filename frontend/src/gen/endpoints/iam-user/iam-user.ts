@@ -30,12 +30,11 @@ import type {
     GetApiV1IamUser400,
     GetApiV1IamUser401,
     GetApiV1IamUser403,
-    GetApiV1IamUser404,
     GetApiV1IamUser500,
     GetApiV1IamUserExists200,
     GetApiV1IamUserExists400,
     GetApiV1IamUserExists401,
-    GetApiV1IamUserExists404,
+    GetApiV1IamUserExists403,
     GetApiV1IamUserExists500,
     GetApiV1IamUserExistsParams,
     GetApiV1IamUserParams,
@@ -56,7 +55,6 @@ import type {
     PostApiV1IamUser400,
     PostApiV1IamUser401,
     PostApiV1IamUser403,
-    PostApiV1IamUser404,
     PostApiV1IamUser500,
     PostApiV1IamUserBody,
     PostApiV1IamUserLogin200,
@@ -71,7 +69,7 @@ export const postApiV1IamUser = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<PostApiV1IamUser201>> => {
     return axios.default.post(
-        `http://localhost:8000/api/v1/iam/user`,
+        `http://localhost:5050/api/v1/iam/user`,
         postApiV1IamUserBody,
         options,
     );
@@ -82,7 +80,6 @@ export const getPostApiV1IamUserMutationOptions = <
         | PostApiV1IamUser400
         | PostApiV1IamUser401
         | PostApiV1IamUser403
-        | PostApiV1IamUser404
         | PostApiV1IamUser500
     >,
     TContext = unknown,
@@ -122,7 +119,6 @@ export type PostApiV1IamUserMutationError = AxiosError<
     | PostApiV1IamUser400
     | PostApiV1IamUser401
     | PostApiV1IamUser403
-    | PostApiV1IamUser404
     | PostApiV1IamUser500
 >;
 
@@ -131,7 +127,6 @@ export const usePostApiV1IamUser = <
         | PostApiV1IamUser400
         | PostApiV1IamUser401
         | PostApiV1IamUser403
-        | PostApiV1IamUser404
         | PostApiV1IamUser500
     >,
     TContext = unknown,
@@ -157,7 +152,7 @@ export const getApiV1IamUser = (
     params?: GetApiV1IamUserParams,
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<GetApiV1IamUser200>> => {
-    return axios.default.get(`http://localhost:8000/api/v1/iam/user`, {
+    return axios.default.get(`http://localhost:5050/api/v1/iam/user`, {
         ...options,
         params: { ...params, ...options?.params },
     });
@@ -165,7 +160,7 @@ export const getApiV1IamUser = (
 
 export const getGetApiV1IamUserQueryKey = (params?: GetApiV1IamUserParams) => {
     return [
-        `http://localhost:8000/api/v1/iam/user`,
+        `http://localhost:5050/api/v1/iam/user`,
         ...(params ? [params] : []),
     ] as const;
 };
@@ -176,7 +171,6 @@ export const getGetApiV1IamUserQueryOptions = <
         | GetApiV1IamUser400
         | GetApiV1IamUser401
         | GetApiV1IamUser403
-        | GetApiV1IamUser404
         | GetApiV1IamUser500
     >,
 >(
@@ -207,11 +201,7 @@ export type GetApiV1IamUserQueryResult = NonNullable<
     Awaited<ReturnType<typeof getApiV1IamUser>>
 >;
 export type GetApiV1IamUserQueryError = AxiosError<
-    | GetApiV1IamUser400
-    | GetApiV1IamUser401
-    | GetApiV1IamUser403
-    | GetApiV1IamUser404
-    | GetApiV1IamUser500
+    GetApiV1IamUser400 | GetApiV1IamUser401 | GetApiV1IamUser403 | GetApiV1IamUser500
 >;
 
 export function useGetApiV1IamUser<
@@ -220,7 +210,6 @@ export function useGetApiV1IamUser<
         | GetApiV1IamUser400
         | GetApiV1IamUser401
         | GetApiV1IamUser403
-        | GetApiV1IamUser404
         | GetApiV1IamUser500
     >,
 >(
@@ -246,7 +235,6 @@ export function useGetApiV1IamUser<
         | GetApiV1IamUser400
         | GetApiV1IamUser401
         | GetApiV1IamUser403
-        | GetApiV1IamUser404
         | GetApiV1IamUser500
     >,
 >(
@@ -272,7 +260,6 @@ export function useGetApiV1IamUser<
         | GetApiV1IamUser400
         | GetApiV1IamUser401
         | GetApiV1IamUser403
-        | GetApiV1IamUser404
         | GetApiV1IamUser500
     >,
 >(
@@ -291,7 +278,6 @@ export function useGetApiV1IamUser<
         | GetApiV1IamUser400
         | GetApiV1IamUser401
         | GetApiV1IamUser403
-        | GetApiV1IamUser404
         | GetApiV1IamUser500
     >,
 >(
@@ -320,7 +306,7 @@ export const patchApiV1IamUserUserId = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<PatchApiV1IamUserUserId200>> => {
     return axios.default.patch(
-        `http://localhost:8000/api/v1/iam/user/${userId}`,
+        `http://localhost:5050/api/v1/iam/user/${userId}`,
         patchApiV1IamUserUserIdBody,
         options,
     );
@@ -407,7 +393,7 @@ export const deleteApiV1IamUserUserId = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<void>> => {
     return axios.default.delete(
-        `http://localhost:8000/api/v1/iam/user/${userId}`,
+        `http://localhost:5050/api/v1/iam/user/${userId}`,
         options,
     );
 };
@@ -493,13 +479,13 @@ export const getApiV1IamUserUserId = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<GetApiV1IamUserUserId200>> => {
     return axios.default.get(
-        `http://localhost:8000/api/v1/iam/user/${userId}`,
+        `http://localhost:5050/api/v1/iam/user/${userId}`,
         options,
     );
 };
 
 export const getGetApiV1IamUserUserIdQueryKey = (userId: string) => {
-    return [`http://localhost:8000/api/v1/iam/user/${userId}`] as const;
+    return [`http://localhost:5050/api/v1/iam/user/${userId}`] as const;
 };
 
 export const getGetApiV1IamUserUserIdQueryOptions = <
@@ -676,7 +662,7 @@ export const getApiV1IamUserExists = (
     params: GetApiV1IamUserExistsParams,
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<GetApiV1IamUserExists200>> => {
-    return axios.default.get(`http://localhost:8000/api/v1/iam/user/exists`, {
+    return axios.default.get(`http://localhost:5050/api/v1/iam/user/exists`, {
         ...options,
         params: { ...params, ...options?.params },
     });
@@ -686,7 +672,7 @@ export const getGetApiV1IamUserExistsQueryKey = (
     params: GetApiV1IamUserExistsParams,
 ) => {
     return [
-        `http://localhost:8000/api/v1/iam/user/exists`,
+        `http://localhost:5050/api/v1/iam/user/exists`,
         ...(params ? [params] : []),
     ] as const;
 };
@@ -696,7 +682,7 @@ export const getGetApiV1IamUserExistsQueryOptions = <
     TError = AxiosError<
         | GetApiV1IamUserExists400
         | GetApiV1IamUserExists401
-        | GetApiV1IamUserExists404
+        | GetApiV1IamUserExists403
         | GetApiV1IamUserExists500
     >,
 >(
@@ -733,7 +719,7 @@ export type GetApiV1IamUserExistsQueryResult = NonNullable<
 export type GetApiV1IamUserExistsQueryError = AxiosError<
     | GetApiV1IamUserExists400
     | GetApiV1IamUserExists401
-    | GetApiV1IamUserExists404
+    | GetApiV1IamUserExists403
     | GetApiV1IamUserExists500
 >;
 
@@ -742,7 +728,7 @@ export function useGetApiV1IamUserExists<
     TError = AxiosError<
         | GetApiV1IamUserExists400
         | GetApiV1IamUserExists401
-        | GetApiV1IamUserExists404
+        | GetApiV1IamUserExists403
         | GetApiV1IamUserExists500
     >,
 >(
@@ -771,7 +757,7 @@ export function useGetApiV1IamUserExists<
     TError = AxiosError<
         | GetApiV1IamUserExists400
         | GetApiV1IamUserExists401
-        | GetApiV1IamUserExists404
+        | GetApiV1IamUserExists403
         | GetApiV1IamUserExists500
     >,
 >(
@@ -800,7 +786,7 @@ export function useGetApiV1IamUserExists<
     TError = AxiosError<
         | GetApiV1IamUserExists400
         | GetApiV1IamUserExists401
-        | GetApiV1IamUserExists404
+        | GetApiV1IamUserExists403
         | GetApiV1IamUserExists500
     >,
 >(
@@ -822,7 +808,7 @@ export function useGetApiV1IamUserExists<
     TError = AxiosError<
         | GetApiV1IamUserExists400
         | GetApiV1IamUserExists401
-        | GetApiV1IamUserExists404
+        | GetApiV1IamUserExists403
         | GetApiV1IamUserExists500
     >,
 >(
@@ -854,7 +840,7 @@ export const postApiV1IamUserLogin = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<PostApiV1IamUserLogin200>> => {
     return axios.default.post(
-        `http://localhost:8000/api/v1/iam/user/login`,
+        `http://localhost:5050/api/v1/iam/user/login`,
         postApiV1IamUserLoginBody,
         options,
     );

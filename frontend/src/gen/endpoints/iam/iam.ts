@@ -25,9 +25,7 @@ import type {
     GetApiV1IamLoginRefresh401,
     GetApiV1IamLoginRefresh500,
     GetApiV1IamMe200,
-    GetApiV1IamMe400,
     GetApiV1IamMe401,
-    GetApiV1IamMe404,
     GetApiV1IamMe500,
     PostApiV1IamLogout401,
     PostApiV1IamLogout500,
@@ -36,11 +34,11 @@ import type {
 export const getApiV1IamLoginRefresh = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<GetApiV1IamLoginRefresh200>> => {
-    return axios.default.get(`http://localhost:8000/api/v1/iam/login/refresh`, options);
+    return axios.default.get(`http://localhost:5050/api/v1/iam/login/refresh`, options);
 };
 
 export const getGetApiV1IamLoginRefreshQueryKey = () => {
-    return [`http://localhost:8000/api/v1/iam/login/refresh`] as const;
+    return [`http://localhost:5050/api/v1/iam/login/refresh`] as const;
 };
 
 export const getGetApiV1IamLoginRefreshQueryOptions = <
@@ -161,18 +159,16 @@ export function useGetApiV1IamLoginRefresh<
 export const getApiV1IamMe = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<GetApiV1IamMe200>> => {
-    return axios.default.get(`http://localhost:8000/api/v1/iam/me`, options);
+    return axios.default.get(`http://localhost:5050/api/v1/iam/me`, options);
 };
 
 export const getGetApiV1IamMeQueryKey = () => {
-    return [`http://localhost:8000/api/v1/iam/me`] as const;
+    return [`http://localhost:5050/api/v1/iam/me`] as const;
 };
 
 export const getGetApiV1IamMeQueryOptions = <
     TData = Awaited<ReturnType<typeof getApiV1IamMe>>,
-    TError = AxiosError<
-        GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
-    >,
+    TError = AxiosError<GetApiV1IamMe401 | GetApiV1IamMe500>,
 >(options?: {
     query?: Partial<
         UseQueryOptions<Awaited<ReturnType<typeof getApiV1IamMe>>, TError, TData>
@@ -197,15 +193,11 @@ export const getGetApiV1IamMeQueryOptions = <
 export type GetApiV1IamMeQueryResult = NonNullable<
     Awaited<ReturnType<typeof getApiV1IamMe>>
 >;
-export type GetApiV1IamMeQueryError = AxiosError<
-    GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
->;
+export type GetApiV1IamMeQueryError = AxiosError<GetApiV1IamMe401 | GetApiV1IamMe500>;
 
 export function useGetApiV1IamMe<
     TData = Awaited<ReturnType<typeof getApiV1IamMe>>,
-    TError = AxiosError<
-        GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
-    >,
+    TError = AxiosError<GetApiV1IamMe401 | GetApiV1IamMe500>,
 >(options: {
     query: Partial<
         UseQueryOptions<Awaited<ReturnType<typeof getApiV1IamMe>>, TError, TData>
@@ -222,9 +214,7 @@ export function useGetApiV1IamMe<
 }): DefinedUseQueryResult<TData, TError> & { queryKey: QueryKey };
 export function useGetApiV1IamMe<
     TData = Awaited<ReturnType<typeof getApiV1IamMe>>,
-    TError = AxiosError<
-        GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
-    >,
+    TError = AxiosError<GetApiV1IamMe401 | GetApiV1IamMe500>,
 >(options?: {
     query?: Partial<
         UseQueryOptions<Awaited<ReturnType<typeof getApiV1IamMe>>, TError, TData>
@@ -241,9 +231,7 @@ export function useGetApiV1IamMe<
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey };
 export function useGetApiV1IamMe<
     TData = Awaited<ReturnType<typeof getApiV1IamMe>>,
-    TError = AxiosError<
-        GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
-    >,
+    TError = AxiosError<GetApiV1IamMe401 | GetApiV1IamMe500>,
 >(options?: {
     query?: Partial<
         UseQueryOptions<Awaited<ReturnType<typeof getApiV1IamMe>>, TError, TData>
@@ -253,9 +241,7 @@ export function useGetApiV1IamMe<
 
 export function useGetApiV1IamMe<
     TData = Awaited<ReturnType<typeof getApiV1IamMe>>,
-    TError = AxiosError<
-        GetApiV1IamMe400 | GetApiV1IamMe401 | GetApiV1IamMe404 | GetApiV1IamMe500
-    >,
+    TError = AxiosError<GetApiV1IamMe401 | GetApiV1IamMe500>,
 >(options?: {
     query?: Partial<
         UseQueryOptions<Awaited<ReturnType<typeof getApiV1IamMe>>, TError, TData>
@@ -277,7 +263,7 @@ export const postApiV1IamLogout = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<void>> => {
     return axios.default.post(
-        `http://localhost:8000/api/v1/iam/logout`,
+        `http://localhost:5050/api/v1/iam/logout`,
         undefined,
         options,
     );

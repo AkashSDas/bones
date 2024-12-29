@@ -41,6 +41,7 @@ import type {
     PostApiV1IamAccountLoginBody,
     PostApiV1IamAccountResetPassword200,
     PostApiV1IamAccountResetPassword400,
+    PostApiV1IamAccountResetPassword404,
     PostApiV1IamAccountResetPassword500,
     PostApiV1IamAccountResetPasswordBody,
     PostApiV1IamAccountResetPasswordResetToken200,
@@ -54,7 +55,7 @@ export const postApiV1IamAccount = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<PostApiV1IamAccount201>> => {
     return axios.default.post(
-        `http://localhost:8000/api/v1/iam/account`,
+        `http://localhost:5050/api/v1/iam/account`,
         postApiV1IamAccountBody,
         options,
     );
@@ -130,7 +131,7 @@ export const getApiV1IamAccountActivateActivationToken = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<GetApiV1IamAccountActivateActivationToken200>> => {
     return axios.default.get(
-        `http://localhost:8000/api/v1/iam/account/activate/${activationToken}`,
+        `http://localhost:5050/api/v1/iam/account/activate/${activationToken}`,
         {
             ...options,
             params: { ...params, ...options?.params },
@@ -143,7 +144,7 @@ export const getGetApiV1IamAccountActivateActivationTokenQueryKey = (
     params?: GetApiV1IamAccountActivateActivationTokenParams,
 ) => {
     return [
-        `http://localhost:8000/api/v1/iam/account/activate/${activationToken}`,
+        `http://localhost:5050/api/v1/iam/account/activate/${activationToken}`,
         ...(params ? [params] : []),
     ] as const;
 };
@@ -329,7 +330,7 @@ export const getApiV1IamAccountExists = (
     params?: GetApiV1IamAccountExistsParams,
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<GetApiV1IamAccountExists200>> => {
-    return axios.default.get(`http://localhost:8000/api/v1/iam/account/exists`, {
+    return axios.default.get(`http://localhost:5050/api/v1/iam/account/exists`, {
         ...options,
         params: { ...params, ...options?.params },
     });
@@ -339,7 +340,7 @@ export const getGetApiV1IamAccountExistsQueryKey = (
     params?: GetApiV1IamAccountExistsParams,
 ) => {
     return [
-        `http://localhost:8000/api/v1/iam/account/exists`,
+        `http://localhost:5050/api/v1/iam/account/exists`,
         ...(params ? [params] : []),
     ] as const;
 };
@@ -480,7 +481,7 @@ export const postApiV1IamAccountLogin = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<PostApiV1IamAccountLogin200>> => {
     return axios.default.post(
-        `http://localhost:8000/api/v1/iam/account/login`,
+        `http://localhost:5050/api/v1/iam/account/login`,
         postApiV1IamAccountLoginBody,
         options,
     );
@@ -561,7 +562,7 @@ export const postApiV1IamAccountResetPassword = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<PostApiV1IamAccountResetPassword200>> => {
     return axios.default.post(
-        `http://localhost:8000/api/v1/iam/account/reset-password`,
+        `http://localhost:5050/api/v1/iam/account/reset-password`,
         postApiV1IamAccountResetPasswordBody,
         options,
     );
@@ -569,7 +570,9 @@ export const postApiV1IamAccountResetPassword = (
 
 export const getPostApiV1IamAccountResetPasswordMutationOptions = <
     TError = AxiosError<
-        PostApiV1IamAccountResetPassword400 | PostApiV1IamAccountResetPassword500
+        | PostApiV1IamAccountResetPassword400
+        | PostApiV1IamAccountResetPassword404
+        | PostApiV1IamAccountResetPassword500
     >,
     TContext = unknown,
 >(options?: {
@@ -606,12 +609,16 @@ export type PostApiV1IamAccountResetPasswordMutationResult = NonNullable<
 export type PostApiV1IamAccountResetPasswordMutationBody =
     PostApiV1IamAccountResetPasswordBody;
 export type PostApiV1IamAccountResetPasswordMutationError = AxiosError<
-    PostApiV1IamAccountResetPassword400 | PostApiV1IamAccountResetPassword500
+    | PostApiV1IamAccountResetPassword400
+    | PostApiV1IamAccountResetPassword404
+    | PostApiV1IamAccountResetPassword500
 >;
 
 export const usePostApiV1IamAccountResetPassword = <
     TError = AxiosError<
-        PostApiV1IamAccountResetPassword400 | PostApiV1IamAccountResetPassword500
+        | PostApiV1IamAccountResetPassword400
+        | PostApiV1IamAccountResetPassword404
+        | PostApiV1IamAccountResetPassword500
     >,
     TContext = unknown,
 >(options?: {
@@ -638,7 +645,7 @@ export const postApiV1IamAccountResetPasswordResetToken = (
     options?: AxiosRequestConfig,
 ): Promise<AxiosResponse<PostApiV1IamAccountResetPasswordResetToken200>> => {
     return axios.default.post(
-        `http://localhost:8000/api/v1/iam/account/reset-password/${resetToken}`,
+        `http://localhost:5050/api/v1/iam/account/reset-password/${resetToken}`,
         postApiV1IamAccountResetPasswordResetTokenBody,
         options,
     );

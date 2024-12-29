@@ -1,12 +1,19 @@
-import { and, eq, gte, lte, or } from "drizzle-orm";
+import { and, eq, gte, or } from "drizzle-orm";
 
-import { type DB, db } from "..";
+import { type DB, TransactionCtx, db } from "..";
 import { account } from "../models";
-import { type Account, type AccountClient, type NewAccount } from "../models/account";
+import {
+    type Account,
+    type AccountClient,
+    type AccountId,
+    type AccountPk,
+    type NewAccount,
+} from "../models/account";
+import { BaseDAL } from "./base";
 
-class AccountDAL {
-    constructor(private db: DB) {
-        this.db = db;
+class AccountDAL extends BaseDAL {
+    constructor(db: DB) {
+        super(db);
     }
 
     // ===========================
@@ -14,8 +21,10 @@ class AccountDAL {
     // ===========================
 
     /** Create a new account. */
-    async create(payload: NewAccount): Promise<Account> {
-        const result = await this.db.insert(account).values(payload).returning();
+    async create(payload: NewAccount, tx?: TransactionCtx): Promise<Account> {
+        const ctx = this.getDbContext(tx);
+
+        const result = await ctx.insert(account).values(payload).returning();
         return result[0];
     }
 
@@ -27,7 +36,7 @@ class AccountDAL {
      * @param hash Activation token
      * @param age Activation token age limit
      */
-    async findByActivationToken(hash: string, age: Date): Promise<number | null> {
+    async findByActivationToken(hash: string, age: Date): Promise<AccountPk | null> {
         const result = await this.db
             .select({ id: account.id, age: account.changeStatusTokenAge })
             .from(account)
@@ -46,7 +55,7 @@ class AccountDAL {
      * @param hash Reset password token
      * @param age Reset password token age limit
      */
-    async findByResetPasswordToken(hash: string, age: Date): Promise<number | null> {
+    async findByResetPasswordToken(hash: string, age: Date): Promise<AccountPk | null> {
         const result = await this.db
             .select({ id: account.id })
             .from(account)
@@ -79,7 +88,6 @@ class AccountDAL {
     async findByEmail(email: string): Promise<AccountClient | null> {
         const result = await this.db
             .select({
-                id: account.id,
                 accountId: account.accountId,
                 email: account.email,
                 accountName: account.accountName,
@@ -98,7 +106,9 @@ class AccountDAL {
         return result.length > 0 ? result[0] : null;
     }
 
-    async findById(accountId: string): Promise<AccountClient | null> {
+    async findByAccountId(
+        accountId: AccountId,
+    ): Promise<[AccountPk, AccountClient] | null> {
         const result = await this.db
             .select({
                 id: account.id,
@@ -117,20 +127,7 @@ class AccountDAL {
             .where(eq(account.accountId, accountId))
             .limit(1);
 
-        return result.length > 0 ? result[0] : null;
-    }
-
-    /**
-     * @param accountId Account id (uuid)
-     */
-    async findAccountById(accountId: string): Promise<number | null> {
-        const result = await this.db
-            .select({ id: account.id })
-            .from(account)
-            .where(eq(account.accountId, accountId))
-            .limit(1);
-
-        return result.length > 0 ? result[0].id : null;
+        return result.length > 0 ? [result[0].id, result[0]] : null;
     }
 
     // ===========================
@@ -140,7 +137,7 @@ class AccountDAL {
     /**
      * @param id Primary key of an account
      */
-    async activate(id: number): Promise<void> {
+    async activate(id: AccountPk): Promise<void> {
         const result = await this.db
             .update(account)
             .set({
@@ -170,7 +167,7 @@ class AccountDAL {
     /**
      * @param id Primary key of an account
      */
-    async setPassword(id: number, pwd: string): Promise<void> {
+    async setPassword(id: AccountPk, pwd: string): Promise<void> {
         await this.db
             .update(account)
             .set({
@@ -182,7 +179,7 @@ class AccountDAL {
             .where(eq(account.id, id));
     }
 
-    async setLastLogin(accountId: string): Promise<void> {
+    async setLastLogin(accountId: AccountId): Promise<void> {
         await this.db
             .update(account)
             .set({ lastLoggedInAt: new Date().toISOString() })
@@ -194,7 +191,10 @@ class AccountDAL {
     // ===========================
 
     /** Check if a account with email and account name exists or not. */
-    async exists(email: string, accountName: string): Promise<boolean> {
+    async existsByEmailAndAccountName(
+        email: string,
+        accountName: string,
+    ): Promise<boolean> {
         const result = await this.db
             .select({ id: account.id })
             .from(account)
@@ -222,6 +222,19 @@ class AccountDAL {
             .limit(1);
 
         return result.length > 0;
+    }
+
+    /**
+     * @param accountId Account id (uuid)
+     */
+    async existsByAccountId(accountId: AccountId): Promise<AccountPk | null> {
+        const result = await this.db
+            .select({ id: account.id })
+            .from(account)
+            .where(eq(account.accountId, accountId))
+            .limit(1);
+
+        return result.length > 0 ? result[0].id : null;
     }
 }
 

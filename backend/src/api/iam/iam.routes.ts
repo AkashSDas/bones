@@ -1,6 +1,8 @@
 import { createRoute } from "@hono/zod-openapi";
 
+import { accountStatus } from "@/middlewares/account-status";
 import { authenticate } from "@/middlewares/authenticate";
+import { rbac } from "@/middlewares/rbac";
 import { HttpErrorSchemas } from "@/schemas/http";
 import { OpenApiResponses, status } from "@/utils/http";
 import type { AppRouteHandler as Handler } from "@/utils/types";
@@ -12,6 +14,10 @@ const TAGS = {
     ACCOUNT: "IAM Account",
     USER: "IAM User",
 } as const;
+
+// =========================================
+// Account Endpoints
+// =========================================
 
 export const accountSignup = createRoute({
     method: "post",
@@ -27,20 +33,12 @@ export const accountSignup = createRoute({
         },
     },
     responses: {
-        ...OpenApiResponses.publicRoute,
+        ...OpenApiResponses.publicValidatedRoute,
         [status.CREATED]: {
             description: "Success response",
             content: {
                 "application/json": {
                     schema: IAMSchemas.AccountSignupResponseBody,
-                },
-            },
-        },
-        [status.BAD_REQUEST]: {
-            description: "Validation error",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.ZodValidationErrorSchema,
                 },
             },
         },
@@ -64,7 +62,7 @@ export const activateAccount = createRoute({
         query: IAMSchemas.ActivateAccountQuery,
     },
     responses: {
-        ...OpenApiResponses.publicAndValidationRoute,
+        ...OpenApiResponses.publicValidatedRoute,
         [status.OK]: {
             description: "Success response",
             content: {
@@ -99,20 +97,12 @@ export const accountExists = createRoute({
         query: IAMSchemas.AccountExistsQuery,
     },
     responses: {
-        ...OpenApiResponses.publicRoute,
+        ...OpenApiResponses.publicValidatedRoute,
         [status.OK]: {
             description: "Success response",
             content: {
                 "application/json": {
                     schema: IAMSchemas.AccountExistsResponseBody,
-                },
-            },
-        },
-        [status.BAD_REQUEST]: {
-            description: "Validation error",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.ZodValidationErrorSchema,
                 },
             },
         },
@@ -133,20 +123,12 @@ export const accountLogin = createRoute({
         },
     },
     responses: {
-        ...OpenApiResponses.publicAndValidationRoute,
+        ...OpenApiResponses.publicValidatedNotFoundRoute,
         [status.OK]: {
             description: "Successfully login",
             content: {
                 "application/json": {
                     schema: IAMSchemas.AccountLoginResponseBody,
-                },
-            },
-        },
-        [status.NOT_FOUND]: {
-            description: "Not found",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.NotFoundErrorSchema,
                 },
             },
         },
@@ -167,7 +149,7 @@ export const resetPassword = createRoute({
         },
     },
     responses: {
-        ...OpenApiResponses.publicAndValidationRoute,
+        ...OpenApiResponses.publicValidatedNotFoundRoute,
         [status.OK]: {
             description: "Successfully login",
             content: {
@@ -194,7 +176,7 @@ export const completeResetPassword = createRoute({
         },
     },
     responses: {
-        ...OpenApiResponses.publicAndValidationRoute,
+        ...OpenApiResponses.publicValidatedRoute,
         [status.OK]: {
             description: "Successfully password reset",
             content: {
@@ -223,11 +205,15 @@ export const refreshAccessToken = createRoute({
     },
 });
 
+// =========================================
+// User Endpoints
+// =========================================
+
 export const createUser = createRoute({
     method: "post",
     path: "/user",
     tags: [TAGS.USER],
-    middleware: [authenticate],
+    middleware: [authenticate, rbac.iamServiceWideWrite, accountStatus.allowOnlyActive],
     request: {
         body: {
             content: {
@@ -238,28 +224,12 @@ export const createUser = createRoute({
         },
     },
     responses: {
-        ...OpenApiResponses.protectedAndValidationRoute,
+        ...OpenApiResponses.rbacRoute,
         [status.CREATED]: {
             description: "Successfully created user",
             content: {
                 "application/json": {
                     schema: IAMSchemas.CreateUserResponseBody,
-                },
-            },
-        },
-        [status.NOT_FOUND]: {
-            description: "Not found",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.NotFoundErrorSchema,
-                },
-            },
-        },
-        [status.FORBIDDEN]: {
-            description: "Forbidden",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.ForbiddenErrorSchema,
                 },
             },
         },
@@ -270,7 +240,7 @@ export const updateUser = createRoute({
     method: "patch",
     path: "/user/{userId}",
     tags: [TAGS.USER],
-    middleware: [authenticate],
+    middleware: [authenticate, rbac.iamServiceWideWrite],
     request: {
         params: IAMSchemas.UpdateUserParams,
         body: {
@@ -282,7 +252,7 @@ export const updateUser = createRoute({
         },
     },
     responses: {
-        ...OpenApiResponses.protectedAndValidationRoute,
+        ...OpenApiResponses.rbacRoute,
         [status.OK]: {
             description: "Successfully updated user",
             content: {
@@ -299,14 +269,6 @@ export const updateUser = createRoute({
                 },
             },
         },
-        [status.FORBIDDEN]: {
-            description: "Forbidden",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.ForbiddenErrorSchema,
-                },
-            },
-        },
     },
 });
 
@@ -314,25 +276,17 @@ export const userExists = createRoute({
     method: "get",
     path: "/user/exists",
     tags: [TAGS.USER],
-    middleware: [authenticate],
+    middleware: [authenticate, rbac.iamServiceWideRead],
     request: {
         query: IAMSchemas.UserExistsQuery,
     },
     responses: {
-        ...OpenApiResponses.protectedAndValidationRoute,
+        ...OpenApiResponses.rbacRoute,
         [status.OK]: {
             description: "Success response",
             content: {
                 "application/json": {
                     schema: IAMSchemas.UserExistsResponseBody,
-                },
-            },
-        },
-        [status.NOT_FOUND]: {
-            description: "Not found",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.NotFoundErrorSchema,
                 },
             },
         },
@@ -343,12 +297,12 @@ export const deleteUser = createRoute({
     method: "delete",
     path: "/user/{userId}",
     tags: [TAGS.USER],
-    middleware: [authenticate],
+    middleware: [authenticate, rbac.iamServiceWideWrite],
     request: {
         params: IAMSchemas.DeleteUserParam,
     },
     responses: {
-        ...OpenApiResponses.protectedAndValidationRoute,
+        ...OpenApiResponses.rbacRoute,
         [status.NO_CONTENT]: {
             description: "Successfully deleted",
         },
@@ -360,14 +314,6 @@ export const deleteUser = createRoute({
                 },
             },
         },
-        [status.FORBIDDEN]: {
-            description: "Forbidden",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.ForbiddenErrorSchema,
-                },
-            },
-        },
     },
 });
 
@@ -375,12 +321,12 @@ export const getUser = createRoute({
     method: "get",
     path: "/user/{userId}",
     tags: [TAGS.USER],
-    middleware: [authenticate],
+    middleware: [authenticate, rbac.iamServiceWideRead],
     request: {
         params: IAMSchemas.GetSingleUserParam,
     },
     responses: {
-        ...OpenApiResponses.protectedAndValidationRoute,
+        ...OpenApiResponses.rbacRoute,
         [status.OK]: {
             description: "User found",
             content: {
@@ -397,14 +343,6 @@ export const getUser = createRoute({
                 },
             },
         },
-        [status.FORBIDDEN]: {
-            description: "Forbidden",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.ForbiddenErrorSchema,
-                },
-            },
-        },
     },
 });
 
@@ -412,33 +350,18 @@ export const getUsers = createRoute({
     method: "get",
     path: "/user",
     tags: [TAGS.USER],
+    // middleware: [authenticate, rbac.iamServiceWideRead],
     middleware: [authenticate],
     request: {
         query: IAMSchemas.GetManyUsersQuery,
     },
     responses: {
-        ...OpenApiResponses.protectedAndValidationRoute,
+        ...OpenApiResponses.rbacRoute,
         [status.OK]: {
             description: "Success response",
             content: {
                 "application/json": {
                     schema: IAMSchemas.GetManyUserResponseBody,
-                },
-            },
-        },
-        [status.NOT_FOUND]: {
-            description: "Not found",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.NotFoundErrorSchema,
-                },
-            },
-        },
-        [status.FORBIDDEN]: {
-            description: "Forbidden",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.ForbiddenErrorSchema,
                 },
             },
         },
@@ -459,20 +382,12 @@ export const userLogin = createRoute({
         },
     },
     responses: {
-        ...OpenApiResponses.publicAndValidationRoute,
+        ...OpenApiResponses.publicValidatedNotFoundRoute,
         [status.OK]: {
             description: "Successfully login",
             content: {
                 "application/json": {
                     schema: IAMSchemas.UserLoginResponseBody,
-                },
-            },
-        },
-        [status.NOT_FOUND]: {
-            description: "Not found",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.NotFoundErrorSchema,
                 },
             },
         },
@@ -485,20 +400,12 @@ export const myProfile = createRoute({
     tags: [TAGS.IAM],
     middleware: [authenticate],
     responses: {
-        ...OpenApiResponses.protectedAndValidationRoute,
+        ...OpenApiResponses.protectedRoute,
         [status.OK]: {
             description: "Logged in user details",
             content: {
                 "application/json": {
                     schema: IAMSchemas.MyProfileResponseBody,
-                },
-            },
-        },
-        [status.NOT_FOUND]: {
-            description: "Not found",
-            content: {
-                "application/json": {
-                    schema: HttpErrorSchemas.NotFoundErrorSchema,
                 },
             },
         },

@@ -5,7 +5,9 @@ import { z } from "zod";
 
 import { orm } from "@/utils/db";
 
+import { iamPermission } from "./iam-permission";
 import { user } from "./user";
+import { workspace } from "./workspace";
 
 // Enums needs to be exported to create them in migrations
 // Manually had to add enum since drizzle kit is not being able to detect enums
@@ -50,9 +52,9 @@ export const account = pgTable(
     },
     function (table) {
         return {
-            accountId: index().on(table.accountId),
-            email: index().on(table.email),
-            accountName: index().on(table.accountName),
+            accountId: index("account_id").on(table.accountId),
+            email: index("account_email").on(table.email),
+            accountName: index("account_name").on(table.accountName),
         };
     },
 );
@@ -60,6 +62,8 @@ export const account = pgTable(
 export const accountRelations = relations(account, function ({ many }) {
     return {
         users: many(user),
+        iamPermissions: many(iamPermission),
+        workspaces: many(workspace),
     };
 });
 
@@ -81,3 +85,6 @@ export const AccountClientSchema = AccountSchema.pick({
 });
 
 export type AccountClient = z.infer<typeof AccountClientSchema>;
+
+export type AccountPk = (typeof account.$inferSelect)["id"];
+export type AccountId = (typeof account.$inferSelect)["accountId"];

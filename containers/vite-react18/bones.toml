@@ -1,0 +1,13 @@
+# ==============================
+# Bones configuration goes here
+# ==============================
+
+# Commands to run where the container is started i.e. workspace is started
+# These commands are ran inside /usr/workspace
+[[start_commands]]
+run = "pnpm dev"
+
+# Ports
+[[ports]]
+local_port = 5173
+external_port = 80

@@ -33,7 +33,7 @@ import { iamKeys } from "@/utils/react-query";
 
 export const Route = createFileRoute("/iam/users/$userId")({
     component: () => (
-        <AuthProtected forRoles={["admin"]}>
+        <AuthProtected>
             <IAMUserDetails />
         </AuthProtected>
     ),
@@ -58,7 +58,7 @@ function IAMUserDetails() {
                 {query.isLoading ? <Loader variant="page" /> : null}
 
                 {!query.isLoading && data === undefined ? (
-                    <div className="flex items-center justify-between gap-1 my-4">
+                    <div className="flex gap-1 justify-between items-center my-4">
                         <p className="text-grey-400">IAM user not found</p>
 
                         <Link to="/iam/users">
@@ -175,7 +175,7 @@ function UserDetails({ user }: { user: GetApiV1IamUserUserId200["user"] }) {
 
     return (
         <div className="flex flex-col gap-1 mt-4">
-            <div className="flex items-center gap-1 text-sm">
+            <div className="flex gap-1 items-center text-sm">
                 <IdCardIcon size="16px" />
                 <span className="font-medium">IAM User ID:</span>
                 <span className="select-all text-grey-500">{user.userId}</span>
@@ -240,17 +240,17 @@ function UserDetails({ user }: { user: GetApiV1IamUserUserId200["user"] }) {
                         control={form.control}
                         name="generateNewPassword"
                         render={({ field }) => (
-                            <FormItem className="flex items-start gap-3">
+                            <FormItem className="flex gap-3 items-start">
                                 <FormControl>
                                     <Checkbox
-                                        className="w-5 h-5 mt-1"
+                                        className="mt-1 w-5 h-5"
                                         checked={field.value}
                                         onCheckedChange={field.onChange}
                                         disabled={isBlocked}
                                     />
                                 </FormControl>
 
-                                <div className="flex flex-col w-full gap-2">
+                                <div className="flex flex-col gap-2 w-full">
                                     <FormLabel>Generate Password</FormLabel>
                                     <FormDescription>
                                         System generated user password for login
@@ -282,16 +282,16 @@ function UserDetails({ user }: { user: GetApiV1IamUserUserId200["user"] }) {
                         control={form.control}
                         name="isBlocked"
                         render={({ field }) => (
-                            <FormItem className="flex items-start gap-3">
+                            <FormItem className="flex gap-3 items-start">
                                 <FormControl>
                                     <Checkbox
-                                        className="w-5 h-5 mt-1"
+                                        className="mt-1 w-5 h-5"
                                         checked={field.value}
                                         onCheckedChange={field.onChange}
                                     />
                                 </FormControl>
 
-                                <div className="flex flex-col w-full gap-2">
+                                <div className="flex flex-col gap-2 w-full">
                                     <FormLabel>Blocked</FormLabel>
                                     <FormDescription>
                                         User will be blocked from performing any action
@@ -302,12 +302,21 @@ function UserDetails({ user }: { user: GetApiV1IamUserUserId200["user"] }) {
                         )}
                     />
 
-                    <div className="flex flex-col w-full gap-2 sm:flex-row">
-                        <Button variant="secondary" className="w-full" type="button">
+                    <div className="flex flex-col gap-2 w-full sm:flex-row">
+                        <Button
+                            variant="secondary"
+                            className="w-full"
+                            type="button"
+                            onClick={() => {
+                                form.reset(initialValues);
+                                setNewPwd({ show: false, pwd: "" });
+                            }}
+                        >
                             Reset
                         </Button>
+
                         <Button className="w-full" disabled={disableBtn} type="submit">
-                            {updateMutation.isPending ? <Loader /> : "Saving"}
+                            {updateMutation.isPending ? <Loader /> : "Save"}
                         </Button>
                     </div>
                 </form>
@@ -315,7 +324,7 @@ function UserDetails({ user }: { user: GetApiV1IamUserUserId200["user"] }) {
 
             <hr className="my-16 border border-grey-800" />
 
-            <div className="flex flex-col items-start justify-start gap-2 md:items-center md:justify-between md:flex-row">
+            <div className="flex flex-col gap-2 justify-start items-start md:items-center md:justify-between md:flex-row">
                 <div className="flex flex-col gap-2">
                     <p className="text-sm font-medium">Delete IAM User</p>
                     <p className="text-[12.8px] text-grey-500">

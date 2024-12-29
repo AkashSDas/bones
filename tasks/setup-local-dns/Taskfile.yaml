@@ -1,0 +1,106 @@
+version: "3"
+
+env:
+    LOCAL_CUSTOM_TLD: "bones.test"
+
+    # This is dependent on the external IP given by nginx-ingress LoadBalancer
+    # For this project only this is need and not localhost (i.e. 127.0.0.1)
+    # │ nginx-ingress-ingress-nginx-controller            LoadBalancer  xx.xx.xx.xx  172.20.0.5  http:80►30325 https:443►30560 2m56s │
+    LOCAL_DNS_RESOLVER_IP: "172.20.0.5"
+    LOCAL_HOST_DNS_RESOLVER_IP: "127.0.0.1"
+
+tasks:
+    install:
+        desc: "Install required packages (MacOS)"
+        cmds:
+            - echo "This setup is for MacOS"
+            - echo "Installing kubernetes-cli and dnsmasq..."
+            - brew install kubernetes-cli dnsmasq
+
+    localhost:setup:
+        desc: "Set up local DNS for ${LOCAL_CUSTOM_TLD} TLD for ${LOCAL_HOST_DNS_RESOLVER_IP} IP address"
+        cmds:
+            - echo "Setting up .${LOCAL_CUSTOM_TLD} TLD locally..."
+            - echo "address=/.${LOCAL_CUSTOM_TLD}/${LOCAL_HOST_DNS_RESOLVER_IP}" | sudo tee -a $(brew --prefix)/etc/dnsmasq.conf
+            - echo "Configuring local DNS resolver for .${LOCAL_CUSTOM_TLD}..."
+            - sudo mkdir -p /etc/resolver
+            - echo "nameserver ${LOCAL_HOST_DNS_RESOLVER_IP}" | sudo tee /etc/resolver/${LOCAL_CUSTOM_TLD}
+            - echo "Restarting dnsmasq and mDNSResponder..."
+            - sudo brew services restart dnsmasq
+            - sudo killall -HUP mDNSResponder
+            - echo "Setup complete. Verifying DNS configuration..."
+            - scutil --dns | grep "${LOCAL_CUSTOM_TLD}"
+
+    nginx-ingress:setup:
+        desc: "Set up local DNS for ${LOCAL_CUSTOM_TLD} TLD for ${LOCAL_DNS_RESOLVER_IP} IP address"
+        cmds:
+            - echo "Setting up .${LOCAL_CUSTOM_TLD} TLD locally..."
+            - echo "address=/.${LOCAL_CUSTOM_TLD}/${LOCAL_DNS_RESOLVER_IP}" | sudo tee -a $(brew --prefix)/etc/dnsmasq.conf
+            - echo "Configuring local DNS resolver for .${LOCAL_CUSTOM_TLD}..."
+            - sudo mkdir -p /etc/resolver
+            - echo "nameserver ${LOCAL_DNS_RESOLVER_IP}" | sudo tee /etc/resolver/${LOCAL_CUSTOM_TLD}
+            - echo "Restarting dnsmasq and mDNSResponder..."
+            - sudo brew services restart dnsmasq
+            - sudo killall -HUP mDNSResponder
+            - echo "Setup complete. Verifying DNS configuration..."
+            - scutil --dns | grep "${LOCAL_CUSTOM_TLD}"
+
+    localhost:teardown:
+        desc: "Remove ${LOCAL_CUSTOM_TLD} TLD configuration for ${LOCAL_HOST_DNS_RESOLVER_IP} IP address"
+        cmds:
+            # For MacOS dnsmasq.conf file is at /opt/homebrew/etc/dnsmasq.conf
+            # cat /opt/homebrew/etc/dnsmasq.conf
+            # Remove the line of "address=/.${LOCAL_CUSTOM_TLD}/${LOCAL_DNS_RESOLVER_IP}" from the
+            # file "dnsmasq.conf" manually if failed
+            - echo "This teardown is for MacOS (not working)."
+            - echo "Removing .${LOCAL_CUSTOM_TLD} TLD configuration from dnsmasq.conf..."
+            - sudo sed -i '' "/address=\/.${LOCAL_CUSTOM_TLD}\/${LOCAL_HOST_DNS_RESOLVER_IP}/d" $(brew --prefix)/etc/dnsmasq.conf
+            - echo "Removing resolver entry for .${LOCAL_CUSTOM_TLD}..."
+            - sudo rm -f /etc/resolver/${LOCAL_CUSTOM_TLD}
+            - echo "Restarting dnsmasq and mDNSResponder..."
+            - sudo brew services restart dnsmasq
+            - sudo killall -HUP mDNSResponder
+            - echo "Teardown complete. .${LOCAL_CUSTOM_TLD} TLD configuration has been removed."
+
+    nginx-ingress:teardown:
+        desc: "Remove ${LOCAL_CUSTOM_TLD} TLD configuration for ${LOCAL_DNS_RESOLVER_IP} IP address"
+        cmds:
+            # For MacOS dnsmasq.conf file is at /opt/homebrew/etc/dnsmasq.conf
+            # cat /opt/homebrew/etc/dnsmasq.conf
+            # Remove the line of "address=/.${LOCAL_CUSTOM_TLD}/${LOCAL_DNS_RESOLVER_IP}" from the
+            # file "dnsmasq.conf" manually if failed
+            - echo "This teardown is for MacOS (not working)."
+            - echo "Removing .${LOCAL_CUSTOM_TLD} TLD configuration from dnsmasq.conf..."
+            - sudo sed -i '' "/address=\/.${LOCAL_CUSTOM_TLD}\/${LOCAL_DNS_RESOLVER_IP}/d" $(brew --prefix)/etc/dnsmasq.conf
+            - echo "Removing resolver entry for .${LOCAL_CUSTOM_TLD}..."
+            - sudo rm -f /etc/resolver/${LOCAL_CUSTOM_TLD}
+            - echo "Restarting dnsmasq and mDNSResponder..."
+            - sudo brew services restart dnsmasq
+            - sudo killall -HUP mDNSResponder
+            - echo "Teardown complete. .${LOCAL_CUSTOM_TLD} TLD configuration has been removed."
+
+    test-dns:
+        desc: "Test DNS setup by pinging a sample subdomain"
+        cmds:
+            - echo "Testing DNS resolution for .${LOCAL_CUSTOM_TLD}..."
+            - ping -c 1 "nginx.random.${LOCAL_CUSTOM_TLD}" || echo "DNS resolution test failed."
+
+    run-nginx:
+        desc: "Run a local Docker container with Nginx to test ${LOCAL_CUSTOM_TLD} TLD"
+        cmds:
+            - echo "Running Nginx container on port 8088..."
+            - docker run --rm -p 8088:80 --name nginx -d nginx
+            - echo "Testing access to nginx.random.${LOCAL_CUSTOM_TLD}:8088..."
+            - curl -I "nginx.random.${LOCAL_CUSTOM_TLD}:8088"
+            - echo "Stopping Nginx container..."
+            - docker stop nginx
+
+    # run-workspace:
+    #     desc: "Run a local Docker container with Vite-React18 to test ${LOCAL_CUSTOM_TLD} TLD"
+    #     cmds:
+    #         - echo "Running workspace container on port 80..."
+    #         - docker run --rm -p 8000:80 --name workspace workspace:vite-react18
+    #         - echo "Testing access to nginx.random.${LOCAL_CUSTOM_TLD}:8088..."
+    #         - curl -I "http://random-workspace.${LOCAL_CUSTOM_TLD}:8088"
+    #         - echo "Stopping Nginx container..."
+    #         - docker stop nginx

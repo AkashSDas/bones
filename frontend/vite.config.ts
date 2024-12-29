@@ -1,12 +1,13 @@
 /// <reference types="vitest" />
+import importMetaUrlPlugin from "@codingame/esbuild-import-meta-url-plugin";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { visualizer } from "rollup-plugin-visualizer";
-import { type PluginOption, defineConfig } from "vite";
+import { type PluginOption, UserConfig, defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode }): UserConfig => {
     const plugins: PluginOption[] = [];
     const isDev = mode === "development";
 
@@ -34,6 +35,11 @@ export default defineConfig(({ mode }) => {
         resolve: {
             alias: {
                 "@": "/src",
+            },
+        },
+        optimizeDeps: {
+            esbuildOptions: {
+                plugins: [importMetaUrlPlugin as any],
             },
         },
         test: {
