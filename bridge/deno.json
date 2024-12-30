@@ -5,7 +5,8 @@
         "#ws/": "./src/websocket/",
 
         "@hono/hono": "jsr:@hono/hono@^4.6.13",
-        "@std/fs": "jsr:@std/fs@^1.0.5",
+        "@sigma/pty-ffi": "jsr:@sigma/pty-ffi@^0.26.3",
+        "@std/fs": "jsr:@std/fs@^1.0.8",
         "@std/path": "jsr:@std/path@^1.0.8",
         "@std/text": "jsr:@std/text@^1.0.8",
         "@std/uuid": "jsr:@std/uuid@^1.0.4",
