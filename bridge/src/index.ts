@@ -8,7 +8,6 @@ import {
     SupportedLSPSchema,
 } from "#ws/lsp.ts";
 import { IWebSocket } from "vscode-ws-jsonrpc";
-import { TerminalWs } from "#ws/terminal.ts";
 
 const app = new Hono();
 
@@ -36,11 +35,6 @@ app.get(
                         }
                         case "lsp": {
                             const instance = new LanguageServerWs(ws, parsed);
-                            await instance.handleWsRequest();
-                            break;
-                        }
-                        case "terminal": {
-                            const instance = new TerminalWs(ws, parsed);
                             await instance.handleWsRequest();
                             break;
                         }
