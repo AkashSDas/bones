@@ -1,6 +1,9 @@
 # Base image for Bridge service
 FROM bridge:1.0.0 AS bridge
 
+# Base image for Bridge v2 service
+FROM bridge-v2:1.0.0 AS bridge-v2
+
 # Starting with NodeJS image since it's Vite-React Workspace
 FROM node:20.8.0-bullseye-slim
 
@@ -21,6 +24,10 @@ COPY ./supervisord.conf /etc/supervisor/supervisord.conf
 # Copy Bridge and install Deno (same version as used in Bridge) to run Bridge
 COPY --from=bridge /usr/bridge /usr/bridge
 COPY --from=denoland/deno:bin-2.0.6 /deno /usr/local/bin/deno
+
+# Copy Bridge v2 and install Node (same version as used in Bridge v2) to run Bridge v2
+COPY --from=bridge-v2 /usr/bridge-v2 /usr/bridge-v2
+COPY --from=node:20.8.0-bullseye-slim /usr/local/bin/node /usr/local/bin/node
 
 # Exposed ports that user can use for their work
 EXPOSE 80
