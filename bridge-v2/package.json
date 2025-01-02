@@ -11,9 +11,9 @@
     "author": "",
     "license": "MIT",
     "dependencies": {
-        "@hocuspocus/server": "^2.15.0",
         "express": "^4.21.2",
-        "express-ws": "^5.0.2"
+        "express-ws": "^5.0.2",
+        "y-websocket": "^2.1.0"
     },
     "devDependencies": {
         "@types/express": "^5.0.0",
