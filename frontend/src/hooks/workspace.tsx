@@ -29,6 +29,8 @@ export function useWorkspaceURL(): {
     baseURL: string | null;
     bridgeURL: string | null;
     bridgeWsURL: string | null;
+    bridgeV2URL: string | null;
+    bridgeV2WsURL: string | null;
 } {
     const workspaceId = useWorkspaceStore((s) => s.workspace?.workspaceId);
 
@@ -38,9 +40,19 @@ export function useWorkspaceURL(): {
     );
 
     const baseURL = useMemo(() => (host ? `http://${host}` : null), [host]);
+
     const bridgeURL = useMemo(() => (host ? `http://${host}/_bridge` : null), [host]);
     const bridgeWsURL = useMemo(
         () => (host ? `ws://${host}/_bridge/ws` : null),
+        [host],
+    );
+
+    const bridgeV2URL = useMemo(
+        () => (host ? `http://${host}/_bridge_v2` : null),
+        [host],
+    );
+    const bridgeV2WsURL = useMemo(
+        () => (host ? `ws://${host}/_bridge_v2` : null),
         [host],
     );
 
@@ -48,6 +60,8 @@ export function useWorkspaceURL(): {
         baseURL,
         bridgeURL,
         bridgeWsURL,
+        bridgeV2URL,
+        bridgeV2WsURL,
     };
 }
 
