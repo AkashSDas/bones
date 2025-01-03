@@ -87,7 +87,7 @@ class PortMappingManager {
     async delete(
         internalPort: number,
         externalPort: number,
-        reloadNginx: boolean = true,
+        reloadNginx: boolean = true
     ): Promise<undefined | Error> {
         try {
             const absolutePath = await this.basePath();
@@ -114,7 +114,7 @@ class PortMappingManager {
     async create(
         internalPort: number,
         externalPort: number,
-        reloadNginx: boolean = true,
+        reloadNginx: boolean = true
     ): Promise<undefined | Error> {
         try {
             const absolutePath = await this.basePath();
@@ -125,13 +125,13 @@ class PortMappingManager {
 
             if (externalPort == 80) {
                 const data = encoder.encode(
-                    this.buildPort80NginxConfig(internalPort),
+                    this.buildPort80NginxConfig(internalPort)
                 );
 
                 await Deno.writeFile(filePath, data, { createNew: true });
             } else {
                 const data = encoder.encode(
-                    this.buildOtherPortNginxConfig(internalPort, externalPort),
+                    this.buildOtherPortNginxConfig(internalPort, externalPort)
                 );
 
                 await Deno.writeFile(filePath, data, { createNew: true });
@@ -221,6 +221,22 @@ class PortMappingManager {
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                 proxy_set_header X-Forwarded-Proto $scheme;
             }
+
+            # Bridge service routing
+            location /_bridge_v2 {
+                rewrite ^/_bridge_v2(.*)$ $1 break;
+        
+                proxy_pass http://127.0.0.1:4001;
+                proxy_http_version 1.1;
+        
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+        
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
         }
         `;
     }
@@ -228,7 +244,7 @@ class PortMappingManager {
     /** Build nginx config for internal-external port where external port is not 80 */
     private buildOtherPortNginxConfig(
         internalPort: number,
-        externalPort: number,
+        externalPort: number
     ): string {
         return `
         server {
