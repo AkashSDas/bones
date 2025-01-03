@@ -1,45 +1,122 @@
 import * as monaco from "monaco-editor";
+import * as Y from "yjs";
 import getConfigurationServiceOverride from "@codingame/monaco-vscode-configuration-service-override";
 import getLanguagesServiceOverride from "@codingame/monaco-vscode-languages-service-override";
 import "@codingame/monaco-vscode-theme-defaults-default-extension";
 import Editor, { loader } from "@monaco-editor/react";
 import { shikiToMonaco } from "@shikijs/monaco";
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createHighlighter } from "shiki";
-// We need to import this so monaco-languageclient can use vscode-api
 import "vscode/localExtensionHost";
 import { initialize } from "vscode/services";
+import { MonacoBinding } from "y-monaco";
+import { WebsocketProvider } from "y-websocket";
 
+import { useWorkspaceURL } from "@/hooks/workspace";
 import { useWorkspaceStore } from "@/store/workspace";
 import { getEditorLanguage } from "@/utils/workspace-editor";
 import { type File } from "@/utils/workspace-file-tree";
-
-export type WorkerLoader = () => Worker;
 
 self.MonacoEnvironment = {
     getWorker: (_moduleId, _label) => new editorWorker(),
 };
 
-loader.config({ monaco: monaco });
+loader.config({ monaco });
 
 (async function () {
     await initialize({
         ...getLanguagesServiceOverride(),
         ...getConfigurationServiceOverride(),
     }).then(() => {
-        loader.init().then(/* ... */);
+        loader.init();
     });
 })();
 
 export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
-    const { loadingFiles, files, setActivePaneId } = useWorkspaceStore();
+    const { loadingFiles, setActivePaneId } = useWorkspaceStore();
+    const { bridgeV2WsURL } = useWorkspaceURL();
+    const providerRef = useRef<WebsocketProvider | null>(null);
+    const bindingRef = useRef<MonacoBinding | null>(null);
 
-    const language = useMemo(
-        function () {
-            return getEditorLanguage(file.name);
+    const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(
+        null,
+    );
+
+    const language = useMemo(() => getEditorLanguage(file.name), [file]);
+
+    useEffect(
+        function setupCollaboration() {
+            const yDoc = new Y.Doc();
+
+            (async function () {
+                if (!monaco?.editor || !bridgeV2WsURL || !editor) return;
+
+                const model = editor.getModel();
+                const roomId = file.absolutePath;
+
+                if (!model) return;
+
+                const wsProvider = new WebsocketProvider(
+                    `${bridgeV2WsURL}/code-file-collaboration`,
+                    roomId,
+                    yDoc,
+                    {
+                        maxBackoffTime: 25000,
+                    },
+                );
+
+                providerRef.current = wsProvider;
+
+                const yText = yDoc.getText();
+
+                wsProvider.on("status", ({ status }) => {
+                    console.log(`Connection status for ${roomId}:`, status);
+                });
+
+                wsProvider.on("sync", (isSynced) => {
+                    console.log(`Document synced for ${roomId}:`, isSynced);
+
+                    if (
+                        isSynced &&
+                        model &&
+                        model.getValue() === "" &&
+                        yText.toString() !== ""
+                    ) {
+                        model.setValue(yText.toString());
+                    }
+                });
+
+                try {
+                    const binding = new MonacoBinding(
+                        yText,
+                        model,
+                        new Set([editor]),
+                        wsProvider.awareness,
+                    );
+
+                    providerRef.current.connect();
+                    bindingRef.current = binding;
+                } catch (error) {
+                    console.error("Error creating Monaco binding:", error);
+                }
+            })();
+
+            return function setupCollaboration() {
+                if (bindingRef.current) {
+                    bindingRef.current.destroy();
+                    bindingRef.current = null;
+                }
+
+                if (providerRef.current) {
+                    providerRef.current.destroy();
+                    providerRef.current = null;
+                }
+
+                yDoc.destroy();
+            };
         },
-        [file],
+        [bridgeV2WsURL, file.absolutePath, editor],
     );
 
     return (
@@ -50,14 +127,14 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
             language={language}
             loading={loadingFiles.includes(file.absolutePath)}
             keepCurrentModel
-            defaultValue={files[file.absolutePath] ?? ""}
-            value={files[file.absolutePath] ?? ""}
             defaultPath={file.absolutePath}
             beforeMount={async (monaco) => {
                 monaco.editor.onDidCreateEditor((editor) => {
-                    editor.onDidFocusEditorText(function changeActivePane() {
+                    editor.onDidFocusEditorText(() => {
                         setActivePaneId(paneId);
                     });
+
+                    setEditor(editor as unknown as monaco.editor.IStandaloneCodeEditor);
                 });
 
                 const highlighter = await createHighlighter({
@@ -78,26 +155,26 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
                     ],
                 });
 
-                monaco.languages.register({ id: "jsx" });
-                monaco.languages.register({ id: "tsx", extensions: ["tsx"] });
-                monaco.languages.register({ id: "html" });
-                monaco.languages.register({ id: "css" });
-                monaco.languages.register({ id: "toml" });
-                monaco.languages.register({ id: "yaml" });
-                monaco.languages.register({ id: "json" });
-                monaco.languages.register({ id: "python" });
-                monaco.languages.register({ id: "go" });
-                monaco.languages.register({ id: "json", extensions: ["json"] });
-                monaco.languages.register({ id: "typescript", extensions: ["ts"] });
-                monaco.languages.register({ id: "javascript" });
-                monaco.languages.register({ id: "markdown" });
+                const languages = [
+                    { id: "jsx" },
+                    { id: "tsx", extensions: ["tsx"] },
+                    { id: "html" },
+                    { id: "css" },
+                    { id: "toml" },
+                    { id: "yaml" },
+                    { id: "json", extensions: ["json"] },
+                    { id: "python" },
+                    { id: "go" },
+                    { id: "typescript", extensions: ["ts"] },
+                    { id: "javascript" },
+                    { id: "markdown" },
+                ];
 
+                languages.forEach((lang) => monaco.languages.register(lang));
                 shikiToMonaco(highlighter, monaco);
             }}
             options={{
-                minimap: {
-                    enabled: false,
-                },
+                minimap: { enabled: false },
                 fontSize: 14,
                 cursorStyle: "line",
                 fontFamily: "Fira Code",
@@ -105,9 +182,7 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
                 cursorSmoothCaretAnimation: "on",
                 lineNumbers: "on",
                 showFoldingControls: "mouseover",
-                stickyScroll: {
-                    enabled: true,
-                },
+                stickyScroll: { enabled: true },
                 fixedOverflowWidgets: true,
                 autoClosingBrackets: "always",
                 autoClosingQuotes: "always",
