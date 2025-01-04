@@ -13,6 +13,8 @@ import { initialize } from "vscode/services";
 import { MonacoBinding } from "y-monaco";
 import { WebsocketProvider } from "y-websocket";
 
+import { Loader } from "@/components/shared/Loader";
+import { useAuth } from "@/hooks/auth";
 import { useWorkspaceURL } from "@/hooks/workspace";
 import { useWorkspaceStore } from "@/store/workspace";
 import { getEditorLanguage } from "@/utils/workspace-editor";
@@ -33,11 +35,23 @@ loader.config({ monaco });
     });
 })();
 
+const COLORS = [
+    "#f44336",
+    "#e91e63",
+    "#9c27b0",
+    "#673ab7",
+    "#3f51b5",
+    "#2196f3",
+    "#03a9f4",
+    "#00bcd4",
+];
+
 export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
-    const { loadingFiles, setActivePaneId } = useWorkspaceStore();
+    const { loadingFiles, files, setActivePaneId } = useWorkspaceStore();
     const { bridgeV2WsURL } = useWorkspaceURL();
     const providerRef = useRef<WebsocketProvider | null>(null);
     const bindingRef = useRef<MonacoBinding | null>(null);
+    const { user, account } = useAuth();
 
     const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(
         null,
@@ -45,12 +59,22 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
 
     const language = useMemo(() => getEditorLanguage(file.name), [file]);
 
+    const userColor = useMemo(() => {
+        return COLORS[Math.floor(Math.random() * COLORS.length)];
+    }, []);
+
     useEffect(
         function setupCollaboration() {
             const yDoc = new Y.Doc();
 
             (async function () {
-                if (!monaco?.editor || !bridgeV2WsURL || !editor) return;
+                if (
+                    !monaco?.editor ||
+                    !bridgeV2WsURL ||
+                    !editor ||
+                    !files[file.absolutePath]
+                )
+                    return;
 
                 const model = editor.getModel();
                 const roomId = file.absolutePath;
@@ -68,14 +92,26 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
 
                 providerRef.current = wsProvider;
 
-                const yText = yDoc.getText();
+                const yText = yDoc.getText(roomId);
 
                 wsProvider.on("status", ({ status }) => {
                     console.log(`Connection status for ${roomId}:`, status);
                 });
 
+                const awareness = wsProvider.awareness;
+
+                awareness.setLocalStateField("user", {
+                    name: user?.username ?? account?.accountName ?? "Unknown",
+                    color: userColor,
+                });
+
                 wsProvider.on("sync", (isSynced) => {
                     console.log(`Document synced for ${roomId}:`, isSynced);
+
+                    // Initialize the document with content only if it's empty
+                    if (isSynced && yText.length === 0) {
+                        yText.insert(0, files[file.absolutePath]);
+                    }
 
                     if (
                         isSynced &&
@@ -92,7 +128,7 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
                         yText,
                         model,
                         new Set([editor]),
-                        wsProvider.awareness,
+                        awareness,
                     );
 
                     providerRef.current.connect();
@@ -102,7 +138,7 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
                 }
             })();
 
-            return function setupCollaboration() {
+            return function cleanup() {
                 if (bindingRef.current) {
                     bindingRef.current.destroy();
                     bindingRef.current = null;
@@ -116,8 +152,16 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
                 yDoc.destroy();
             };
         },
-        [bridgeV2WsURL, file.absolutePath, editor],
+        [bridgeV2WsURL, file.absolutePath, editor, files],
     );
+
+    if (files[file.absolutePath] === undefined) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full">
+                <Loader />
+            </div>
+        );
+    }
 
     return (
         <Editor
@@ -128,6 +172,9 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
             loading={loadingFiles.includes(file.absolutePath)}
             keepCurrentModel
             defaultPath={file.absolutePath}
+            onMount={async (editor, monaco) => {
+                editor.setValue(files[file.absolutePath]);
+            }}
             beforeMount={async (monaco) => {
                 monaco.editor.onDidCreateEditor((editor) => {
                     editor.onDidFocusEditorText(() => {
