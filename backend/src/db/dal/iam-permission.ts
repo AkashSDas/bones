@@ -137,7 +137,7 @@ class IAMPermissionDAL extends BaseDAL {
     // Find
     // ==================================
 
-    async findWorkspacePermission(
+    async findWorkspacePermissionMappedToUser(
         accountPk: AccountPk,
         userPk: UserPk,
         workspacePk: WorkspacePk,
@@ -156,6 +156,26 @@ class IAMPermissionDAL extends BaseDAL {
                     eq(iamPermission.isServiceWide, false),
                     eq(iamPermission.workspaceId, workspacePk),
                     eq(iamPermissionUser.userId, userPk),
+                ),
+            )
+            .limit(1);
+
+        return result.length === 0 ? null : [result[0].id, result[0]];
+    }
+
+    async findWorkspacePermission(
+        accountPk: AccountPk,
+        workspacePk: WorkspacePk,
+    ): Promise<[IAMPermissionPk, IAMPermissionClient] | null> {
+        const result = await this.db
+            .select(this.permissionSelect)
+            .from(iamPermission)
+            .where(
+                and(
+                    eq(iamPermission.accountId, accountPk),
+                    eq(iamPermission.serviceType, IAM_SERVICE.WORKSPACE),
+                    eq(iamPermission.isServiceWide, false),
+                    eq(iamPermission.workspaceId, workspacePk),
                 ),
             )
             .limit(1);

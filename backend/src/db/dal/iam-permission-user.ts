@@ -56,8 +56,14 @@ class IAMPermissionUserDAL extends BaseDAL {
             throw new BadRequestError({ message: "Some users do not exist" });
         }
 
-        const update = Array.from(insertUsers)
-            .map((userId) => {
+        type NewIAMPermissionUser = {
+            permissionId: IAMPermissionPk;
+            userId: UserPk;
+            accessType: IAMPermissionAccessType;
+        };
+
+        const update: NewIAMPermissionUser[] = Array.from(insertUsers)
+            .map((userId): NewIAMPermissionUser | null => {
                 const uid = foundUsers.find((u) => u.userId === userId)?.id;
 
                 if (uid === undefined) {
@@ -70,7 +76,7 @@ class IAMPermissionUserDAL extends BaseDAL {
                     accessType,
                 };
             })
-            .filter((u) => u !== null);
+            .filter((u) => u !== null) as NewIAMPermissionUser[];
 
         if (update.length === 0) {
             return;
