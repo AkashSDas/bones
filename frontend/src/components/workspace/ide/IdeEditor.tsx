@@ -172,9 +172,6 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
             loading={loadingFiles.includes(file.absolutePath)}
             keepCurrentModel
             defaultPath={file.absolutePath}
-            onMount={async (editor, monaco) => {
-                editor.setValue(files[file.absolutePath]);
-            }}
             beforeMount={async (monaco) => {
                 monaco.editor.onDidCreateEditor((editor) => {
                     editor.onDidFocusEditorText(() => {
