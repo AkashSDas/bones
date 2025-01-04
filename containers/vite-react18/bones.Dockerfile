@@ -13,7 +13,7 @@ FROM node:20.8.0-bullseye-slim
 
 # Install required dependencies for workspace setup/execution
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends nginx supervisor curl neovim lsof \
+    && apt-get install -y --no-install-recommends nginx supervisor curl neovim lsof python3 make g++ \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the Nginx and Supervisor configuration files
