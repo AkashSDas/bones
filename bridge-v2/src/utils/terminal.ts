@@ -24,6 +24,20 @@ class TerminalManager {
         this.terminals.splice(index, 1);
     }
 
+    runCommand(id: string, command: string) {
+        const terminal = this.terminals.find((t) => t.id === id);
+        if (!terminal) return;
+
+        terminal.ptyInstance.write(command);
+    }
+
+    resize(id: string, cols: number, rows: number) {
+        const terminal = this.terminals.find((t) => t.id === id);
+        if (!terminal) return;
+
+        terminal.ptyInstance.resize(cols, rows);
+    }
+
     create(ws: WebSocket) {
         const id = uuid();
         const ptyInstance = pty.spawn(SHELL, [], {
@@ -37,7 +51,7 @@ class TerminalManager {
             ws.send(
                 JSON.stringify({
                     type: "terminal",
-                    event: "terminalResponse",
+                    event: "runCommandResponse",
                     payload: {
                         id,
                         data,

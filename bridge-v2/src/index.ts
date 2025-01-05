@@ -40,6 +40,22 @@ app.ws("/ws", (websocket, request) => {
                         );
                     } else if (parsed.event === "deleteTerminal") {
                         terminalManager.delete(parsed.payload);
+                    } else if (parsed.event === "runCommand") {
+                        terminalManager.runCommand(
+                            parsed.payload.id,
+                            parsed.payload.command
+                        );
+                    } else if (parsed.event === "resize") {
+                        const cols = parseFloat(parsed.payload.cols);
+                        const rows = parseFloat(parsed.payload.rows);
+
+                        if (!Number.isNaN(rows) && !Number.isNaN(cols)) {
+                            terminalManager.resize(
+                                parsed.payload.id,
+                                parsed.payload.cols,
+                                parsed.payload.rows
+                            );
+                        }
                     }
                     break;
                 }
