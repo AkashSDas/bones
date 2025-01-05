@@ -6,7 +6,7 @@ import { useWorkspaceTerminal } from "@/hooks/workspace";
 import { useWorkspaceTerminalStore } from "@/store/workspace-terminal";
 import { cn } from "@/utils/styles";
 
-import { ActiveTerminalContent } from "./ActiveTerminalContent";
+import { Terminal } from "./Terminal";
 
 export function TerminalPane() {
     const { getTerminals, createTerminal, deleteTerminal } = useWorkspaceTerminal();
@@ -19,8 +19,21 @@ export function TerminalPane() {
 
     return (
         <div className="flex h-full">
-            <div className="flex-1 h-full border-r border-r-grey-900">
-                <ActiveTerminalContent />
+            <div className="relative flex-1 h-full border-r border-r-grey-900">
+                {terminals.map((terminal) => {
+                    const isActive = activeTerminal === terminal.id;
+
+                    return (
+                        <div
+                            key={terminal.id}
+                            className={cn(
+                                isActive ? "visible h-full" : "invisible h-0",
+                            )}
+                        >
+                            <Terminal terminalId={terminal.id} />
+                        </div>
+                    );
+                })}
             </div>
 
             <div className="flex flex-col h-full px-1 py-2 min-w-60">
