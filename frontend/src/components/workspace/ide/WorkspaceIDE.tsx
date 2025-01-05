@@ -15,7 +15,7 @@ import {
 import { useWorkspaceBridgeConnection } from "@/hooks/workspace";
 import { useWorkspaceStore } from "@/store/workspace";
 import {
-    TaskWindowPane,
+    type TaskWindowPane,
     useWorkspaceTaskWindowStore,
 } from "@/store/workspace-task-window";
 import { cn } from "@/utils/styles";
@@ -24,6 +24,7 @@ import { Dock } from "./Dock";
 import { FileTree } from "./FileTree";
 import { LSPExtensions } from "./LSPExtensions";
 import { MainSection } from "./MainSection";
+import { TaskWindowPane as TaskWindow } from "./TaskWindowPane";
 
 const ICON_MAPPING: Record<TaskWindowPane["id"], React.JSX.Element> = {
     browserConsole: <LogsIcon size={16} />,
@@ -119,6 +120,8 @@ export function WorkspaceIDE() {
                                         </TooltipProvider>
                                     </span>
                                 </div>
+
+                                <TaskWindow />
                             </ResizablePanel>
                         </ResizablePanelGroup>
                     </div>
