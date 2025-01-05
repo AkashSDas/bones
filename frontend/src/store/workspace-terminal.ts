@@ -9,6 +9,7 @@ type TerminalInfo = {
 
 type WorkspaceTerminalState = {
     terminals: TerminalInfo[];
+    setTerminals: (terminals: TerminalInfo[]) => void;
     addTerminal: (item: TerminalInfo) => void;
     removeTerminal: (id: TerminalId) => void;
 };
@@ -19,6 +20,9 @@ export const useWorkspaceTerminalStore = create<WorkspaceTerminalState>()(
             function (set, get) {
                 return {
                     terminals: [],
+                    setTerminals(terminals) {
+                        set({ terminals });
+                    },
                     addTerminal(item) {
                         set({ terminals: [...get().terminals, item] });
                     },
