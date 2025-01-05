@@ -597,6 +597,8 @@ export function useWorkspaceBridgeV2Connection() {
     const { bridgeV2WsURL } = useWorkspaceURL();
     const { setBridge2Socket, setConnection2Status } = useWorkspaceBridgeStore();
 
+    const { mapRequestToHandler: mapTerminalRequestToHandler } = useWorkspaceTerminal();
+
     const handleOpen = useCallback(
         function handleBridge2Open() {
             setConnection2Status("connected");
@@ -620,6 +622,10 @@ export function useWorkspaceBridgeV2Connection() {
 
             if (parsed.type && parsed.event) {
                 switch (parsed.type) {
+                    case "terminal": {
+                        mapTerminalRequestToHandler(parsed);
+                        break;
+                    }
                     default:
                         break;
                 }
