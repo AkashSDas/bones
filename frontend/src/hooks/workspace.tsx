@@ -1,3 +1,4 @@
+import { Terminal } from "@xterm/xterm";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import ReconnectingWebSocket from "reconnecting-websocket";
 
@@ -5,7 +6,10 @@ import { useWorkspaceStore } from "@/store/workspace";
 import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
 import { useWorkspaceFileTreeStore } from "@/store/workspace-file-tree";
 import { useWorkspaceLSPStore } from "@/store/workspace-lsp";
-import { useWorkspaceTerminalStore } from "@/store/workspace-terminal";
+import {
+    createTerminalInstance,
+    useWorkspaceTerminalStore,
+} from "@/store/workspace-terminal";
 import {
     CreateFileOrFolderResponseSchema,
     DeleteFilesOrFoldersResponseSchema,
@@ -25,6 +29,7 @@ import {
 import {
     CreateTerminalResponseSchema,
     ListTerminalsResponseSchema,
+    RunCommandTerminalResponseSchema,
     TerminalEventSchema,
     terminalManager,
 } from "@/utils/workspace-terminal";
@@ -314,7 +319,7 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
 export function useWorkspaceTerminal() {
     const { bridgeV2WsURL } = useWorkspaceURL();
     const { bridge2Socket } = useWorkspaceBridgeStore();
-    const { setTerminals, removeTerminal, addTerminal } = useWorkspaceTerminalStore();
+    const { setTerminals, addTerminal, terminals } = useWorkspaceTerminalStore();
     const { toast } = useToast();
 
     // ==========================================
@@ -358,9 +363,10 @@ export function useWorkspaceTerminal() {
 
             if (parsed.success) {
                 setTerminals(
-                    parsed.data.payload.map((i) => ({
+                    parsed.data.payload.map((id) => ({
                         name: "terminal",
-                        id: i,
+                        id: id,
+                        xtermInstance: createTerminalInstance(),
                     })),
                 );
             }
@@ -376,6 +382,7 @@ export function useWorkspaceTerminal() {
                 addTerminal({
                     name: "terminal",
                     id: parsed.data.payload,
+                    xtermInstance: createTerminalInstance(),
                 });
             } else {
                 toast({
@@ -384,8 +391,32 @@ export function useWorkspaceTerminal() {
                 });
             }
         },
-        [setTerminals],
+        [addTerminal],
     );
+
+    const terminalsRef = useRef(terminals);
+
+    useEffect(() => {
+        // Update the ref whenever terminals changes, directly using terminals from
+        // zustand store was not updating terminals in the useCallback even if it's in
+        // the dependency array
+        terminalsRef.current = terminals;
+    }, [terminals]);
+
+    const handleRunCommandResponse = useCallback(function (
+        data: Record<string, unknown>,
+    ) {
+        const parsed = RunCommandTerminalResponseSchema.safeParse(data);
+
+        if (parsed.success) {
+            const { id, data } = parsed.data.payload;
+            const terminal = terminalsRef.current.find((t) => t.id === id);
+
+            if (terminal && typeof data === "string") {
+                terminal.xtermInstance.write(data);
+            }
+        }
+    }, []);
 
     const mapRequestToHandler = useCallback(
         function (data: Record<string, unknown>) {
@@ -398,11 +429,18 @@ export function useWorkspaceTerminal() {
                 case "createTerminal":
                     handleCreateTerminalResponse(data);
                     break;
+                case "runCommandResponse":
+                    handleRunCommandResponse(data);
+                    break;
                 default:
                     break;
             }
         },
-        [handleListTerminalsResponse, handleCreateTerminalResponse],
+        [
+            handleListTerminalsResponse,
+            handleCreateTerminalResponse,
+            handleRunCommandResponse,
+        ],
     );
 
     return {
