@@ -5,6 +5,7 @@ import { useWorkspaceStore } from "@/store/workspace";
 import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
 import { useWorkspaceFileTreeStore } from "@/store/workspace-file-tree";
 import { useWorkspaceLSPStore } from "@/store/workspace-lsp";
+import { useWorkspaceTerminalStore } from "@/store/workspace-terminal";
 import {
     CreateFileOrFolderResponseSchema,
     DeleteFilesOrFoldersResponseSchema,
@@ -21,6 +22,12 @@ import {
     type SupportedLSP,
     lspManger,
 } from "@/utils/workspace-lsp";
+import {
+    CreateTerminalResponseSchema,
+    ListTerminalsResponseSchema,
+    TerminalEventSchema,
+    terminalManager,
+} from "@/utils/workspace-terminal";
 
 import { useToast } from "./toast";
 
@@ -52,7 +59,7 @@ export function useWorkspaceURL(): {
         [host],
     );
     const bridgeV2WsURL = useMemo(
-        () => (host ? `ws://${host}/_bridge_v2` : null),
+        () => (host ? `ws://${host}/_bridge_v2/ws` : null),
         [host],
     );
 
@@ -304,6 +311,108 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
     };
 }
 
+export function useWorkspaceTerminal() {
+    const { bridgeV2WsURL } = useWorkspaceURL();
+    const { bridge2Socket } = useWorkspaceBridgeStore();
+    const { setTerminals, removeTerminal, addTerminal } = useWorkspaceTerminalStore();
+    const { toast } = useToast();
+
+    // ==========================================
+    // Send request
+    // ==========================================
+
+    const getTerminals = useCallback(
+        function () {
+            if (bridge2Socket && bridgeV2WsURL) {
+                bridge2Socket.send(JSON.stringify(terminalManager.list()));
+            }
+        },
+        [bridgeV2WsURL, bridge2Socket],
+    );
+
+    const createTerminal = useCallback(
+        function () {
+            if (bridge2Socket && bridgeV2WsURL) {
+                bridge2Socket.send(JSON.stringify(terminalManager.create()));
+            }
+        },
+        [bridgeV2WsURL, bridge2Socket],
+    );
+
+    const deleteTerminal = useCallback(
+        function (id: string) {
+            if (bridge2Socket && bridgeV2WsURL) {
+                bridge2Socket.send(JSON.stringify(terminalManager.delete(id)));
+            }
+        },
+        [bridgeV2WsURL, bridge2Socket],
+    );
+
+    // ==========================================
+    // Handle response
+    // ==========================================
+
+    const handleListTerminalsResponse = useCallback(
+        function (data: Record<string, unknown>) {
+            const parsed = ListTerminalsResponseSchema.safeParse(data);
+
+            if (parsed.success) {
+                setTerminals(
+                    parsed.data.payload.map((i) => ({
+                        name: "terminal",
+                        id: i,
+                    })),
+                );
+            }
+        },
+        [setTerminals],
+    );
+
+    const handleCreateTerminalResponse = useCallback(
+        function (data: Record<string, unknown>) {
+            const parsed = CreateTerminalResponseSchema.safeParse(data);
+
+            if (parsed.success) {
+                addTerminal({
+                    name: "terminal",
+                    id: parsed.data.payload,
+                });
+            } else {
+                toast({
+                    title: "Failed to create terminal",
+                    variant: "error",
+                });
+            }
+        },
+        [setTerminals],
+    );
+
+    const mapRequestToHandler = useCallback(
+        function (data: Record<string, unknown>) {
+            const { data: event } = TerminalEventSchema.safeParse(data.event);
+
+            switch (event) {
+                case "getTerminals":
+                    handleListTerminalsResponse(data);
+                    break;
+                case "createTerminal":
+                    handleCreateTerminalResponse(data);
+                    break;
+                default:
+                    break;
+            }
+        },
+        [handleListTerminalsResponse, handleCreateTerminalResponse],
+    );
+
+    return {
+        mapRequestToHandler,
+        getTerminals,
+        createTerminal,
+        deleteTerminal,
+    };
+}
+
 export function useWorkspaceLSP() {
     const { bridgeWsURL } = useWorkspaceURL();
     const { bridgeSocket } = useWorkspaceBridgeStore();
@@ -480,5 +589,67 @@ export function useWorkspaceBridgeConnection() {
             }
         },
         [bridgeWsURL, setBridgeSocket, handleClose, handleMessage, handleOpen],
+    );
+}
+
+/** Handle the workspace bridge v2 connection. Should be used in one place only */
+export function useWorkspaceBridgeV2Connection() {
+    const { bridgeV2WsURL } = useWorkspaceURL();
+    const { setBridge2Socket, setConnection2Status } = useWorkspaceBridgeStore();
+
+    const handleOpen = useCallback(
+        function handleBridge2Open() {
+            setConnection2Status("connected");
+        },
+        [setConnection2Status],
+    );
+
+    const handleClose = useCallback(
+        function handleBridge2Close() {
+            setConnection2Status("disconnected");
+        },
+        [setConnection2Status],
+    );
+
+    const handleMessage = useCallback(function handleBridge2Message(evt: MessageEvent) {
+        console.log("Bridge 2 connection message", { evt });
+
+        try {
+            const { data } = evt;
+            const parsed: Record<string, unknown> = JSON.parse(data);
+
+            if (parsed.type && parsed.event) {
+                switch (parsed.type) {
+                    default:
+                        break;
+                }
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }, []);
+
+    useEffect(
+        function setupBridge2Connection() {
+            if (bridgeV2WsURL) {
+                const newSocket = new ReconnectingWebSocket(bridgeV2WsURL, [], {
+                    maxRetries: 10,
+                });
+
+                newSocket.onopen = handleOpen;
+                newSocket.onclose = handleClose;
+                newSocket.onmessage = handleMessage;
+
+                setBridge2Socket(newSocket);
+
+                return function cleanup() {
+                    newSocket.onopen = null;
+                    newSocket.onclose = null;
+                    newSocket.onmessage = null;
+                    newSocket.close();
+                };
+            }
+        },
+        [bridgeV2WsURL, setBridge2Socket, handleClose, handleMessage, handleOpen],
     );
 }
