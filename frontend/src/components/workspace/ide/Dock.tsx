@@ -26,6 +26,7 @@ import {
 import { useWorkspaceStore } from "@/store/workspace";
 import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
 import { DOCK_ITEMS, DockItemKey, useWorkspaceDockStore } from "@/store/workspace-dock";
+import { useWorkspaceTaskWindowStore } from "@/store/workspace-task-window";
 import { cn } from "@/utils/styles";
 
 export function Dock() {
@@ -33,6 +34,7 @@ export function Dock() {
 
     useEffect(function disallowLayoutChangeOnInitLoad() {
         stopLayoutChange();
+        // @eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const sensors = useSensors(
@@ -127,6 +129,8 @@ function SortableItem(props: {
 
     const { setContextWindow } = useWorkspaceStore();
 
+    const { setShow, setActivePaneId } = useWorkspaceTaskWindowStore();
+
     function handleClick() {
         switch (props.id) {
             case "files": {
@@ -151,6 +155,11 @@ function SortableItem(props: {
             }
             case "lockLayout": {
                 toggleAllowLayoutChange();
+                break;
+            }
+            case "terminal": {
+                setActivePaneId("terminalSessions");
+                setShow(true);
                 break;
             }
         }
