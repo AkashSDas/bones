@@ -12,7 +12,10 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/shared/Tooltip";
-import { useWorkspaceBridgeConnection } from "@/hooks/workspace";
+import {
+    useWorkspaceBridgeConnection,
+    useWorkspaceBridgeV2Connection,
+} from "@/hooks/workspace";
 import { useWorkspaceStore } from "@/store/workspace";
 import {
     type TaskWindowPane,
@@ -33,6 +36,8 @@ const ICON_MAPPING: Record<TaskWindowPane["id"], React.JSX.Element> = {
 
 export function WorkspaceIDE() {
     useWorkspaceBridgeConnection();
+    useWorkspaceBridgeV2Connection();
+
     const contextWindow = useWorkspaceStore((s) => s.contextWindow);
     const { panes, activePaneId, setActivePaneId, setShow, show } =
         useWorkspaceTaskWindowStore();
