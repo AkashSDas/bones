@@ -5,7 +5,7 @@ import { terminalManager } from "./utils/terminal";
 
 const { app } = expressWebsockets(express());
 
-app.ws("/code-file-collaboration/*", (websocket, request) => {
+app.ws("/ws/code-file-collaboration/*", (websocket, request) => {
     const filePath = request.params[0];
 
     if (filePath) {
@@ -13,7 +13,7 @@ app.ws("/code-file-collaboration/*", (websocket, request) => {
     }
 });
 
-app.ws("/terminal", (websocket, request) => {
+app.ws("/ws", (websocket, request) => {
     websocket.on("message", (data) => {
         try {
             const parsed = JSON.parse(data.toString());
