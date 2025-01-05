@@ -12,6 +12,9 @@ type WorkspaceTerminalState = {
     setTerminals: (terminals: TerminalInfo[]) => void;
     addTerminal: (item: TerminalInfo) => void;
     removeTerminal: (id: TerminalId) => void;
+
+    activeTerminal: TerminalId | null;
+    setActiveTerminal: (id: TerminalId | null) => void;
 };
 
 export const useWorkspaceTerminalStore = create<WorkspaceTerminalState>()(
@@ -21,15 +24,33 @@ export const useWorkspaceTerminalStore = create<WorkspaceTerminalState>()(
                 return {
                     terminals: [],
                     setTerminals(terminals) {
-                        set({ terminals });
+                        let activeTerminal: null | TerminalId = null;
+
+                        if (Array.isArray(terminals) && terminals.length > 0) {
+                            activeTerminal = terminals[0].id;
+                        }
+
+                        set({ terminals, activeTerminal });
                     },
                     addTerminal(item) {
-                        set({ terminals: [...get().terminals, item] });
+                        set({
+                            terminals: [...get().terminals, item],
+                            activeTerminal: item.id,
+                        });
                     },
                     removeTerminal(id) {
+                        const newTerminals = get().terminals.filter((i) => i.id != id);
+
                         set({
-                            terminals: [...get().terminals.filter((i) => i.id != id)],
+                            terminals: newTerminals,
+                            activeTerminal:
+                                newTerminals.length > 0 ? newTerminals[0].id : null,
                         });
+                    },
+
+                    activeTerminal: null,
+                    setActiveTerminal(id) {
+                        set({ activeTerminal: id });
                     },
                 };
             },
