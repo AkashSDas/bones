@@ -104,6 +104,14 @@ body {
     @apply !shadow-[0_0_0_1px_theme(colors.brand.500)];
 }
 
+.xterm {
+    @apply px-2 pt-2;
+}
+
+.xterm .xterm-viewport {
+    @apply pb-8;
+}
+
 /* ======================================== */
 /* Fonts */
 /* ======================================== */
