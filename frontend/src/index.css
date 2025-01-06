@@ -105,11 +105,7 @@ body {
 }
 
 .xterm {
-    @apply px-2 pt-2;
-}
-
-.xterm .xterm-viewport {
-    @apply pb-8;
+    @apply px-2 py-2;
 }
 
 /* ======================================== */
