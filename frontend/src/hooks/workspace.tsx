@@ -1,4 +1,3 @@
-import { Terminal } from "@xterm/xterm";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import ReconnectingWebSocket from "reconnecting-websocket";
 
@@ -364,7 +363,7 @@ export function useWorkspaceTerminal() {
             if (parsed.success) {
                 setTerminals(
                     parsed.data.payload.map((id) => ({
-                        name: "terminal",
+                        name: "Terminal",
                         id: id,
                         xtermInstance: createTerminalInstance(),
                     })),
@@ -380,7 +379,7 @@ export function useWorkspaceTerminal() {
 
             if (parsed.success) {
                 addTerminal({
-                    name: "terminal",
+                    name: "Terminal",
                     id: parsed.data.payload,
                     xtermInstance: createTerminalInstance(),
                 });
