@@ -26,6 +26,7 @@ export function TerminalPane() {
 
     return (
         <div className="flex h-full">
+            {/* Terminal Content Area */}
             <div className="relative flex-1 h-full border-r border-r-grey-900">
                 {terminals.map((terminal) => {
                     const isActive = activeTerminal === terminal.id;
@@ -34,15 +35,19 @@ export function TerminalPane() {
                         <div
                             key={terminal.id}
                             className={cn(
-                                isActive ? "visible h-full" : "invisible h-0",
+                                "absolute w-full h-full",
+                                isActive
+                                    ? "z-10 opacity-100 visible"
+                                    : "z-0 opacity-0 invisible",
                             )}
                         >
-                            <Terminal key={terminal.id} terminalId={terminal.id} />
+                            <Terminal terminalId={terminal.id} />
                         </div>
                     );
                 })}
             </div>
 
+            {/* Terminal List Sidebar */}
             <div className="flex flex-col h-full px-1 py-2 min-w-60">
                 <Button
                     variant="secondary"
@@ -62,16 +67,19 @@ export function TerminalPane() {
                         )}
                     >
                         <TerminalIcon size={16} />
-                        <span className="flex-1 text-start">{terminal.name}</span>
-                        <button
-                            className="h-7 w-7"
-                            onClick={() => {
+                        <span className="flex-1 text-start">
+                            {terminal.name} {terminal.id}
+                        </span>
+                        <span
+                            className="flex items-center justify-center h-7 w-7"
+                            onClick={(e) => {
+                                e.stopPropagation();
                                 removeTerminal(terminal.id);
                                 deleteTerminal(terminal.id);
                             }}
                         >
                             <XIcon size={16} />
-                        </button>
+                        </span>
                     </button>
                 ))}
             </div>
