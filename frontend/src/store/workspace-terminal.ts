@@ -76,12 +76,18 @@ export const useWorkspaceTerminalStore = create<WorkspaceTerminalState>()(
                 });
             },
             removeTerminal(id) {
-                const newTerminals = get().terminals.filter((i) => i.id != id);
+                const newTerminals = get().terminals.filter((i) => i.id !== id);
+                let activeTerminal = get().activeTerminal;
 
-                set({
-                    terminals: newTerminals,
-                    activeTerminal: newTerminals.length > 0 ? newTerminals[0].id : null,
-                });
+                if (id === get().activeTerminal) {
+                    if (newTerminals.length > 0) {
+                        activeTerminal = newTerminals[0].id;
+                    } else {
+                        activeTerminal = null;
+                    }
+                }
+
+                set({ terminals: newTerminals, activeTerminal });
             },
 
             activeTerminal: null,
