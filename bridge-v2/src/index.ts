@@ -1,7 +1,13 @@
 import express from "express";
 import expressWebsockets from "express-ws";
 import { setupWSConnection } from "../node_modules/y-websocket/bin/utils.cjs";
-import { terminalManager } from "./utils/terminal";
+import {
+    createTerminal,
+    deleteTerminal,
+    listTerminals,
+    resize,
+    runCommand,
+} from "./utils/terminal";
 
 const { app } = expressWebsockets(express());
 
@@ -25,11 +31,11 @@ app.ws("/ws", (websocket, request) => {
                             JSON.stringify({
                                 type: "terminal",
                                 event: "getTerminals",
-                                payload: terminalManager.list(),
+                                payload: listTerminals(),
                             })
                         );
                     } else if (parsed.event === "createTerminal") {
-                        const id = terminalManager.create(websocket as any);
+                        const id = createTerminal(websocket as any);
 
                         websocket.send(
                             JSON.stringify({
@@ -39,21 +45,23 @@ app.ws("/ws", (websocket, request) => {
                             })
                         );
                     } else if (parsed.event === "deleteTerminal") {
-                        terminalManager.delete(parsed.payload);
+                        deleteTerminal(parsed.payload);
                     } else if (parsed.event === "runCommand") {
-                        terminalManager.runCommand(
+                        runCommand(
                             parsed.payload.id,
-                            parsed.payload.command
+                            parsed.payload.command,
+                            websocket as any
                         );
                     } else if (parsed.event === "resize") {
                         const cols = parseFloat(parsed.payload.cols);
                         const rows = parseFloat(parsed.payload.rows);
 
                         if (!Number.isNaN(rows) && !Number.isNaN(cols)) {
-                            terminalManager.resize(
+                            resize(
                                 parsed.payload.id,
                                 parsed.payload.cols,
-                                parsed.payload.rows
+                                parsed.payload.rows,
+                                websocket as any
                             );
                         }
                     }

@@ -3,71 +3,80 @@ import { v4 as uuid } from "uuid";
 
 const SHELL = "bash";
 
+const terminals: TerminalManager[] = [];
+
+export function listTerminals() {
+    return terminals.map((t) => t.id);
+}
+
+export function createTerminal(ws: WebSocket) {
+    const terminal = new TerminalManager(ws);
+    terminals.push(terminal);
+    return terminal.id;
+}
+
+export function deleteTerminal(terminalId: string) {
+    const index = terminals.findIndex((t) => t.id === terminalId);
+    if (index === -1) return;
+
+    const terminal = terminals[index];
+    terminal.ptyInstance.kill();
+    terminals.splice(index, 1);
+}
+
+export function resize(
+    terminalId: string,
+    cols: number,
+    rows: number,
+    ws: WebSocket
+) {
+    const terminal = terminals.find((t) => t.id === terminalId);
+    if (!terminal) return;
+
+    terminal.ptyInstance.resize(cols, rows);
+    terminal.ws = ws;
+}
+
+export function runCommand(
+    terminalId: string,
+    command: string,
+    newWs: WebSocket
+) {
+    const terminal = terminals.find((t) => t.id === terminalId);
+    if (!terminal) return;
+
+    terminal.ws = newWs;
+    terminal.ptyInstance.write(command);
+}
+
 class TerminalManager {
-    terminals: {
-        ptyInstance: pty.IPty;
-        id: string;
-    }[] = [];
+    id: string;
+    ptyInstance: pty.IPty;
 
-    constructor() {}
-
-    list() {
-        return this.terminals.map((t) => t.id);
-    }
-
-    delete(id: string) {
-        const index = this.terminals.findIndex((t) => t.id === id);
-        if (index === -1) return;
-
-        const terminal = this.terminals[index];
-        terminal.ptyInstance.kill();
-        this.terminals.splice(index, 1);
-    }
-
-    runCommand(id: string, command: string) {
-        const terminal = this.terminals.find((t) => t.id === id);
-        if (!terminal) return;
-
-        terminal.ptyInstance.write(command);
-    }
-
-    resize(id: string, cols: number, rows: number) {
-        const terminal = this.terminals.find((t) => t.id === id);
-        if (!terminal) return;
-
-        terminal.ptyInstance.resize(cols, rows);
-    }
-
-    create(ws: WebSocket) {
-        const id = uuid();
-        const ptyInstance = pty.spawn(SHELL, [], {
+    constructor(public ws: WebSocket) {
+        this.id = uuid();
+        this.ptyInstance = pty.spawn(SHELL, [], {
             name: "xterm-color",
             cols: 80,
             rows: 24,
             cwd: "/usr/workspace",
         });
 
-        ptyInstance.onData((data) => {
-            ws.send(
+        this.ptyInstance.onData((data) => {
+            this.ws.send(
                 JSON.stringify({
                     type: "terminal",
                     event: "runCommandResponse",
                     payload: {
-                        id,
+                        id: this.id,
                         data,
                     },
                 })
             );
         });
 
-        ptyInstance.onExit(() => {
-            this.delete(id);
+        this.ptyInstance.onExit(() => {
+            deleteTerminal(this.id);
         });
-
-        this.terminals.push({ ptyInstance, id });
-
-        return id;
     }
 }
-
-export const terminalManager = new TerminalManager();
