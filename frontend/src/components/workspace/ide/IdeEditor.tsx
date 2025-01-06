@@ -6,7 +6,7 @@ import "@codingame/monaco-vscode-theme-defaults-default-extension";
 import Editor, { loader } from "@monaco-editor/react";
 import { shikiToMonaco } from "@shikijs/monaco";
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createHighlighter } from "shiki";
 import "vscode/localExtensionHost";
 import { initialize } from "vscode/services";
@@ -46,11 +46,37 @@ const COLORS = [
     "#00bcd4",
 ];
 
+const yDocs = new Map<string, Y.Doc>();
+const providers = new Map<string, WebsocketProvider>();
+const bindings = new Map<string, MonacoBinding>();
+
+function getYDoc(filePath: string): Y.Doc {
+    if (!yDocs.has(filePath)) {
+        const yDoc = new Y.Doc({ guid: filePath });
+        yDocs.set(filePath, yDoc);
+    }
+    return yDocs.get(filePath)!;
+}
+
+function getOrCreateMonacoModel(
+    monacoInstance: typeof monaco,
+    filePath: string,
+    language: string,
+    content: string,
+) {
+    const uri = monacoInstance.Uri.parse(filePath);
+    let model = monacoInstance.editor.getModel(uri);
+
+    if (!model) {
+        model = monacoInstance.editor.createModel(content, language, uri);
+    }
+
+    return model;
+}
+
 export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
     const { loadingFiles, files, setActivePaneId } = useWorkspaceStore();
     const { bridgeV2WsURL } = useWorkspaceURL();
-    const providerRef = useRef<WebsocketProvider | null>(null);
-    const bindingRef = useRef<MonacoBinding | null>(null);
     const { user, account } = useAuth();
 
     const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(
@@ -58,102 +84,95 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
     );
 
     const language = useMemo(() => getEditorLanguage(file.name), [file]);
-
-    const userColor = useMemo(() => {
-        return COLORS[Math.floor(Math.random() * COLORS.length)];
-    }, []);
-
-    useEffect(
-        function setupCollaboration() {
-            const yDoc = new Y.Doc();
-
-            (async function () {
-                if (
-                    !monaco?.editor ||
-                    !bridgeV2WsURL ||
-                    !editor ||
-                    !files[file.absolutePath]
-                )
-                    return;
-
-                const model = editor.getModel();
-                const roomId = file.absolutePath;
-
-                if (!model) return;
-
-                const wsProvider = new WebsocketProvider(
-                    `${bridgeV2WsURL}/code-file-collaboration`,
-                    roomId,
-                    yDoc,
-                    {
-                        maxBackoffTime: 25000,
-                    },
-                );
-
-                providerRef.current = wsProvider;
-
-                const yText = yDoc.getText(roomId);
-
-                wsProvider.on("status", ({ status }) => {
-                    console.log(`Connection status for ${roomId}:`, status);
-                });
-
-                const awareness = wsProvider.awareness;
-
-                awareness.setLocalStateField("user", {
-                    name: user?.username ?? account?.accountName ?? "Unknown",
-                    color: userColor,
-                });
-
-                wsProvider.on("sync", (isSynced) => {
-                    console.log(`Document synced for ${roomId}:`, isSynced);
-
-                    // Initialize the document with content only if it's empty
-                    if (isSynced && yText.length === 0) {
-                        yText.insert(0, files[file.absolutePath]);
-                    }
-
-                    if (
-                        isSynced &&
-                        model &&
-                        model.getValue() === "" &&
-                        yText.toString() !== ""
-                    ) {
-                        model.setValue(yText.toString());
-                    }
-                });
-
-                try {
-                    const binding = new MonacoBinding(
-                        yText,
-                        model,
-                        new Set([editor]),
-                        awareness,
-                    );
-
-                    providerRef.current.connect();
-                    bindingRef.current = binding;
-                } catch (error) {
-                    console.error("Error creating Monaco binding:", error);
-                }
-            })();
-
-            return function cleanup() {
-                if (bindingRef.current) {
-                    bindingRef.current.destroy();
-                    bindingRef.current = null;
-                }
-
-                if (providerRef.current) {
-                    providerRef.current.destroy();
-                    providerRef.current = null;
-                }
-
-                yDoc.destroy();
-            };
-        },
-        [bridgeV2WsURL, file.absolutePath, editor, files],
+    const userColor = useMemo(
+        () => COLORS[Math.floor(Math.random() * COLORS.length)],
+        [],
     );
+
+    useEffect(() => {
+        const yDoc = getYDoc(file.absolutePath);
+        const yText = yDoc.getText(file.absolutePath);
+
+        if (!monaco?.editor || !bridgeV2WsURL || !editor || !files[file.absolutePath]) {
+            return;
+        }
+
+        const model = getOrCreateMonacoModel(
+            monaco,
+            file.absolutePath,
+            language,
+            files[file.absolutePath],
+        );
+
+        // Reuse or create the WebSocketProvider
+        let wsProvider = providers.get(file.absolutePath);
+        if (!wsProvider) {
+            wsProvider = new WebsocketProvider(
+                `${bridgeV2WsURL}/code-file-collaboration`,
+                file.absolutePath,
+                yDoc,
+                { maxBackoffTime: 25000 },
+            );
+            providers.set(file.absolutePath, wsProvider);
+
+            wsProvider.on("status", ({ status }) => {
+                console.log(`Connection status for ${file.absolutePath}:`, status);
+            });
+
+            wsProvider.on("sync", (isSynced) => {
+                console.log(`Document synced for ${file.absolutePath}:`, isSynced);
+                if (
+                    isSynced &&
+                    yText.length === 0 &&
+                    yText.doc?.guid === file.absolutePath
+                ) {
+                    yText.insert(0, files[file.absolutePath]);
+                }
+
+                if (isSynced && model.getValue() === "" && yText.toString() !== "") {
+                    model.setValue(yText.toString());
+                }
+            });
+        }
+
+        // Reuse or create the MonacoBinding
+        let binding = bindings.get(file.absolutePath);
+        if (!binding) {
+            const awareness = wsProvider.awareness;
+            awareness.setLocalStateField("user", {
+                name: user?.username ?? account?.accountName ?? "Unknown",
+                color: userColor,
+                paneId,
+            });
+
+            binding = new MonacoBinding(yText, model, new Set([editor]), awareness);
+            bindings.set(file.absolutePath, binding);
+        } else {
+            // Add the current editor to the existing binding
+            binding.editors.add(editor);
+        }
+
+        // Connect the provider
+        wsProvider.connect();
+
+        return () => {
+            // Remove the current editor from the binding
+            if (binding && binding.editors.has(editor)) {
+                binding.editors.delete(editor);
+            }
+
+            // Cleanup provider and binding if no editors are left
+            if (binding && binding.editors.size === 0) {
+                binding.destroy();
+                bindings.delete(file.absolutePath);
+            }
+
+            if (wsProvider && bindings.size === 0) {
+                wsProvider.destroy();
+                providers.delete(file.absolutePath);
+            }
+        };
+    }, [bridgeV2WsURL, file.absolutePath, editor, files, language, paneId, userColor]);
 
     if (files[file.absolutePath] === undefined) {
         return (
