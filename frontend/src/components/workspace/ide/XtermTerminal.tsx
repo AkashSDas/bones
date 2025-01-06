@@ -80,36 +80,36 @@ export function XtermTerminal({ terminalId }: { terminalId: string }) {
 
         xterm.open(divRef.current!);
 
-        // Fit the terminal to its initial container size
-        const handleInitialFit = () => {
-            fitAddon.fit();
-            const dimensions = fitAddon.proposeDimensions();
-
-            if (dimensions) {
-                resize(dimensions.cols, dimensions.rows);
-            }
-        };
-        handleInitialFit();
-
-        // Resize on window resize
         const handleResize = () => {
             fitAddon.fit();
             const dimensions = fitAddon.proposeDimensions();
-
             if (dimensions) {
                 resize(dimensions.cols, dimensions.rows);
             }
         };
 
-        window.addEventListener("resize", handleResize);
+        // Initial fit
+        handleResize();
+
+        // Resize observer for container changes
+        const resizeObserver = new ResizeObserver(() => {
+            handleResize();
+        });
+
+        if (divRef.current) {
+            resizeObserver.observe(divRef.current);
+        }
 
         termRef.current = xterm;
 
-        xterm.onData((data) => runCommand(data));
+        xterm.onData((data) => {
+            runCommand(data);
+            xterm.scrollToBottom();
+        });
         xterm.onResize(({ cols, rows }) => resize(cols, rows));
 
         return () => {
-            window.removeEventListener("resize", handleResize);
+            resizeObserver.disconnect();
             xterm.dispose();
         };
     }, [bridgeV2WsURL]);
