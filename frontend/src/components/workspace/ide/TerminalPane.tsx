@@ -2,20 +2,27 @@ import { TerminalIcon, XIcon } from "lucide-react";
 import { useEffect } from "react";
 
 import { Button } from "@/components/shared/Button";
-import { useWorkspaceTerminal } from "@/hooks/workspace";
+import { useWorkspaceTerminal, useWorkspaceURL } from "@/hooks/workspace";
+import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
 import { useWorkspaceTerminalStore } from "@/store/workspace-terminal";
 import { cn } from "@/utils/styles";
 
 import { Terminal } from "./Terminal";
 
 export function TerminalPane() {
+    const { bridgeV2WsURL } = useWorkspaceURL();
+    const { bridge2Socket } = useWorkspaceBridgeStore();
     const { getTerminals, createTerminal, deleteTerminal } = useWorkspaceTerminal();
     const { terminals, activeTerminal, setActiveTerminal, removeTerminal } =
         useWorkspaceTerminalStore();
 
-    useEffect(function init() {
-        getTerminals();
-    }, []);
+    useEffect(
+        function init() {
+            if (!bridge2Socket || !bridgeV2WsURL) return;
+            getTerminals();
+        },
+        [bridge2Socket, bridgeV2WsURL],
+    );
 
     return (
         <div className="flex h-full">
@@ -30,7 +37,7 @@ export function TerminalPane() {
                                 isActive ? "visible h-full" : "invisible h-0",
                             )}
                         >
-                            <Terminal terminalId={terminal.id} />
+                            <Terminal key={terminal.id} terminalId={terminal.id} />
                         </div>
                     );
                 })}
