@@ -4,12 +4,13 @@ import { WebLinksAddon } from "@xterm/addon-web-links";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { useCallback, useEffect, useRef } from "react";
+import React from "react";
 
 import { useWorkspaceURL } from "@/hooks/workspace";
 import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
 import { useWorkspaceTerminalStore } from "@/store/workspace-terminal";
 
-export function useTerminal(terminalId: string) {
+function useTerminal(terminalId: string) {
     const { bridgeV2WsURL } = useWorkspaceURL();
     const { bridge2Socket } = useWorkspaceBridgeStore();
 
@@ -28,7 +29,7 @@ export function useTerminal(terminalId: string) {
                 );
             }
         },
-        [bridgeV2WsURL, bridge2Socket],
+        [bridgeV2WsURL, bridge2Socket, terminalId],
     );
 
     const resize = useCallback(
@@ -47,7 +48,7 @@ export function useTerminal(terminalId: string) {
                 );
             }
         },
-        [bridgeV2WsURL, bridge2Socket],
+        [bridgeV2WsURL, bridge2Socket, terminalId],
     );
 
     return {
@@ -56,7 +57,11 @@ export function useTerminal(terminalId: string) {
     };
 }
 
-export function XtermTerminal({ terminalId }: { terminalId: string }) {
+export const XtermTerminal = React.memo(function XtermTerminal({
+    terminalId,
+}: {
+    terminalId: string;
+}) {
     const divRef = useRef<HTMLDivElement>(null);
     const termRef = useRef<Terminal | null>(null);
     const { bridgeV2WsURL } = useWorkspaceURL();
@@ -106,13 +111,14 @@ export function XtermTerminal({ terminalId }: { terminalId: string }) {
             runCommand(data);
             xterm.scrollToBottom();
         });
+
         xterm.onResize(({ cols, rows }) => resize(cols, rows));
 
         return () => {
             resizeObserver.disconnect();
             xterm.dispose();
         };
-    }, [bridgeV2WsURL]);
+    }, [bridgeV2WsURL, terminals, resize, runCommand, terminalId]);
 
     return <div ref={divRef} className="w-full h-full overflow-y-auto" />;
-}
+});
