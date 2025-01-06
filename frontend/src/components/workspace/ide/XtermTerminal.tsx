@@ -68,10 +68,19 @@ export const XtermTerminal = React.memo(function XtermTerminal({
 
     const { terminals } = useWorkspaceTerminalStore();
     const { resize, runCommand } = useTerminal(terminalId);
+    const terminalsRef = useRef(terminals);
+
+    useEffect(
+        function () {
+            terminalsRef.current = terminals;
+        },
+        [terminals],
+    );
 
     useEffect(() => {
         if (!bridgeV2WsURL) return;
 
+        const terminals = terminalsRef.current;
         const xterm = terminals.find((t) => t.id === terminalId)?.xtermInstance;
         if (!xterm) return;
 
@@ -118,7 +127,7 @@ export const XtermTerminal = React.memo(function XtermTerminal({
             resizeObserver.disconnect();
             xterm.dispose();
         };
-    }, [bridgeV2WsURL, terminals, resize, runCommand, terminalId]);
+    }, [bridgeV2WsURL, resize, runCommand, terminalId]);
 
     return <div ref={divRef} className="w-full h-full overflow-y-auto" />;
 });
