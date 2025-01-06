@@ -25,12 +25,33 @@ export function createTerminalInstance() {
         fontFamily: "Fira Code, monospace",
         fontSize: 14,
         theme: {
-            red: "\x1b[38;2;248;113;133m",
-            green: "\x1b[38;2;134;239;172m",
-            yellow: "\x1b[38;2;253;224;71m",
-            blue: "\x1b[38;2;147;197;253m",
-            magenta: "\x1b[38;2;249;168;212m",
-            cyan: "\x1b[38;2;103;232;249m",
+            foreground: "#e6d4a3",
+            background: "#1e1e1e",
+            cursor: "#bbbbbb",
+
+            black: "#161819",
+            brightBlack: "#7f7061",
+
+            red: "#f73028",
+            brightRed: "#be0f17",
+
+            green: "#aab01e",
+            brightGreen: "#868715",
+
+            yellow: "#f7b125",
+            brightYellow: "#cc881a",
+
+            blue: "#719586",
+            brightBlue: "#377375",
+
+            magenta: "#c77089",
+            brightMagenta: "#a04b73",
+
+            cyan: "#7db669",
+            brightCyan: "#578e57",
+
+            white: "#faefbb",
+            brightWhite: "#e6d4a3",
         },
     });
 }
