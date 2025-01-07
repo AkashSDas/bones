@@ -115,10 +115,11 @@ export class RBACValidator {
 
         if (this.isAdmin) return;
 
-        const [userPk] = this.checkUserBlocked();
+        this.checkUserBlocked();
 
-        const [permPk, perm] =
-            await dal.iamPermission.findWorkspaceServiceWidePermission(this.accountPk);
+        const [_, perm] = await dal.iamPermission.findWorkspaceServiceWidePermission(
+            this.accountPk,
+        );
 
         if (read && (perm.readAll || perm.writeAll)) {
             return;
@@ -127,22 +128,8 @@ export class RBACValidator {
             return;
         }
 
-        const permMapping = await dal.iamPermissionUser.findByPermissionIdAndUserId(
-            permPk,
-            userPk,
-        );
-        const hasReadAccess = permMapping.some(
-            (p) => p.accessType === IAM_PERMISSION_ACCESS_TYPE.READ,
-        );
-        const hasWriteAccess = permMapping.some(
-            (p) => p.accessType === IAM_PERMISSION_ACCESS_TYPE.WRITE,
-        );
-
-        if (read && (hasReadAccess || hasWriteAccess)) return;
-        if (write && hasWriteAccess) return;
-
         throw new ForbiddenError({
-            message: "You don't have access IAM Service",
+            message: "You don't have access to Workspace Service",
         });
     }
 
@@ -151,18 +138,6 @@ export class RBACValidator {
         write,
         workspacePk,
     }: IAMPermissionOpts & { workspacePk: WorkspacePk }): Promise<void> {
-        let hasAccess = false;
-        try {
-            this.validateWorkspaceServiceWide({ read, write });
-            hasAccess = true;
-        } catch (e) {
-            log.error(`Workspace service wide access failed: ${e}`);
-        }
-
-        if (hasAccess) {
-            return;
-        }
-
         if (read && write) {
             log.error("Only one value is allowed to be added: 'read' or 'write'");
             throw new InternalServerError({});
@@ -174,18 +149,49 @@ export class RBACValidator {
 
         if (this.isAdmin) return;
 
+        let hasAccess = false;
+        try {
+            await this.validateWorkspaceServiceWide({ read, write });
+            hasAccess = true;
+        } catch (e) {
+            log.error(`Workspace service wide access failed: ${e}`);
+        }
+
+        if (hasAccess) return;
+
         const [userPk] = this.checkUserBlocked();
 
-        const result = await dal.iamPermission.findWorkspacePermission(
-            this.accountPk,
-            userPk,
-            workspacePk,
-        );
+        const [result, workspacePerm] = await Promise.all([
+            dal.iamPermission.findWorkspacePermissionMappedToUser(
+                this.accountPk,
+                userPk,
+                workspacePk,
+            ),
+            dal.iamPermission.findWorkspacePermission(this.accountPk, workspacePk),
+        ]);
 
-        if (result === null) {
+        if (workspacePerm === null) {
+            log.error(
+                `Workspace is missing permission policy: ${workspacePk} ${this.accountPk}`,
+            );
+            throw new InternalServerError({});
+        }
+
+        if (
+            result === null &&
+            !workspacePerm[1].readAll &&
+            !workspacePerm[1].writeAll
+        ) {
             throw new ForbiddenError({
                 message: "You don't have access to this workspace",
             });
+        }
+
+        if (read && (workspacePerm[1].readAll || workspacePerm[1].writeAll)) return;
+        if (write && workspacePerm[1].writeAll) return;
+
+        if (result === null) {
+            throw new InternalServerError({});
         }
 
         const [permPk, perm] = result;

@@ -11,6 +11,13 @@ type WorkspaceBridgeState = {
 
     connectionStatus: ConnectionStatus;
     setConnectionStatus: (v: ConnectionStatus) => void;
+
+    bridge2Socket: ReconnectingWebSocket | null;
+    setBridge2Socket: (v: ReconnectingWebSocket) => void;
+    closeBridge2Socket: () => void;
+
+    connection2Status: ConnectionStatus;
+    setConnection2Status: (v: ConnectionStatus) => void;
 };
 
 export const useWorkspaceBridgeStore = create<WorkspaceBridgeState>()(
@@ -30,6 +37,22 @@ export const useWorkspaceBridgeStore = create<WorkspaceBridgeState>()(
             connectionStatus: "disconnected",
             setConnectionStatus(v) {
                 set((_state) => ({ connectionStatus: v }));
+            },
+
+            bridge2Socket: null,
+            setBridge2Socket(v) {
+                set((_state) => ({ bridge2Socket: v }));
+            },
+            closeBridge2Socket() {
+                set((_state) => ({
+                    bridge2Socket: null,
+                    connection2Status: "disconnected",
+                }));
+            },
+
+            connection2Status: "disconnected",
+            setConnection2Status(v) {
+                set((_state) => ({ connection2Status: v }));
             },
         };
     }),

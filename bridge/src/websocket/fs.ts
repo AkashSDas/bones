@@ -16,6 +16,7 @@ const EventSchema = z.union([
     z.literal("copy"),
     z.literal("search-text-in-files"),
     z.literal("search-file"),
+    z.literal("save-file"),
 ]);
 
 const GetFilePayloadSchema = z.object({
@@ -56,6 +57,11 @@ const SearchTextInFilesPayloadSchema = z.object({
 
 const SearchFilePayloadSchema = z.object({
     query: z.string().min(3),
+});
+
+const SaveFilePayloadSchema = z.object({
+    content: z.string(),
+    absolutePath: z.string(),
 });
 
 // ==========================================
@@ -102,12 +108,15 @@ export class FileSystemWs {
             case "search-file":
                 this.ws.send(await this.searchFile());
                 break;
+            case "save-file":
+                this.ws.send(await this.saveFile());
+                break;
             default:
                 this.ws.send(
                     this.returnResult({
                         success: false,
                         error: `Invalid event type`,
-                    }),
+                    })
                 );
                 break;
         }
@@ -132,7 +141,7 @@ export class FileSystemWs {
      */
     private async getFile(): Promise<string> {
         const { success, data } = await GetFilePayloadSchema.safeParseAsync(
-            this.payload,
+            this.payload
         );
 
         if (success) {
@@ -193,15 +202,14 @@ export class FileSystemWs {
      * ```
      */
     private async createFileOrFolder(): Promise<string> {
-        const { success, data } = await CreateFileOrFolderPayloadSchema.safeParseAsync(
-            this.payload,
-        );
+        const { success, data } =
+            await CreateFileOrFolderPayloadSchema.safeParseAsync(this.payload);
 
         if (success) {
             const res = await fileSystemManager.createFileOrFolder(
                 data.name,
                 data.absolutePath,
-                data.isDirectory,
+                data.isDirectory
             );
 
             if (res instanceof Error) {
@@ -238,14 +246,13 @@ export class FileSystemWs {
      * ```
      */
     private async renameFileOrFolder(): Promise<string> {
-        const { success, data } = await RenameFileOrFolderPayloadSchema.safeParseAsync(
-            this.payload,
-        );
+        const { success, data } =
+            await RenameFileOrFolderPayloadSchema.safeParseAsync(this.payload);
 
         if (success) {
             const res = await fileSystemManager.renameFileOrFolder(
                 data.absolutePath,
-                data.name,
+                data.name
             );
 
             if (res instanceof Error) {
@@ -281,9 +288,8 @@ export class FileSystemWs {
      * ```
      */
     private async deleteFilesOrFolders(): Promise<string> {
-        const { success, data } = await DeleteFileOrFolderPayloadSchema.safeParseAsync(
-            this.payload,
-        );
+        const { success, data } =
+            await DeleteFileOrFolderPayloadSchema.safeParseAsync(this.payload);
 
         if (success) {
             await fileSystemManager.deleteFilesOrFolders(data.absolutePaths);
@@ -311,14 +317,13 @@ export class FileSystemWs {
      * ```
      */
     private async moveFilesOrFolders(): Promise<string> {
-        const { success, data } = await MoveFileOrFolderPayloadSchema.safeParseAsync(
-            this.payload,
-        );
+        const { success, data } =
+            await MoveFileOrFolderPayloadSchema.safeParseAsync(this.payload);
 
         if (success) {
             const res = await fileSystemManager.moveFilesOrFolders(
                 data.absoluteSourcePaths,
-                data.absoluteDestinationPath,
+                data.absoluteDestinationPath
             );
 
             if (res instanceof Error) {
@@ -361,14 +366,13 @@ export class FileSystemWs {
      * ```
      */
     private async copyFilesOrFolders(): Promise<string> {
-        const { success, data } = await CopyFileOrFolderPayloadSchema.safeParseAsync(
-            this.payload,
-        );
+        const { success, data } =
+            await CopyFileOrFolderPayloadSchema.safeParseAsync(this.payload);
 
         if (success) {
             const res = await fileSystemManager.copyFilesOrFolders(
                 data.absoluteSourcePaths,
-                data.absoluteDestinationPath,
+                data.absoluteDestinationPath
             );
 
             if (res instanceof Error) {
@@ -414,9 +418,8 @@ export class FileSystemWs {
      * ```
      */
     private async searchTextInFiles(): Promise<string> {
-        const { success, data } = await SearchTextInFilesPayloadSchema.safeParseAsync(
-            this.payload,
-        );
+        const { success, data } =
+            await SearchTextInFilesPayloadSchema.safeParseAsync(this.payload);
 
         if (success) {
             const res = await fileSystemManager.searchTextInFiles(data.query, {
@@ -461,7 +464,7 @@ export class FileSystemWs {
      */
     private async searchFile(): Promise<string> {
         const { success, data } = await SearchFilePayloadSchema.safeParseAsync(
-            this.payload,
+            this.payload
         );
 
         if (success) {
@@ -481,6 +484,51 @@ export class FileSystemWs {
                 error: "Invalid payload",
             });
         }
+    }
+
+    /**
+     * Required incoming WS data:
+     *
+     * ```
+     * {
+     *     "type": "fs",
+     *     "event": "save-file",
+     *     "payload": {
+     *     "content": "console.log('Hello, World!');",
+     *     "absolutePath": "/usr/workspace/index.js"
+     *     }
+     * }
+     * ```
+     */
+    private async saveFile(): Promise<string> {
+        const { success, data } = await SaveFilePayloadSchema.safeParseAsync(
+            this.payload
+        );
+
+        if (success) {
+            const isSuccess = await fileSystemManager.saveFile(
+                data.absolutePath,
+                data.content
+            );
+
+            if (!isSuccess) {
+                return this.returnResult({
+                    success: false,
+                    error: "Failed to save file",
+                });
+            }
+
+            return this.returnResult({
+                success: true,
+                absolutePath: data.absolutePath,
+                content: data.content,
+            });
+        }
+
+        return this.returnResult({
+            success: false,
+            error: "Invalid payload",
+        });
     }
 
     private returnResult(res: Record<string, unknown>): string {

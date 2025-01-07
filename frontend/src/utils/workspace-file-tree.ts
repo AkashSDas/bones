@@ -52,6 +52,7 @@ export const FileTreeEventSchema = z.union([
     z.literal("copy"),
     z.literal("search-text-in-files"),
     z.literal("search-file"),
+    z.literal("save-file"),
 ]);
 
 // =====================================
@@ -132,6 +133,15 @@ const SearchFileRequestSchema = z.object({
     event: z.literal("search-file"),
     payload: z.object({
         query: z.string().min(3),
+    }),
+});
+
+const SaveFileRequestSchema = z.object({
+    type: z.literal("fs"),
+    event: z.literal("save-file"),
+    payload: z.object({
+        absolutePath: z.string(),
+        content: z.string(),
     }),
 });
 
@@ -246,6 +256,17 @@ export const SearchFileResponseSchema = z.union([
         }),
     }),
     getErrorSchema(z.literal("search-file")),
+]);
+
+export const SaveFileResponseSchema = z.union([
+    z.object({
+        type: z.literal("fs"),
+        event: z.literal("save-file"),
+        success: z.literal(true),
+        absolutePath: z.string(),
+        content: z.string(),
+    }),
+    getErrorSchema(z.literal("save-file")),
 ]);
 
 // ==========================================
@@ -364,6 +385,20 @@ class WorkspaceFileTreeManager {
             event: "search-file",
             payload: {
                 query: searchText,
+            },
+        };
+    }
+
+    saveFileRequest(
+        absolutePath: string,
+        content: string,
+    ): z.infer<typeof SaveFileRequestSchema> {
+        return {
+            type: "fs",
+            event: "save-file",
+            payload: {
+                absolutePath,
+                content,
             },
         };
     }

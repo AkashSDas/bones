@@ -1,0 +1,25 @@
+{
+    "name": "bridge-v2",
+    "version": "0.1.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "dev": "tsx src/index.ts",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "express": "^4.21.2",
+        "express-ws": "^5.0.2",
+        "node-pty": "^1.0.0",
+        "uuid": "^11.0.3",
+        "y-websocket": "^2.1.0"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.0",
+        "@types/express-ws": "^3.0.5",
+        "tsx": "^4.19.2"
+    }
+}

@@ -21,7 +21,11 @@ export type FileTab = {
     file: File;
 };
 
-export type PaneTabPayload = FileTab;
+export type WebViewTab = {
+    type: "webView";
+};
+
+export type PaneTabPayload = FileTab | WebViewTab;
 
 export type PaneTab = {
     tabId: TabId;

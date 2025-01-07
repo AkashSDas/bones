@@ -5,8 +5,7 @@
     "jsr:@hono/hono@^4.6.13": "4.6.13",
     "jsr:@std/bytes@^1.0.2": "1.0.4",
     "jsr:@std/crypto@^1.0.3": "1.0.3",
-    "jsr:@std/fs@*": "1.0.6",
-    "jsr:@std/fs@^1.0.5": "1.0.6",
+    "jsr:@std/fs@^1.0.8": "1.0.8",
     "jsr:@std/path@*": "1.0.8",
     "jsr:@std/path@^1.0.8": "1.0.8",
     "jsr:@std/text@*": "1.0.9",
@@ -31,8 +30,8 @@
     "@std/crypto@1.0.3": {
       "integrity": "a2a32f51ddef632d299e3879cd027c630dcd4d1d9a5285d6e6788072f4e51e7f"
     },
-    "@std/fs@1.0.6": {
-      "integrity": "42b56e1e41b75583a21d5a37f6a6a27de9f510bcd36c0c85791d685ca0b85fa2",
+    "@std/fs@1.0.8": {
+      "integrity": "161c721b6f9400b8100a851b6f4061431c538b204bb76c501d02c508995cffe0",
       "dependencies": [
         "jsr:@std/path@^1.0.8"
       ]
@@ -87,7 +86,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@hono/hono@^4.6.13",
-      "jsr:@std/fs@^1.0.5",
+      "jsr:@std/fs@^1.0.8",
       "jsr:@std/path@^1.0.8",
       "jsr:@std/text@^1.0.8",
       "jsr:@std/uuid@^1.0.4",

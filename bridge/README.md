@@ -16,5 +16,5 @@ Docker build and run command:
 
 ```bash
 docker build -t bridge:1.0.0 -f Dockerfile .
-docker run --rm -p 4000:4000 bridge:latest
+docker run --rm -p 4000:4000 bridge:1.0.0
 ```
