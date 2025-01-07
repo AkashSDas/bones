@@ -56,12 +56,41 @@ export function useWorkspacePane() {
         [panes, setPanes, addPaneToPanesTree, setActivePaneId],
     );
 
+    const checkTabExistsInAnyPane = useCallback(
+        function (payload: PaneTabPayload): boolean {
+            for (const paneId in panes) {
+                if (payload.type === "webView") {
+                    const tab = Object.values(panes[paneId].tabs).find(
+                        (tab) => tab.type === "webView",
+                    );
+
+                    if (tab) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        },
+        [panes],
+    );
+
     const checkTabExistsInPane = useCallback(
         function (payload: PaneTabPayload, paneId: PaneId): PaneTab | null {
             if (panes[paneId]) {
                 if (payload.type === "codeFile") {
                     const tab = Object.values(panes[paneId].tabs).find(
-                        (tab) => tab.file.name === payload.file.name,
+                        (tab) =>
+                            tab.type === "codeFile" &&
+                            tab.file.name === payload.file.name,
+                    );
+
+                    if (tab) {
+                        return tab;
+                    }
+                } else if (payload.type === "webView") {
+                    const tab = Object.values(panes[paneId].tabs).find(
+                        (tab) => tab.type === "webView",
                     );
 
                     if (tab) {
@@ -229,5 +258,5 @@ export function useWorkspacePane() {
         ],
     );
 
-    return { addTab, addPane, removePane, removeTab };
+    return { addTab, addPane, removePane, removeTab, checkTabExistsInAnyPane };
 }

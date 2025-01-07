@@ -23,6 +23,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/shared/Tooltip";
+import { useWorkspacePane } from "@/hooks/workspace-pane";
 import { useWorkspaceStore } from "@/store/workspace";
 import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
 import { DOCK_ITEMS, DockItemKey, useWorkspaceDockStore } from "@/store/workspace-dock";
@@ -129,6 +130,8 @@ function SortableItem(props: {
 
     const { setContextWindow } = useWorkspaceStore();
 
+    const { addTab, checkTabExistsInAnyPane } = useWorkspacePane();
+
     const { setShow, setActivePaneId } = useWorkspaceTaskWindowStore();
 
     function handleClick() {
@@ -160,6 +163,12 @@ function SortableItem(props: {
             case "terminal": {
                 setActivePaneId("terminalSessions");
                 setShow(true);
+                break;
+            }
+            case "webview": {
+                if (!checkTabExistsInAnyPane({ type: "webView" })) {
+                    addTab({ type: "webView" });
+                }
                 break;
             }
         }

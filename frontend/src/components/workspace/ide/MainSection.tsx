@@ -1,4 +1,4 @@
-import { Columns2Icon, XIcon } from "lucide-react";
+import { Columns2Icon, Tv2Icon, XIcon } from "lucide-react";
 import { Mosaic, MosaicWindow } from "react-mosaic-component";
 import "react-mosaic-component/react-mosaic-component.css";
 
@@ -133,6 +133,39 @@ function TabButton(props: { tab: PaneTab; isActive: boolean; paneId: PaneId }) {
                 <span className="whitespace-nowrap text-nowrap">
                     {props.tab.file.name}
                 </span>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="!h-7 !w-7 !min-w-7 !px-0 shadow-none"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        removeTab(props.tab.tabId, props.paneId);
+                    }}
+                >
+                    <XIcon className="!w-4 !h-4" />
+                </Button>
+            </span>
+        );
+    }
+
+    if (props.tab.type === "webView") {
+        return (
+            <span
+                className={cn(
+                    "flex items-center gap-2 px-2 text-sm text-grey-300 rounded-sm cursor-pointer",
+                    props.isActive && "bg-grey-800",
+                )}
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    setActiveTab(props.paneId, props.tab.tabId);
+                    setActivePaneId(props.paneId);
+                }}
+            >
+                <Tv2Icon height={16} width={16} />
+                <span className="whitespace-nowrap text-nowrap">Web View</span>
                 <Button
                     variant="ghost"
                     size="icon"
