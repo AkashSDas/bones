@@ -17,6 +17,7 @@ import { Loader } from "@/components/shared/Loader";
 import { useAuth } from "@/hooks/auth";
 import { useWorkspaceURL } from "@/hooks/workspace";
 import { useWorkspaceStore } from "@/store/workspace";
+import { useWorkspaceCollaborationStore } from "@/store/workspace-collaboration";
 import { getEditorLanguage } from "@/utils/workspace-editor";
 import { type File } from "@/utils/workspace-file-tree";
 
@@ -46,18 +47,6 @@ const COLORS = [
     "#00bcd4",
 ];
 
-const yDocs = new Map<string, Y.Doc>();
-const providers = new Map<string, WebsocketProvider>();
-const bindings = new Map<string, MonacoBinding>();
-
-function getYDoc(filePath: string): Y.Doc {
-    if (!yDocs.has(filePath)) {
-        const yDoc = new Y.Doc({ guid: filePath });
-        yDocs.set(filePath, yDoc);
-    }
-    return yDocs.get(filePath)!;
-}
-
 function getOrCreateMonacoModel(
     monacoInstance: typeof monaco,
     filePath: string,
@@ -78,6 +67,15 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
     const { loadingFiles, files, setActivePaneId } = useWorkspaceStore();
     const { bridgeV2WsURL } = useWorkspaceURL();
     const { user, account } = useAuth();
+    const {
+        getYDoc,
+        providers,
+        bindings,
+        updateBinding,
+        updateProvider,
+        deleteBinding,
+        deleteProvider,
+    } = useWorkspaceCollaborationStore();
 
     const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(
         null,
@@ -113,7 +111,7 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
                 yDoc,
                 { maxBackoffTime: 25000 },
             );
-            providers.set(file.absolutePath, wsProvider);
+            updateProvider(file.absolutePath, wsProvider);
 
             wsProvider.on("status", ({ status }) => {
                 console.log(`Connection status for ${file.absolutePath}:`, status);
@@ -146,7 +144,7 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
             });
 
             binding = new MonacoBinding(yText, model, new Set([editor]), awareness);
-            bindings.set(file.absolutePath, binding);
+            updateBinding(file.absolutePath, binding);
         } else {
             // Add the current editor to the existing binding
             binding.editors.add(editor);
@@ -164,12 +162,12 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
             // Cleanup provider and binding if no editors are left
             if (binding && binding.editors.size === 0) {
                 binding.destroy();
-                bindings.delete(file.absolutePath);
+                deleteBinding(file.absolutePath);
             }
 
             if (wsProvider && bindings.size === 0) {
                 wsProvider.destroy();
-                providers.delete(file.absolutePath);
+                deleteProvider(file.absolutePath);
             }
         };
     }, [bridgeV2WsURL, file.absolutePath, editor, files, language, paneId, userColor]);
