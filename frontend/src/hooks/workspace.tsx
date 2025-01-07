@@ -15,6 +15,7 @@ import {
     FileTreeEventSchema,
     GetFileResponseSchema,
     ListFileTreeResponseSchema,
+    SaveFileResponseSchema,
     fileTreeManger,
 } from "@/utils/workspace-file-tree";
 import {
@@ -91,6 +92,8 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
     } = useWorkspaceFileTreeStore();
     const { loadingFiles, addLoadingFile, removeLoadingFile, upsertFile } =
         useWorkspaceStore();
+
+    const { toast } = useToast();
 
     const wasDisconnected = useRef(true);
 
@@ -176,6 +179,19 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
         ],
     );
 
+    const saveFile = useCallback(
+        function (absolutePath: string, content: string) {
+            if (bridgeWsURL && bridgeSocket) {
+                bridgeSocket.send(
+                    JSON.stringify(
+                        fileTreeManger.saveFileRequest(absolutePath, content),
+                    ),
+                );
+            }
+        },
+        [bridgeWsURL, bridgeSocket],
+    );
+
     // ==========================================
     // Handlers
     // ==========================================
@@ -252,6 +268,20 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
         ],
     );
 
+    const handleSaveFileResponse = useCallback(function (
+        data: Record<string, unknown>,
+    ) {
+        const parsed = SaveFileResponseSchema.parse(data);
+
+        if (!parsed.success) {
+            toast({
+                title: "Error",
+                description: "Failed to save file",
+                variant: "error",
+            });
+        }
+    }, []);
+
     const mapRequestToHandler = useCallback(
         function (data: Record<string, unknown>) {
             const { data: event } = FileTreeEventSchema.safeParse(data.event);
@@ -269,6 +299,9 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
                 case "get-file":
                     handleGetFileResponse(data);
                     break;
+                case "save-file":
+                    handleSaveFileResponse(data);
+                    break;
             }
         },
         [
@@ -276,6 +309,7 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
             handleCreateFileOrFolderResponse,
             handleDeleteFilesOrFoldersResponse,
             handleGetFileResponse,
+            handleSaveFileResponse,
         ],
     );
 
@@ -311,6 +345,7 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
         getFile,
         createFileOrFolder,
         deleteFilesOrFolders,
+        saveFile,
         mapRequestToHandler,
     };
 }

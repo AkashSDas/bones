@@ -1,5 +1,4 @@
 import * as monaco from "monaco-editor";
-import * as Y from "yjs";
 import getConfigurationServiceOverride from "@codingame/monaco-vscode-configuration-service-override";
 import getLanguagesServiceOverride from "@codingame/monaco-vscode-languages-service-override";
 import "@codingame/monaco-vscode-theme-defaults-default-extension";
@@ -8,6 +7,7 @@ import { shikiToMonaco } from "@shikijs/monaco";
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import { useEffect, useMemo, useState } from "react";
 import { createHighlighter } from "shiki";
+import { useDebounceCallback } from "usehooks-ts";
 import "vscode/localExtensionHost";
 import { initialize } from "vscode/services";
 import { MonacoBinding } from "y-monaco";
@@ -15,7 +15,7 @@ import { WebsocketProvider } from "y-websocket";
 
 import { Loader } from "@/components/shared/Loader";
 import { useAuth } from "@/hooks/auth";
-import { useWorkspaceURL } from "@/hooks/workspace";
+import { useWorkspaceFileTree, useWorkspaceURL } from "@/hooks/workspace";
 import { useWorkspaceStore } from "@/store/workspace";
 import { useWorkspaceCollaborationStore } from "@/store/workspace-collaboration";
 import { getEditorLanguage } from "@/utils/workspace-editor";
@@ -76,6 +76,7 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
         deleteBinding,
         deleteProvider,
     } = useWorkspaceCollaborationStore();
+    const { saveFile } = useWorkspaceFileTree();
 
     const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(
         null,
@@ -86,6 +87,8 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
         () => COLORS[Math.floor(Math.random() * COLORS.length)],
         [],
     );
+
+    const debouncedSaveFile = useDebounceCallback(saveFile, 300);
 
     useEffect(() => {
         const yDoc = getYDoc(file.absolutePath);
@@ -189,6 +192,11 @@ export function IdeEditor({ file, paneId }: { file: File; paneId: string }) {
             loading={loadingFiles.includes(file.absolutePath)}
             keepCurrentModel
             defaultPath={file.absolutePath}
+            onChange={(value) => {
+                if (value) {
+                    debouncedSaveFile(file.absolutePath, value);
+                }
+            }}
             beforeMount={async (monaco) => {
                 monaco.editor.onDidCreateEditor((editor) => {
                     editor.onDidFocusEditorText(() => {

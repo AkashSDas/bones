@@ -1,6 +1,6 @@
 import * as Y from "yjs";
-import { MonacoBinding } from "y-monaco";
-import { WebsocketProvider } from "y-websocket";
+import { type MonacoBinding } from "y-monaco";
+import { type WebsocketProvider } from "y-websocket";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
