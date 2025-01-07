@@ -67,9 +67,7 @@ export function TerminalPane() {
                         )}
                     >
                         <TerminalIcon size={16} />
-                        <span className="flex-1 text-start">
-                            {terminal.name} {terminal.id}
-                        </span>
+                        <span className="flex-1 text-start">{terminal.name}</span>
                         <span
                             className="flex items-center justify-center h-7 w-7"
                             onClick={(e) => {
