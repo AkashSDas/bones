@@ -17,28 +17,10 @@ const services = [
         href: "/iam" as const,
     },
     {
-        Icon: FlameIcon,
-        label: "Lambda",
-        description: "Small compute for managing small tasks",
-        href: "/" as const,
-    },
-    {
-        Icon: PlugIcon,
-        label: "API Gateway",
-        description: "Gateway to interact with you applications",
-        href: "/" as const,
-    },
-    {
         Icon: ContainerIcon,
         label: "Workspace",
         description: "Manage your software project in one place",
         href: "/workspace" as const,
-    },
-    {
-        Icon: GitForkIcon,
-        label: "WorkFlow",
-        description: "Automated tasks for anything and everything",
-        href: "/" as const,
     },
 ];
 
