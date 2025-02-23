@@ -1,11 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import {
-    ContainerIcon,
-    FlameIcon,
-    GitForkIcon,
-    KeyRoundIcon,
-    PlugIcon,
-} from "lucide-react";
+import { ContainerIcon, KeyRoundIcon } from "lucide-react";
 import type React from "react";
 
 /** Services offered by Bones */

@@ -9,15 +9,23 @@ export default defineConfig({
             mode: "tags-split",
             target: "./src/gen/endpoints",
             schemas: "./src/gen/schemas",
-            // fileExtension: ".gen.ts", // TODO: issue with this is that the imports in each are file have extension .ts and not .gen.ts
+
+            // TODO: issue with this is that the imports in each are file have extension .ts and not .gen.ts
+            // fileExtension: ".gen.ts",
+
+            // Backend URL
             baseUrl: "http://localhost:5050",
+
             mock: true,
             client: "react-query",
-            // httpClient: "fetch",
+
             // Using axios instead of fetch because if a request is above 200 (error status)
             // then fetch is considering it as success and even though types are generated for
             // react query's error but the values of these errors are received in success data
+            // httpClient: "fetch",
+
             httpClient: "axios",
+
             override: {
                 query: {
                     useQuery: true,
@@ -30,7 +38,7 @@ export default defineConfig({
                     // useInfiniteQueryParam: "offset",
 
                     options: {
-                        staleTime: 10 * 60 * 1000,
+                        staleTime: 10 * 60 * 1000, // 10 min
                     },
                 },
             },
