@@ -1,7 +1,7 @@
 {
-    "name": "bones-frontend",
+    "name": "frontend",
     "private": true,
-    "version": "0.1.0",
+    "version": "1.0.0",
     "type": "module",
     "scripts": {
         "dev": "tsc -v && vite",
@@ -162,5 +162,9 @@
         "extends": [
             "plugin:storybook/recommended"
         ]
+    },
+    "engines": {
+        "node": "20.11.0",
+        "pnpm": ">=9.12.2"
     }
 }
