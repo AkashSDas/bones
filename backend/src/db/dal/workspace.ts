@@ -6,7 +6,7 @@ import { WorkspaceSchemas } from "@/api/workspace/workspace.schema";
 import { type DB, type TransactionCtx, db } from "..";
 import { iamPermission, workspace } from "../models";
 import { type AccountPk } from "../models/account";
-import { IAMPermission, IAM_SERVICE } from "../models/iam-permission";
+import { type IAMPermission, IAM_SERVICE } from "../models/iam-permission";
 import {
     type IAMPermissionUser,
     iamPermissionUser,

@@ -4,10 +4,10 @@ import { BadRequestError } from "@/utils/http";
 
 import { dal } from ".";
 import { type DB, db } from "..";
-import { AccountPk } from "../models/account";
+import { type AccountPk } from "../models/account";
 import { type IAMPermissionPk } from "../models/iam-permission";
 import {
-    IAMPermissionAccessType,
+    type IAMPermissionAccessType,
     iamPermissionUser,
 } from "../models/iam-permission-user";
 import { type UserId, type UserPk, user } from "../models/user";

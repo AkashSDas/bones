@@ -73,7 +73,7 @@ export const createWorkspace = createRoute({
     method: "post",
     path: "/",
     tags: [TAGS.WORKSPACE],
-    middleware: [authenticate, rbac.workspaceServiceWideWrite],
+    middleware: [authenticate, rbac.workspaceAccountWideWrite],
     request: {
         body: {
             content: {

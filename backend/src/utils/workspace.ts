@@ -12,7 +12,7 @@ import {
     type WorkspaceId,
     type WorkspacePk,
 } from "@/db/models/workspace";
-import { k8sApi, k8sKind, k8sNames, k8sNetworkingApi } from "@/lib/k8s";
+import { K8sKind, k8sApi, k8sNames, k8sNetworkingApi } from "@/lib/k8s";
 import { log } from "@/lib/logger";
 
 import { BadRequestError, InternalServerError } from "./http";
@@ -227,7 +227,7 @@ export class WorkspaceManager {
     private buildNamespaceConfig(namespace: string): k8s.V1Namespace {
         return {
             apiVersion: API_VERSION,
-            kind: k8sKind.Namespace,
+            kind: K8sKind.Namespace,
             metadata: {
                 name: namespace,
                 labels: {
@@ -246,7 +246,7 @@ export class WorkspaceManager {
     }): k8s.V1Pod {
         return {
             apiVersion: API_VERSION,
-            kind: k8sKind.Pod,
+            kind: K8sKind.Pod,
             metadata: {
                 name: k8sNames.workspacePod(config.workspaceId),
                 labels: {
@@ -281,7 +281,7 @@ export class WorkspaceManager {
     }): k8s.V1Service {
         return {
             apiVersion: API_VERSION,
-            kind: k8sKind.Service,
+            kind: K8sKind.Service,
             metadata: {
                 name: k8sNames.workspaceService(config.workspaceId),
                 labels: {
@@ -323,7 +323,7 @@ export class WorkspaceManager {
     }): k8s.V1Ingress {
         return {
             apiVersion: NETWORKING_API_VERSION,
-            kind: k8sKind.Ingress,
+            kind: K8sKind.Ingress,
             metadata: {
                 name: k8sNames.workspaceIngress(config.workspaceId),
                 labels: {

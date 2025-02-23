@@ -13,15 +13,15 @@ const adminOnly = createMiddleware<AppBindings>(async function (c, next) {
 // IAM
 // ============================
 
-const iamServiceWideRead = createMiddleware<AppBindings>(async function (c, next) {
+const iamAccountWideRead = createMiddleware<AppBindings>(async function (c, next) {
     const rbac = new RBACValidator(c);
-    rbac.validateIAMServiceWide({ read: true, write: false });
+    rbac.validateIAMAccountWideAccess({ read: true, write: false });
     return next();
 });
 
-const iamServiceWideWrite = createMiddleware<AppBindings>(async function (c, next) {
+const iamAccountWideWrite = createMiddleware<AppBindings>(async function (c, next) {
     const rbac = new RBACValidator(c);
-    rbac.validateIAMServiceWide({ read: false, write: true });
+    rbac.validateIAMAccountWideAccess({ read: false, write: true });
     return next();
 });
 
@@ -29,18 +29,18 @@ const iamServiceWideWrite = createMiddleware<AppBindings>(async function (c, nex
 // Workspace
 // ============================
 
-const workspaceServiceWideRead = createMiddleware<AppBindings>(
+const workspaceAccountWideRead = createMiddleware<AppBindings>(
     async function (c, next) {
         const rbac = new RBACValidator(c);
-        rbac.validateWorkspaceServiceWide({ read: true, write: false });
+        rbac.validateWorkspaceAccountWideAccess({ read: true, write: false });
         return next();
     },
 );
 
-const workspaceServiceWideWrite = createMiddleware<AppBindings>(
+const workspaceAccountWideWrite = createMiddleware<AppBindings>(
     async function (c, next) {
         const rbac = new RBACValidator(c);
-        rbac.validateWorkspaceServiceWide({ read: false, write: true });
+        rbac.validateWorkspaceAccountWideAccess({ read: false, write: true });
         return next();
     },
 );
@@ -53,9 +53,9 @@ const workspaceServiceWideWrite = createMiddleware<AppBindings>(
 export const rbac = {
     adminOnly,
 
-    iamServiceWideRead,
-    iamServiceWideWrite,
+    iamAccountWideRead: iamAccountWideRead,
+    iamAccountWideWrite: iamAccountWideWrite,
 
-    workspaceServiceWideRead,
-    workspaceServiceWideWrite,
+    workspaceAccountWideRead: workspaceAccountWideRead,
+    workspaceAccountWideWrite: workspaceAccountWideWrite,
 };

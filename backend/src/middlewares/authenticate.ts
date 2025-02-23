@@ -10,8 +10,8 @@ import { UnauthorizedError } from "@/utils/http";
 import type { AppBindings } from "@/utils/types";
 
 /**
- * Only validates whether user is authenticated or not. This also sets the account and user
- * objects to the context based on the requester (admin or user).
+ * Validates whether user is authenticated or not. This also sets some values inside of
+ * Hono context object based on the requester (admin or user).
  *
  * If user or account are not found then it throws an unauthorized error. Also when account
  * id mismatch then it throws an unauthorized error.

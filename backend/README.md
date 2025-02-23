@@ -25,7 +25,7 @@ docker run --name bones-postgres \
 docker run --name bones-redis -d -p 6379:6379 redis
 ```
 
-SQL query to drop all types in PostgreSQL:
+### SQL query to drop all types in PostgreSQL:
 
 ```sql
 DO $$
@@ -44,4 +44,15 @@ BEGIN
         EXECUTE 'DROP TYPE IF EXISTS ' || r.schema_name || '.' || r.type_name || ' CASCADE';
     END LOOP;
 END $$;
+```
+
+### Issue with adding enums
+
+When you run the Drizzle migration command, it fails to add enums. This is because Drizzle kit is not being able to detect enums. This maybe solved till now: [Github Issue](https://github.com/drizzle-team/drizzle-orm/issues/2389)
+
+```sql
+-- Manually adding enum since drizzle kit is not being able to detect enums
+CREATE TYPE account_status AS ENUM ('uninitialized', 'active', 'suspended', 'deactive');
+CREATE TYPE iam_permission_service_type AS ENUM ('iam', 'workspace');
+CREATE TYPE iam_permission_access_type AS ENUM ('read', 'write');
 ```

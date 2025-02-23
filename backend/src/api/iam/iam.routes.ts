@@ -213,7 +213,11 @@ export const createUser = createRoute({
     method: "post",
     path: "/user",
     tags: [TAGS.USER],
-    middleware: [authenticate, rbac.iamServiceWideWrite, accountStatus.allowOnlyActive],
+    middleware: [
+        authenticate,
+        rbac.iamAccountWideWrite,
+        accountStatus.allowOnlyActiveAccount,
+    ],
     request: {
         body: {
             content: {
@@ -240,7 +244,7 @@ export const updateUser = createRoute({
     method: "patch",
     path: "/user/{userId}",
     tags: [TAGS.USER],
-    middleware: [authenticate, rbac.iamServiceWideWrite],
+    middleware: [authenticate, rbac.iamAccountWideWrite],
     request: {
         params: IAMSchemas.UpdateUserParams,
         body: {
@@ -276,7 +280,7 @@ export const userExists = createRoute({
     method: "get",
     path: "/user/exists",
     tags: [TAGS.USER],
-    middleware: [authenticate, rbac.iamServiceWideRead],
+    middleware: [authenticate, rbac.iamAccountWideRead],
     request: {
         query: IAMSchemas.UserExistsQuery,
     },
@@ -297,7 +301,7 @@ export const deleteUser = createRoute({
     method: "delete",
     path: "/user/{userId}",
     tags: [TAGS.USER],
-    middleware: [authenticate, rbac.iamServiceWideWrite],
+    middleware: [authenticate, rbac.iamAccountWideWrite],
     request: {
         params: IAMSchemas.DeleteUserParam,
     },
@@ -321,7 +325,7 @@ export const getUser = createRoute({
     method: "get",
     path: "/user/{userId}",
     tags: [TAGS.USER],
-    middleware: [authenticate, rbac.iamServiceWideRead],
+    middleware: [authenticate, rbac.iamAccountWideRead],
     request: {
         params: IAMSchemas.GetSingleUserParam,
     },

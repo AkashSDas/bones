@@ -19,7 +19,7 @@ export const getIAMPermissions = createRoute({
     method: "get",
     path: "/",
     tags: [TAGS.IAM_PERMISSION],
-    middleware: [authenticate, rbac.iamServiceWideRead],
+    middleware: [authenticate, rbac.iamAccountWideRead],
     request: {
         query: IAMPermissionSchemas.GetManyIAMPermissionsQuery,
     },
@@ -40,7 +40,7 @@ export const getIAMPermission = createRoute({
     method: "get",
     path: "/{permissionId}",
     tags: [TAGS.IAM_PERMISSION],
-    middleware: [authenticate, rbac.iamServiceWideRead],
+    middleware: [authenticate, rbac.iamAccountWideRead],
     request: {
         params: IAMPermissionSchemas.GetIAMPermissionParams,
     },
@@ -61,7 +61,7 @@ export const updateIAMPermission = createRoute({
     method: "patch",
     path: "/{permissionId}",
     tags: [TAGS.IAM_PERMISSION],
-    middleware: [authenticate, rbac.iamServiceWideWrite],
+    middleware: [authenticate, rbac.iamAccountWideWrite],
     request: {
         params: IAMPermissionSchemas.UpdateIAMPermissionParams,
         body: {

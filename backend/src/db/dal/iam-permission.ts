@@ -13,14 +13,14 @@ import {
     type IAMPermissionId,
     type IAMPermissionPk,
     IAM_SERVICE,
-    NewIAMPermission,
+    type NewIAMPermission,
 } from "../models/iam-permission";
 import {
-    IAMPermissionAccessType,
+    type IAMPermissionAccessType,
     iamPermissionUser,
 } from "../models/iam-permission-user";
-import { type UserClient, UserPk, user } from "../models/user";
-import { WorkspacePk } from "../models/workspace";
+import { type UserClient, type UserPk, user } from "../models/user";
+import { type WorkspacePk } from "../models/workspace";
 import { BaseDAL } from "./base";
 
 class IAMPermissionDAL extends BaseDAL {

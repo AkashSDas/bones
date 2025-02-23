@@ -92,6 +92,7 @@ export const EnvironmentVariablesSchema = z
                 );
             }
         }),
+        WORKSPACE_DOMAIN_SUFFIX: z.string(),
     })
     .transform((env) => ({
         APP_URL: env.APP_URL,
@@ -124,6 +125,7 @@ export const EnvironmentVariablesSchema = z
         REFRESH_TOKEN_AGE_IN_DATE: env.REFRESH_TOKEN_AGE_IN_DATE,
 
         WORKSPACE_EXPOSED_PORTS: env.WORKSPACE_EXPOSED_PORTS,
+        WORKSPACE_DOMAIN_SUFFIX: env.WORKSPACE_DOMAIN_SUFFIX,
     }));
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariablesSchema>;

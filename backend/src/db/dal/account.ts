@@ -1,6 +1,6 @@
 import { and, eq, gte, or } from "drizzle-orm";
 
-import { type DB, TransactionCtx, db } from "..";
+import { type DB, type TransactionCtx, db } from "..";
 import { account } from "../models";
 import {
     type Account,

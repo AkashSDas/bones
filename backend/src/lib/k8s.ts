@@ -1,3 +1,5 @@
+import { env } from "@/utils/env";
+
 import * as k8s from "@kubernetes/client-node";
 
 const kc = new k8s.KubeConfig();
@@ -11,7 +13,7 @@ export const k8sNetworkingApi = kc.makeApiClient(k8s.NetworkingV1Api);
 // Manage resource names in k8s
 // ===============================
 
-export const k8sKind = {
+export const K8sKind = {
     Namespace: "Namespace",
     Pod: "Pod",
     Service: "Service",
@@ -20,8 +22,8 @@ export const k8sKind = {
 
 export const k8sNames = {
     /** Domain using which a workspace will be accessed */
-    workspaceDomain(workspaceId: string): `${string}-workspace.bones.test` {
-        return `${workspaceId}-workspace.bones.test`;
+    workspaceDomain(workspaceId: string): string {
+        return `${workspaceId}-${env.WORKSPACE_DOMAIN_SUFFIX}`;
     },
 
     workspaceNamespace(accountId: string): `workspace-${string}` {

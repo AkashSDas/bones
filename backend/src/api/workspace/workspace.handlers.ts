@@ -71,7 +71,7 @@ export const deleteWorkspace: WorkspaceHandler["DeleteWorkspace"] = async (c) =>
     }
 
     const rbac = new RBACValidator(c);
-    await rbac.validateWorkspace({ workspacePk: workspace[1], write: true });
+    await rbac.validateWorkspaceAccess({ workspacePk: workspace[1], write: true });
 
     const manager = new WorkspaceManager(account.accountId);
     await manager.delete(workspace[1], workspace[2].workspaceId);
@@ -95,7 +95,7 @@ export const updateWorkspace: WorkspaceHandler["UpdateWorkspace"] = async (c) =>
     }
 
     const rbac = new RBACValidator(c);
-    await rbac.validateWorkspace({ workspacePk: workspace[1], write: true });
+    await rbac.validateWorkspaceAccess({ workspacePk: workspace[1], write: true });
 
     const updatedWorkspace = await dal.workspace.update(accountPk, workspace[1], body);
 
@@ -117,7 +117,7 @@ export const getWorkspace: WorkspaceHandler["GetWorkspace"] = async (c) => {
     }
 
     const rbac = new RBACValidator(c);
-    await rbac.validateWorkspace({ workspacePk: workspace[1], read: true });
+    await rbac.validateWorkspaceAccess({ workspacePk: workspace[1], read: true });
 
     return c.json({ workspace: workspace[2] }, status.OK);
 };

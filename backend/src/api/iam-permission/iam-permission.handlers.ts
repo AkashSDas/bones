@@ -23,7 +23,7 @@ export const getIAMPermission: PermHandler["GetIAMPermission"] = async (c) => {
     const { permissionId } = c.req.valid("param");
     const accountPk = c.get("accountPk")!;
 
-    const [_, permission] = await RBACValidator.validateIAMPermissionAccess(
+    const [_, permission] = await RBACValidator.validateIAMAccess(
         accountPk,
         permissionId,
     );
@@ -36,7 +36,7 @@ export const updateIAMPermission: PermHandler["UpdateIAMPermission"] = async (c)
     const body = c.req.valid("json");
     const accountPk = c.get("accountPk")!;
 
-    const [permissionPk] = await RBACValidator.validateIAMPermissionAccess(
+    const [permissionPk] = await RBACValidator.validateIAMAccess(
         accountPk,
         permissionId,
     );

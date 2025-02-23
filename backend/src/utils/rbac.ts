@@ -60,7 +60,10 @@ export class RBACValidator {
     }
 
     /** Check if there's a IAM access across account */
-    async validateIAMWideAccess({ read, write }: IAMPermissionOpts): Promise<void> {
+    async validateIAMAccountWideAccess({
+        read,
+        write,
+    }: IAMPermissionOpts): Promise<void> {
         if (read && write) {
             log.error("Only one value is allowed to be added: 'read' or 'write'");
             throw new InternalServerError({});
@@ -101,7 +104,7 @@ export class RBACValidator {
     }
 
     /** Check if there's a Workspace access across account */
-    async validateWorkspaceWideAccess({
+    async validateWorkspaceAccountWideAccess({
         read,
         write,
     }: IAMPermissionOpts): Promise<void> {
@@ -180,7 +183,7 @@ export class RBACValidator {
 
         let hasAccess = false;
         try {
-            await this.validateWorkspaceWideAccess({ read, write });
+            await this.validateWorkspaceAccountWideAccess({ read, write });
             hasAccess = true;
         } catch (e) {
             log.error(`Workspace service wide access failed: ${e}`);
