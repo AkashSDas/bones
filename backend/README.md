@@ -1,6 +1,18 @@
 # Bones Backend
 
+This is the main backend for Bones project. It handles:
+
+-   IAM (authentication, authorization, account's users management)
+-   Workspace management (creating and managing IDE environments)
+
+## Getting started (for development)
+
+1. Go the `Databases` section and setup required databases.
+1. Create a `.env` file using the existing `.env.sample` file. Add values for the missing ones.
+
 ## Databases
+
+The database used for storing data is PostgreSQL, and Redis is used for managing task queues.
 
 ```bash
 docker run --name bones-postgres \
@@ -13,15 +25,15 @@ docker run --name bones-postgres \
 docker run --name bones-redis -d -p 6379:6379 redis
 ```
 
-Drop all PostgreSQL types:
+SQL query to drop all types in PostgreSQL:
 
 ```sql
-DO $$ 
-DECLARE 
+DO $$
+DECLARE
     r RECORD;
 BEGIN
     -- Loop through all user-defined types in the current schema
-    FOR r IN (SELECT n.nspname AS schema_name, t.typname AS type_name 
+    FOR r IN (SELECT n.nspname AS schema_name, t.typname AS type_name
               FROM pg_type t
               JOIN pg_namespace n ON n.oid = t.typnamespace
               WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
