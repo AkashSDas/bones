@@ -1,6 +1,6 @@
 {
     "name": "backend",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "type": "module",
     "scripts": {
         "dev": "node -v && tsc -v && tsx watch src/index.ts",
@@ -74,5 +74,9 @@
         "*/**/*.{json,css,md}": [
             "prettier --write"
         ]
+    },
+    "engines": {
+        "node": "20.11.0",
+        "pnpm": "10.4.1"
     }
 }
