@@ -6,8 +6,12 @@ import { z } from "zod";
 import { WorkspaceSchemas } from "@/api/workspace/workspace.schema";
 import { dal } from "@/db/dal";
 import { type AccountId, type AccountPk } from "@/db/models/account";
-import { UserPk } from "@/db/models/user";
-import { WorkspaceClient, WorkspaceId, WorkspacePk } from "@/db/models/workspace";
+import { type UserPk } from "@/db/models/user";
+import {
+    WorkspaceClient,
+    type WorkspaceId,
+    type WorkspacePk,
+} from "@/db/models/workspace";
 import { k8sApi, k8sKind, k8sNames, k8sNetworkingApi } from "@/lib/k8s";
 import { log } from "@/lib/logger";
 
@@ -20,7 +24,7 @@ const NETWORKING_API_VERSION = "networking.k8s.io/v1";
 /** Service offered by Bones */
 const SERVICE_NAME = "workspace";
 
-/** This class takes care of all of management related to workspaces */
+/** This manager will take care of managing K8s resources related to a workspace */
 export class WorkspaceManager {
     constructor(private accountId: AccountId) {}
 
@@ -37,7 +41,7 @@ export class WorkspaceManager {
     }
 
     /**
-     * Create a namespace for this account. This is will keep all of kubernetes resources
+     * Create a namespace for this account. This is will keep all of Kubernetes resources
      * under same namespace. Also, if I delete the namespace, all resources in it will be
      * terminated (easy peasy)
      **/
@@ -99,7 +103,6 @@ export class WorkspaceManager {
 
     /**
      * Create a new workspace based on container img and tag
-     * @returns Workspace URL
      */
     async create(
         accountPk: AccountPk,

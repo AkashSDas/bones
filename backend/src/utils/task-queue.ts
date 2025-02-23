@@ -24,13 +24,13 @@ const sendEmailQueue = new Bull<unknown>("sendEmail", config);
 
 // =================================
 // Task Queue
-// ================================
+// =================================
 
-/**
- * Using static methods for processing tasks, if using instance methods then
- * `this.<method>` is not a function while processing tasks.
- */
+/** Use task queue to run long running task in the background */
 class TaskQueue {
+    // Here, using static methods for processing tasks and not instance methods. This is
+    // because while using instance method, `this.<method>` is not a function while processing tasks
+
     public queues: Bull.Queue[];
 
     constructor() {

@@ -6,22 +6,23 @@ import type {
     IAMPermissionPk,
 } from "@/db/models/iam-permission";
 import {
-    IAMPermissionAccessType,
+    type IAMPermissionAccessType,
     IAM_PERMISSION_ACCESS_TYPE,
 } from "@/db/models/iam-permission-user";
-import { type UserClient, UserPk } from "@/db/models/user";
-import { type WorkspacePk } from "@/db/models/workspace";
+import type { UserClient, UserPk } from "@/db/models/user";
+import type { WorkspacePk } from "@/db/models/workspace";
 import { log } from "@/lib/logger";
 
 import { InternalServerError } from "./http";
 import { ForbiddenError } from "./http";
-import { type HonoContext } from "./types";
+import type { HonoContext } from "./types";
 
 type IAMPermissionOpts = {
     read?: boolean;
     write?: boolean;
 };
 
+/** Set of validators to check if there's service wide or service access */
 export class RBACValidator {
     public isAdmin: boolean;
     public accountPk: number;
@@ -33,8 +34,10 @@ export class RBACValidator {
         this.isAdmin = c.get("isAdmin") ?? false;
 
         const accountPk = c.get("accountPk");
+
+        // Account PK should always be set and therefore RBACValidator should be used after
+        // the `authenticate` middleware has ran
         if (typeof accountPk !== "number") {
-            // Account should always be set. Meaning use this after an the `authenticate` middleware has ran
             log.error(`Account PK is not set: ${accountPk}`);
             throw new InternalServerError({});
         }
@@ -56,7 +59,8 @@ export class RBACValidator {
         }
     }
 
-    async validateIAMServiceWide({ read, write }: IAMPermissionOpts): Promise<void> {
+    /** Check if there's a IAM access across account */
+    async validateIAMWideAccess({ read, write }: IAMPermissionOpts): Promise<void> {
         if (read && write) {
             log.error("Only one value is allowed to be added: 'read' or 'write'");
             throw new InternalServerError({});
@@ -74,12 +78,8 @@ export class RBACValidator {
             this.accountPk,
         );
 
-        if (read && (perm.readAll || perm.writeAll)) {
-            return;
-        }
-        if (write && perm.writeAll) {
-            return;
-        }
+        if (read && (perm.readAll || perm.writeAll)) return;
+        if (write && perm.writeAll) return;
 
         const permMapping = await dal.iamPermissionUser.findByPermissionIdAndUserId(
             permPk,
@@ -100,7 +100,8 @@ export class RBACValidator {
         });
     }
 
-    async validateWorkspaceServiceWide({
+    /** Check if there's a Workspace access across account */
+    async validateWorkspaceWideAccess({
         read,
         write,
     }: IAMPermissionOpts): Promise<void> {
@@ -133,7 +134,35 @@ export class RBACValidator {
         });
     }
 
-    async validateWorkspace({
+    // =========================================
+    // RBAC Helpers
+    // =========================================
+
+    /** Validate IAM access */
+    static async validateIAMAccess(
+        accountPk: AccountPk,
+        permissionId: IAMPermissionId,
+    ): Promise<
+        [
+            IAMPermissionPk,
+            IAMPermissionClient & {
+                users: (UserClient & { accessType: IAMPermissionAccessType })[];
+            },
+        ]
+    > {
+        const perm = await dal.iamPermission.findById(permissionId, accountPk);
+
+        if (perm === null) {
+            throw new ForbiddenError({
+                message: "You don't have access to this IAM permission",
+            });
+        }
+
+        return perm;
+    }
+
+    /** Validate workspace access */
+    async validateWorkspaceAccess({
         read,
         write,
         workspacePk,
@@ -151,7 +180,7 @@ export class RBACValidator {
 
         let hasAccess = false;
         try {
-            await this.validateWorkspaceServiceWide({ read, write });
+            await this.validateWorkspaceWideAccess({ read, write });
             hasAccess = true;
         } catch (e) {
             log.error(`Workspace service wide access failed: ${e}`);
@@ -220,32 +249,6 @@ export class RBACValidator {
         throw new ForbiddenError({
             message: "You don't have access IAM Service",
         });
-    }
-
-    // =========================================
-    // RBAC Helpers
-    // =========================================
-
-    static async validateIAMPermissionAccess(
-        accountPk: AccountPk,
-        permissionId: IAMPermissionId,
-    ): Promise<
-        [
-            IAMPermissionPk,
-            IAMPermissionClient & {
-                users: (UserClient & { accessType: IAMPermissionAccessType })[];
-            },
-        ]
-    > {
-        const perm = await dal.iamPermission.findById(permissionId, accountPk);
-
-        if (perm === null) {
-            throw new ForbiddenError({
-                message: "You don't have access to this IAM permission",
-            });
-        }
-
-        return perm;
     }
 
     // =========================================

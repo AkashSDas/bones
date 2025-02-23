@@ -1,5 +1,5 @@
-// Update prettier to have this file imported first so that it will
-// load all of the environment variables
+// This file will be imported before others are import because this will
+// load ll of the environment variables
 import { env } from "./utils/env";
 
 import { createBullBoard } from "@bull-board/api";
@@ -57,6 +57,7 @@ app.use(
     }),
 );
 
+// Request id is useful for tracking the request
 app.use(
     requestId({
         generator(_c) {
@@ -66,16 +67,20 @@ app.use(
     }),
 );
 
+// Correlation id is useful for tracking the request across API calls in a micro-service architecture
 app.use(correlationId);
 
 app.use(async function runWithinContext(c, next) {
     const requestId = c.get("requestId") ?? "-";
     const correlationId = c.get("correlationId") ?? "-";
 
-    // Run the request inside AsyncLocalStorage context
+    // Run the request inside AsyncLocalStorage context so that we've access to the
+    // all the variables stored inside of this storage and don't have struggle and pass
+    // these values across functions/methods/classes and what not
     return asyncLocalStorage.run({ correlationId, requestId }, () => next());
 });
 
+// For faster API response responses
 app.use(compress({ encoding: "gzip" }));
 
 // ==========================
@@ -105,10 +110,13 @@ app.notFound(function handleNotFound(c) {
 // Task Queue Setup
 // ==========================
 
-const serverAdapter = new HonoAdapter(serveStatic);
-createBullBoard({ serverAdapter, queues: queue.queueAdapter });
+// Task queues are used for running long running tasks in the background and quickly
+// sending response to the frontend.
 
-const basePath = "/api/task-queue/ui";
+const serverAdapter = new HonoAdapter(serveStatic);
+const basePath = "/api/task-queue/ui"; // See task queues in the dashboard in this endpoint
+
+createBullBoard({ serverAdapter, queues: queue.queueAdapter });
 serverAdapter.setBasePath(basePath);
 app.route(basePath, serverAdapter.registerPlugin());
 
@@ -116,6 +124,7 @@ app.route(basePath, serverAdapter.registerPlugin());
 // Endpoints
 // ==========================
 
+// API documentation endpoints. Generated automatically via Swagger and HonoJS
 app.doc("/api/doc", {
     openapi: "3.0.0",
     info: {
@@ -126,7 +135,10 @@ app.doc("/api/doc", {
 app.get("/api/doc/ui", swaggerUI({ url: "/api/doc" }));
 app.get("/api/doc/ref", apiReference({ spec: { url: "/api/doc" } }));
 
+// Endpoints for testing backend is active or not and miscellaneous info
 app.route("/api/v1/ping", pingRouter);
+
+// Core endpoints
 app.route("/api/v1/iam", iamRouter);
 app.route("/api/v1/iam-permission", iamPermissionRouter);
 app.route("/api/v1/workspace", workspaceRouter);

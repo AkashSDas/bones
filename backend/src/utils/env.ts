@@ -18,5 +18,5 @@ export function loadEnv(): EnvironmentVariables {
     }
 }
 
-/** Environment variables */
+/** Environment variables. Use this instead of `process.env` */
 export const env = loadEnv();
