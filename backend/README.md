@@ -2,8 +2,8 @@
 
 This is the main backend for Bones project. It handles:
 
--   IAM (authentication, authorization, account's users management)
--   Workspace management (creating and managing IDE environments)
+- IAM (authentication, authorization, account's users management)
+- Workspace management (creating and managing IDE environments)
 
 ## Getting started (for development)
 
@@ -25,7 +25,7 @@ docker run --name bones-postgres \
 docker run --name bones-redis -d -p 6379:6379 redis
 ```
 
-### SQL query to drop all types in PostgreSQL:
+### SQL query to drop all types in PostgreSQL
 
 ```sql
 DO $$
