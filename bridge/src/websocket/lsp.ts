@@ -1,10 +1,10 @@
 import { type WSContext } from "@hono/hono/ws";
 import { z } from "npm:zod";
-import { RequestMessage } from "npm:vscode-jsonrpc/lib/node/main.js";
+import { type RequestMessage } from "npm:vscode-jsonrpc/lib/node/main.js";
 import * as rpc from "npm:vscode-ws-jsonrpc";
 import * as server from "npm:vscode-ws-jsonrpc/server";
 import {
-    InitializeParams,
+    type InitializeParams,
     InitializeRequest,
     Message,
 } from "npm:vscode-languageserver";
@@ -20,13 +20,15 @@ export const SupportedLSPSchema = z.union([
     z.literal("jsonLanguageServer"),
     z.literal("cssLanguageServer"),
     z.literal("htmlLanguageServer"),
-    z.literal("tomlLanguageServer"),
-    z.literal("rustLanguageServer"),
 ]);
 
 type SupportedLSP = z.infer<typeof SupportedLSPSchema>;
 
-const EventSchema = z.union([z.literal("install"), z.literal("list")]);
+const EventSchema = z.union([
+    z.literal("install"),
+    z.literal("list"),
+    z.literal("listInstalled"),
+]);
 
 const InstallPayloadSchema = z.object({
     lsp: SupportedLSPSchema,
@@ -75,7 +77,7 @@ const lspCommandMapping: Record<
                 toolName: "Python PIP",
                 description: `PIP is required to install Pyright Language Server`,
                 exampleInstallCommand: "apt install python3-pip",
-            },
+
         ],
         extension: "py",
     },
@@ -165,41 +167,22 @@ const lspCommandMapping: Record<
         ],
         extension: "html",
     },
-    tomlLanguageServer: {
-        lspName: "tomlLanguageServer",
-        lspReadableName: "Toml",
-        runCommand: ["taplo-lsp", "stdio"],
-        installCommand: ["cargo", "install", "taplo-cli"],
-        installationPrerequisite: [
-            {
-                toolName: "Rust",
-                description: `Rust is required to install Rust Language Server`,
-                exampleInstallCommand: "apt install rustc",
-            },
-        ],
-        extension: "toml",
-    },
-    rustLanguageServer: {
-        lspName: "rustLanguageServer",
-        lspReadableName: "Rust Language Server",
-        runCommand: ["rust-analyzer"],
-        installCommand: ["rustup", "component", "add", "rust-analyzer"],
-        installationPrerequisite: [
-            {
-                toolName: "Rust",
-                description: `Rust is required to install Rust Language Server`,
-                exampleInstallCommand: "apt install rustc",
-            },
-        ],
-        extension: "rs",
-    },
 };
+
+// TODO: a better way to handle this would be to save this info in a SQLite storage
+// Issue with this would be that if the pod is recovered from a crash then LSP would
+// be installed, but would be marked as uninstalled, but that's not a big issue.
+let installedLSPs: SupportedLSP[] = []
 
 export class LanguageServerWs {
     public event: z.infer<typeof EventSchema> | undefined;
     public payload: unknown;
 
-    constructor(public ws: WSContext, public data: Record<string, unknown>) {
+
+    constructor(
+        public ws: WSContext,
+        public data: Record<string, unknown>,
+    ) {
         const { data: event } = EventSchema.safeParse(data.event);
 
         this.event = event;
@@ -214,12 +197,15 @@ export class LanguageServerWs {
             case "list":
                 this.ws.send(this.listAvailableLSPs());
                 break;
+            case "listInstalled":
+                this.ws.send(this.listInstalledLSPs());
+                break;
             default:
                 this.ws.send(
                     this.returnResult({
                         success: false,
                         error: `Invalid event type`,
-                    })
+                    }),
                 );
                 break;
         }
@@ -246,14 +232,14 @@ export class LanguageServerWs {
      */
     private async install(): Promise<string> {
         const { success, data } = await InstallPayloadSchema.safeParseAsync(
-            this.payload
+            this.payload,
         );
 
         if (success) {
             const config = lspCommandMapping[data.lsp];
 
             const isSetupValid = await this.validateToolInstalled(
-                config.installCommand[0]
+                config.installCommand[0],
             );
             if (!isSetupValid) {
                 return this.returnResult({
@@ -273,6 +259,10 @@ export class LanguageServerWs {
                     error: `Failed to install ${data.lsp} language server`,
                 });
             } else {
+                const newInstalledLSPs = new Set(installedLSPs);
+                newInstalledLSPs.add(config.lspName);
+                installedLSPs = Array.from(newInstalledLSPs);
+
                 return this.returnResult({
                     success: true,
                     message: `${
@@ -312,6 +302,35 @@ export class LanguageServerWs {
     }
 
     /**
+     * Get list of installed language servers
+     *
+     * @example
+     * ```json
+     * {
+     *     "type": "lsp",
+     *     "event": "listInstalled",
+     * }
+     * ```
+     */
+    private listInstalledLSPs(): string {
+        return this.returnResult({
+            success: true,
+            languageServers: Object.values(lspCommandMapping)
+                .map((lsp) => ({
+                    lspName: lsp.lspName,
+                    lspReadableName: lsp.lspReadableName,
+                    installationPrerequisite: lsp.installationPrerequisite,
+                    extension: lsp.extension,
+                }))
+                .filter((lsp) => installedLSPs.includes(lsp.lspName)),
+        });
+    }
+
+    // ================================
+    // Helpers
+    // ================================
+
+    /**
      * Helper method to return standardized WebSocket response
      */
     private returnResult(res: Record<string, unknown>): string {
@@ -341,8 +360,13 @@ export class LanguageServerWs {
     }
 }
 
+/** Handle LSP installation management for a workspace */
 const lspProcessMapping: Map<SupportedLSP, unknown> = new Map();
 
+/**
+ * Initialize language server so that it can communicate with the Monaco editor in the
+ * frontend and you'll get the auto-complete, hints, signatures, etc
+ **/
 export class LanguageServerPool {
     constructor() {}
 
@@ -360,14 +384,14 @@ export class LanguageServerPool {
         const writer = new rpc.WebSocketMessageWriter(socket);
 
         const socketConnection = server.createConnection(reader, writer, () =>
-            socket.dispose()
+            socket.dispose(),
         );
 
         const config = lspCommandMapping[lsp];
         const serverConnection = server.createServerProcess(
             config.lspReadableName,
             config.runCommand[0],
-            config.runCommand.slice(1)
+            config.runCommand.slice(1),
         );
 
         console.log(`${config.lspReadableName} server started`);
@@ -379,7 +403,7 @@ export class LanguageServerPool {
                 function forwardOrReceiveMessageToLSP(message: Message) {
                     if (Message.isRequest(message)) {
                         console.log(
-                            `${config.lspReadableName} Server received: ${message}`
+                            `${config.lspReadableName} Server received: ${message}`,
                         );
 
                         if (message.method === InitializeRequest.type.method) {
@@ -391,12 +415,12 @@ export class LanguageServerPool {
 
                     if (Message.isResponse(message)) {
                         console.log(
-                            `${config.lspReadableName} Server sent: ${message}`
+                            `${config.lspReadableName} Server sent: ${message}`,
                         );
                     }
 
                     return message;
-                }
+                },
             );
 
             console.log(`${config.lspReadableName} Server connected`);

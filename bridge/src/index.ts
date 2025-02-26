@@ -2,15 +2,12 @@ import { type Context, Hono } from "jsr:@hono/hono";
 import { upgradeWebSocket } from "jsr:@hono/hono/deno";
 import { status } from "#utils/http.ts";
 import { FileSystemWs } from "#ws/fs.ts";
-import {
-    LanguageServerPool,
-    LanguageServerWs,
-    SupportedLSPSchema,
-} from "#ws/lsp.ts";
+import { LanguageServerPool, LanguageServerWs, SupportedLSPSchema } from "#ws/lsp.ts";
 import { IWebSocket } from "vscode-ws-jsonrpc";
 
 const app = new Hono();
 
+// Testing endpoint for checking if this bridge server is running or not
 app.get("/ping", (c: Context) => {
     return c.json({ message: "Bridge is active" }, status.OK);
 });
@@ -42,8 +39,9 @@ app.get(
                             ws.send(
                                 JSON.stringify({
                                     success: false,
-                                    error: `Failed to parse incoming data: Invalid request type`,
-                                })
+                                    error:
+                                        `Failed to parse incoming data: Invalid request type`,
+                                }),
                             );
                             break;
                     }
@@ -53,7 +51,7 @@ app.get(
                         JSON.stringify({
                             success: false,
                             error: `Failed to parse incoming data: ${e}`,
-                        })
+                        }),
                     );
                 }
             },
@@ -61,9 +59,12 @@ app.get(
                 console.log("Connection closed");
             },
         };
-    })
+    }),
 );
 
+// WebSocket endpoint for handling communication between Moncao Editor and the running
+// language server. The `:lsp` param is the LSP name. This is acting as a "bridge" between
+// the running language server and the Moncao Editor
 app.get(
     "/ws/lsp/:lsp",
     upgradeWebSocket(function handleLSPWebsocketConnection(c) {
@@ -88,7 +89,7 @@ app.get(
                             };
                         },
                         onError: (
-                            cb: ((e: Event | ErrorEvent) => unknown) | null
+                            cb: ((e: Event | ErrorEvent) => unknown) | null,
                         ) => {
                             honoSocket.onerror = cb;
                         },
@@ -106,12 +107,12 @@ app.get(
                         JSON.stringify({
                             type: "error",
                             message: `Unsupported Language Server: ${lsp}`,
-                        })
+                        }),
                     );
                 }
             },
         };
-    })
+    }),
 );
 
 Deno.serve({ port: 4000 }, app.fetch);

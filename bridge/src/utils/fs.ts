@@ -3,13 +3,20 @@ import { copy, emptyDir, ensureDir, expandGlob } from "jsr:@std/fs";
 import { basename, dirname, extname, join } from "jsr:@std/path";
 import { levenshteinDistance } from "jsr:@std/text";
 
-function queryExistsInFileName(fileName: string, query: string): boolean {
+function checkQueryStringExistsInFilename(
+    fileName: string,
+    query: string,
+): boolean {
     // Escape special regex characters in the query to prevent unintended behavior
     const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(escapedQuery.toLowerCase(), "i"); // 'i' for case-insensitive match
     return regex.test(fileName.toLowerCase());
 }
 
+/**
+ * This will be the data structure of a file/folder in a workspace and will be used
+ * for communicating with frontend and the bridge server (i.e. this backend).
+ */
 type File = {
     name: string;
     absolutePath: string;
@@ -23,6 +30,7 @@ type File = {
     children: File[] | null;
 };
 
+// Using Zod lazy for self referencing Zod schema
 const FileSchema: z.ZodType<File> = z.lazy(function () {
     return z.object({
         name: z.string(),
@@ -53,7 +61,6 @@ type SearchFileResult = {
 class FileSystemManager {
     /** Absolute path of workspace */
     private readonly rootDir: "/usr/workspace" = "/usr/workspace";
-    // private readonly rootDir = "../containers/vite-react18";
 
     /** These directories will be excluded for search (text, file/directory) */
     private readonly excludedDirs: string[] = [".git", "node_modules", ".venv"];
@@ -63,7 +70,7 @@ class FileSystemManager {
     // ==============================================
 
     async getFile(
-        absolutePath: string
+        absolutePath: string,
     ): Promise<{ file: File; content: string } | Error> {
         try {
             const stats = await Deno.lstat(absolutePath);
@@ -114,7 +121,7 @@ class FileSystemManager {
                     }
 
                     return child;
-                })()
+                })(),
             );
         }
 
@@ -128,7 +135,7 @@ class FileSystemManager {
     async createFileOrFolder(
         name: string,
         absolutePath: string,
-        isDirectory: boolean
+        isDirectory: boolean,
     ): Promise<File | Error> {
         const location = join(absolutePath, name);
 
@@ -152,7 +159,7 @@ class FileSystemManager {
 
     async renameFileOrFolder(
         absolutePath: string,
-        newName: string
+        newName: string,
     ): Promise<File | Error> {
         try {
             const newAbsolutePath = join(dirname(absolutePath), newName);
@@ -164,7 +171,7 @@ class FileSystemManager {
                 // Else it'll throw error
                 if (exists) {
                     return new Error(
-                        `Target path ${newAbsolutePath} already exists.`
+                        `Target path ${newAbsolutePath} already exists.`,
                     );
                 }
             } catch {
@@ -233,12 +240,12 @@ class FileSystemManager {
 
     async moveFileOrFolder(
         absoluteSourcePath: string,
-        absoluteDestinationPath: string
+        absoluteDestinationPath: string,
     ): Promise<File | Error> {
         try {
             const newAbsolutePath = join(
                 absoluteDestinationPath,
-                basename(absoluteSourcePath)
+                basename(absoluteSourcePath),
             );
 
             try {
@@ -284,7 +291,7 @@ class FileSystemManager {
     // Checkout Deno.rename function. It also moves files/folders.
     async moveFilesOrFolders(
         absoluteSourcePaths: string[],
-        absoluteDestinationPath: string
+        absoluteDestinationPath: string,
     ): Promise<(File | Error)[] | Error> {
         try {
             const destInfo = await Deno.stat(absoluteDestinationPath);
@@ -295,7 +302,7 @@ class FileSystemManager {
             const movePromises = absoluteSourcePaths.map((sourcePath) => {
                 return this.moveFileOrFolder(
                     sourcePath,
-                    absoluteDestinationPath
+                    absoluteDestinationPath,
                 );
             });
 
@@ -313,7 +320,7 @@ class FileSystemManager {
 
     async copyFileOrFolder(
         absoluteSourcePath: string,
-        absoluteDestinationPath: string
+        absoluteDestinationPath: string,
     ): Promise<File | Error> {
         try {
             const baseName = basename(absoluteSourcePath);
@@ -324,7 +331,7 @@ class FileSystemManager {
             while (await this.pathExists(destinationPath)) {
                 destinationPath = join(
                     absoluteDestinationPath,
-                    `${baseName} ${counter}`
+                    `${baseName} ${counter}`,
                 );
                 counter++;
             }
@@ -343,7 +350,7 @@ class FileSystemManager {
 
     async copyFilesOrFolders(
         absoluteSourcePaths: string[],
-        absoluteDestinationPath: string
+        absoluteDestinationPath: string,
     ): Promise<(File | Error)[] | Error> {
         try {
             const destInfo = await Deno.stat(absoluteDestinationPath);
@@ -354,7 +361,7 @@ class FileSystemManager {
             const copyPromises = absoluteSourcePaths.map((sourcePath) => {
                 return this.copyFileOrFolder(
                     sourcePath,
-                    absoluteDestinationPath
+                    absoluteDestinationPath,
                 );
             });
 
@@ -375,7 +382,7 @@ class FileSystemManager {
             matchCase: boolean;
             matchWholeWord: boolean;
             useRegex: boolean;
-        }
+        },
     ): Promise<{
         results: SearchTextResult[];
         total: number;
@@ -390,7 +397,7 @@ class FileSystemManager {
 
             const ignoreFilesInDir = this.excludedDirs.some((dir) => {
                 const ignore = file.absolutePath.startsWith(
-                    join(rootAbsolutePath, dir)
+                    join(rootAbsolutePath, dir),
                 );
 
                 return ignore;
@@ -411,7 +418,7 @@ class FileSystemManager {
             results,
             total: results.reduce(
                 (acc, result) => acc + result.numberOfMatches,
-                0
+                0,
             ),
         };
     }
@@ -423,7 +430,7 @@ class FileSystemManager {
             matchWholeWord: boolean;
             useRegex: boolean;
         },
-        file: File
+        file: File,
     ): Promise<SearchTextResult | null> {
         // Prepare the query pattern based on options
 
@@ -436,7 +443,7 @@ class FileSystemManager {
             const wordBoundary = options.matchWholeWord ? "\\b" : "";
             pattern = new RegExp(
                 `${wordBoundary}${escapedQuery}${wordBoundary}`,
-                options.matchCase ? "g" : "gi"
+                options.matchCase ? "g" : "gi",
             );
         }
 
@@ -472,7 +479,7 @@ class FileSystemManager {
 
             const ignoreFilesInDir = this.excludedDirs.some((dir) => {
                 const ignore = file.absolutePath.startsWith(
-                    join(rootAbsolutePath, dir)
+                    join(rootAbsolutePath, dir),
                 );
 
                 return ignore;
@@ -484,18 +491,18 @@ class FileSystemManager {
         const results: SearchFileResult[] = [];
 
         for (const file of files) {
-            const exists = queryExistsInFileName(
+            const exists = checkQueryStringExistsInFilename(
                 file.name.toLowerCase(),
-                query.toLowerCase()
+                query.toLowerCase(),
             );
             const distance = levenshteinDistance(
                 file.name.toLowerCase(),
-                query.toLowerCase()
+                query.toLowerCase(),
             );
 
             if (exists) {
                 const previewContent = await this.previewInitialContentOfFile(
-                    file.absolutePath
+                    file.absolutePath,
                 );
 
                 results.push({ file, matchScore: distance, previewContent });
@@ -587,7 +594,7 @@ class FileSystemManager {
             // End preview 100 characters after match
             const endIdx = Math.min(
                 content.length,
-                match.index + match[0].length + 100
+                match.index + match[0].length + 100,
             );
 
             return content.substring(startIdx, endIdx);
@@ -597,7 +604,7 @@ class FileSystemManager {
     }
 
     private async previewInitialContentOfFile(
-        absolutePath: string
+        absolutePath: string,
     ): Promise<string> {
         try {
             const content = await Deno.readTextFile(absolutePath);
@@ -609,4 +616,5 @@ class FileSystemManager {
     }
 }
 
+/** Instance to manage all of the workspace file related operations */
 export const fileSystemManager = new FileSystemManager();

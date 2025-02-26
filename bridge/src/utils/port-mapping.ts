@@ -14,7 +14,7 @@ const Extension = ".conf";
 /** Whenever nginx config is changed */
 const NginxReloadShellCommand = "nginx -s reload";
 
-/** Available exposed ports */
+/** Available exposed ports. This should be in sync with what is used in the Bones backend */
 const PortSchema = z.union([
     z.literal(80),
     z.literal(3000),
@@ -37,6 +37,7 @@ class PortMappingManager {
 
     constructor() {}
 
+    /** List of the current Nginx internal-external port mappings */
     async list(): Promise<PortMapping[] | Error> {
         try {
             const mappings: PortMapping[] = [];
@@ -87,7 +88,7 @@ class PortMappingManager {
     async delete(
         internalPort: number,
         externalPort: number,
-        reloadNginx: boolean = true
+        reloadNginx: boolean = true,
     ): Promise<undefined | Error> {
         try {
             const absolutePath = await this.basePath();
@@ -110,11 +111,11 @@ class PortMappingManager {
         }
     }
 
-    /** Delete port mapping */
+    /** Create port mapping */
     async create(
         internalPort: number,
         externalPort: number,
-        reloadNginx: boolean = true
+        reloadNginx: boolean = true,
     ): Promise<undefined | Error> {
         try {
             const absolutePath = await this.basePath();
@@ -125,13 +126,13 @@ class PortMappingManager {
 
             if (externalPort == 80) {
                 const data = encoder.encode(
-                    this.buildPort80NginxConfig(internalPort)
+                    this.buildPort80NginxConfig(internalPort),
                 );
 
                 await Deno.writeFile(filePath, data, { createNew: true });
             } else {
                 const data = encoder.encode(
-                    this.buildOtherPortNginxConfig(internalPort, externalPort)
+                    this.buildOtherPortNginxConfig(internalPort, externalPort),
                 );
 
                 await Deno.writeFile(filePath, data, { createNew: true });
@@ -150,8 +151,10 @@ class PortMappingManager {
     // ====================================
 
     /**
-     * When port mapping for external port 80 is removed, this will be it's content
-     * as Bridge run on port 4000
+     * When port mapping for external port 80 is removed then this will be it's content
+     * i.e. we remove the internal-external port mapping and keep mappings for Bridge
+     * v1 and v2 as they're running on ports 4000 and 4001 respectively. Bridge v1 and
+     * v2 will listening to external port 80 request.
      */
     private buildEmptyPort80NginxConfig(): string {
         return `
@@ -173,13 +176,30 @@ class PortMappingManager {
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                 proxy_set_header X-Forwarded-Proto $scheme;
             }
+
+            # Bridge service routing
+            location /_bridge_v2 {
+                rewrite ^/_bridge_v2(.*)$ $1 break;
+        
+                proxy_pass http://127.0.0.1:4001;
+                proxy_http_version 1.1;
+        
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+        
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
         }
         `;
     }
 
     /**
      * When port mapping for external port 80 is added, we will have to add port mapping
-     * as well as Bridge port mapping as Bridge run on port 4000
+     * and keep the mappings for Bridge v1 and v2 as they're running on ports 4000
+     * and 4001 respectively. Bridge v1 and v2 will listening to external port 80 request.
      */
     private buildPort80NginxConfig(internalPort: number): string {
         return `
@@ -241,10 +261,10 @@ class PortMappingManager {
         `;
     }
 
-    /** Build nginx config for internal-external port where external port is not 80 */
+    /** Build Nginx conf for internal-external port where external port is not 80 */
     private buildOtherPortNginxConfig(
         internalPort: number,
-        externalPort: number
+        externalPort: number,
     ): string {
         return `
         server {
@@ -290,4 +310,5 @@ class PortMappingManager {
     }
 }
 
+/** Manage internal and external port mapping for a Workspace */
 export const portMappingManager = new PortMappingManager();
