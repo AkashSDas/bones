@@ -50,7 +50,7 @@ tasks:
         cmds:
             # For MacOS dnsmasq.conf file is at /opt/homebrew/etc/dnsmasq.conf
             # cat /opt/homebrew/etc/dnsmasq.conf
-            # Remove the line of "address=/.${LOCAL_CUSTOM_TLD}/${LOCAL_DNS_RESOLVER_IP}" from the
+            # Remove the line of "address=/.${LOCAL_CUSTOM_TLD}/${LOCAL_HOST_DNS_RESOLVER_IP}" from the
             # file "dnsmasq.conf" manually if failed
             - echo "This teardown is for MacOS (not working)."
             - echo "Removing .${LOCAL_CUSTOM_TLD} TLD configuration from dnsmasq.conf..."

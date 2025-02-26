@@ -19,12 +19,12 @@ tasks:
             - docker exec -it kind-control-plane crictl rmi workspace:vite-react18
 
     prune-kind-images:
-        desc: "Remove unused images from KinD cluster"
+        desc: "Remove unused images from KinD cluster (this will give some storage back)"
         cmds:
             - docker exec -it kind-control-plane crictl rmi --prune
 
     load-local-container-image-in-kind:
-        desc: "Load Local Container Images for Workspace in KinD"
+        desc: "Load Local Container Image (workspace:vite-react18) for Workspace in KinD"
         cmds:
             - echo "Removing old image if exists..."
             - docker exec -it kind-control-plane crictl rmi workspace:vite-react18 || true
