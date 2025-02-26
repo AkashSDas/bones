@@ -7,7 +7,6 @@ WORKDIR /usr/bridge-v2
 COPY pnpm-lock.yaml ./
 COPY package.json ./
 RUN pnpm install
-
 COPY ./src /usr/bridge-v2/src
 
 FROM node:20.8.0-bullseye-slim
