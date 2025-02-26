@@ -7,7 +7,3 @@
 [[start_commands]]
 run = "deno task start"
 
-# Ports
-[[ports]]
-local_port = 8000
-external_port = 80

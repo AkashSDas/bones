@@ -7,7 +7,3 @@
 [[start_commands]]
 run = "pnpm dev"
 
-# Ports
-[[ports]]
-local_port = 5173
-external_port = 80
