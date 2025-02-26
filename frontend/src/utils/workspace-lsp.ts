@@ -14,7 +14,11 @@ import { useWorkspaceLSPStore } from "@/store/workspace-lsp";
 // Schemas
 // ==========================================
 
-export const LSPEventSchema = z.union([z.literal("list"), z.literal("install")]);
+export const LSPEventSchema = z.union([
+    z.literal("install"),
+    z.literal("list"),
+    z.literal("listInstalled"),
+]);
 
 const SupportedLSPSchema = z.union([
     z.literal("gopls"),
@@ -23,8 +27,6 @@ const SupportedLSPSchema = z.union([
     z.literal("jsonLanguageServer"),
     z.literal("cssLanguageServer"),
     z.literal("htmlLanguageServer"),
-    z.literal("tomlLanguageServer"),
-    z.literal("rustLanguageServer"),
 ]);
 
 export const LanguageLSPMapping: Record<string, SupportedLSP> = {
@@ -34,8 +36,6 @@ export const LanguageLSPMapping: Record<string, SupportedLSP> = {
     json: "jsonLanguageServer",
     css: "cssLanguageServer",
     html: "htmlLanguageServer",
-    toml: "tomlLanguageServer",
-    rust: "rustLanguageServer",
 };
 
 export const ReadableLSPNameToLSP: Record<string, SupportedLSP> = {
@@ -45,8 +45,6 @@ export const ReadableLSPNameToLSP: Record<string, SupportedLSP> = {
     JSON: "jsonLanguageServer",
     CSS: "cssLanguageServer",
     HTML: "htmlLanguageServer",
-    Toml: "tomlLanguageServer",
-    Rust: "rustLanguageServer",
 };
 
 export type SupportedLSP = z.infer<typeof SupportedLSPSchema>;
@@ -64,6 +62,11 @@ const _InstallLSPRequestSchema = z.object({
     type: z.literal("lsp"),
     event: z.literal("install"),
     payload: z.object({ lsp: SupportedLSPSchema }),
+});
+
+const _ListInstalledLSPsRequestSchema = z.object({
+    type: z.literal("lsp"),
+    event: z.literal("listInstalled"),
 });
 
 // =====================================
@@ -112,12 +115,35 @@ export const InstallLSPResponseSchema = z.union([
     getErrorSchema(z.literal("install")),
 ]);
 
+export const ListInstalledLSPsResponseSchema = z.union([
+    z.object({
+        type: z.literal("lsp"),
+        event: z.literal("listInstalled"),
+        success: z.literal(true),
+        languageServers: z.array(
+            z.object({
+                lspName: z.string(),
+                lspReadableName: z.string(),
+                extension: z.string(),
+                installationPrerequisite: z.array(
+                    z.object({
+                        toolName: z.string(),
+                        description: z.string(),
+                        exampleInstallCommand: z.string().optional(),
+                    }),
+                ),
+            }),
+        ),
+    }),
+    getErrorSchema(z.literal("list")),
+]);
+
 // ==========================================
 // Helper
 // ==========================================
 
 class WorkspaceLSPManager {
-    list(): z.infer<typeof _ListLSPsRequestSchema> {
+    listAvailable(): z.infer<typeof _ListLSPsRequestSchema> {
         return {
             type: "lsp",
             event: "list",
@@ -131,6 +157,13 @@ class WorkspaceLSPManager {
             payload: {
                 lsp,
             },
+        };
+    }
+
+    listInstalled(): z.infer<typeof _ListInstalledLSPsRequestSchema> {
+        return {
+            type: "lsp",
+            event: "listInstalled",
         };
     }
 }
