@@ -30,7 +30,7 @@ function WorkspaceHomePage() {
         <main className="my-5 md:my-6 px-8 md:py-8 mx-auto w-full max-w-[1440px] space-y-4 md:space-y-12">
             {query.isFetching ? <Loader variant="page" /> : null}
 
-            {query.data?.data.isInitialized ? (
+            {query.isFetching ? null : query.data?.data.isInitialized ? (
                 <>
                     <StartNewWorkspaceSection />
                     <hr className="w-full max-w-[740px] mx-auto h-px border border-grey-900" />
