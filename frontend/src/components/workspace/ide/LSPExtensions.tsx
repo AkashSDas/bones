@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { Button } from "@/components/shared/Button";
 import { Loader } from "@/components/shared/Loader";
@@ -7,20 +7,21 @@ import { useWorkspaceStore } from "@/store/workspace";
 import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
 import { useWorkspaceLSPStore } from "@/store/workspace-lsp";
 import { cn } from "@/utils/styles";
-import { SupportedLSP } from "@/utils/workspace-lsp";
+import { type SupportedLSP } from "@/utils/workspace-lsp";
 
 import { FileIcon } from "./FileIcon";
 
 export function LSPExtensions() {
     const contextWindow = useWorkspaceStore((s) => s.contextWindow);
     const { connectionStatus } = useWorkspaceBridgeStore();
-    const { listLSPs, installLSP } = useWorkspaceLSP();
+    const { listAvailableLSPs, installLSP, listInstalledLSPs } = useWorkspaceLSP();
     const { installedLSPs, availableLSPs } = useWorkspaceLSPStore();
 
     useEffect(
         function () {
             if (connectionStatus === "connected") {
-                listLSPs();
+                listAvailableLSPs();
+                listInstalledLSPs();
             }
         },
         [connectionStatus],

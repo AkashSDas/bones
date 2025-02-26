@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { devtools, persist } from "zustand/middleware";
+import { devtools } from "zustand/middleware";
 
 import { SupportedLSP } from "@/utils/workspace-lsp";
 
@@ -27,29 +27,20 @@ type WorkspaceLSPState = {
 
 export const useWorkspaceLSPStore = create<WorkspaceLSPState>()(
     devtools(
-        persist(
-            function (set) {
-                return {
-                    availableLSPs: [],
-                    setAvailableLSPs: (v) => set({ availableLSPs: v }),
+        function (set) {
+            return {
+                availableLSPs: [],
+                setAvailableLSPs: (v) => set({ availableLSPs: v }),
 
-                    installedLSPs: [],
-                    setInstalledLSPs: (v) => set({ installedLSPs: v }),
+                installedLSPs: [],
+                setInstalledLSPs: (v) => set({ installedLSPs: v }),
 
-                    initializedLSPs: [],
-                    setInitializedLSPs: (v) => set({ initializedLSPs: v }),
-                };
-            },
-            {
-                name: "workspace-lsp-store",
-                partialize(state) {
-                    // Skipping initialized LSPs as they we will initialize new connection on load
-                    // and also skipping persisting available LSPs (for fresh data)
-                    return {
-                        installedLSPs: state.installedLSPs,
-                    };
-                },
-            },
-        ),
+                initializedLSPs: [],
+                setInitializedLSPs: (v) => set({ initializedLSPs: v }),
+            };
+        },
+        {
+            name: "workspace-lsp-store",
+        },
     ),
 );
