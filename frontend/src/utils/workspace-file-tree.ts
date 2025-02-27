@@ -249,11 +249,13 @@ export const SearchFileResponseSchema = z.union([
         event: z.literal("search-file"),
         success: z.literal(true),
         total: z.number().int(),
-        results: z.object({
-            file: FileSchema,
-            matchScore: z.number(),
-            previewContent: z.string(),
-        }),
+        results: z.array(
+            z.object({
+                file: FileSchema,
+                matchScore: z.number(),
+                previewContent: z.string(),
+            }),
+        ),
     }),
     getErrorSchema(z.literal("search-file")),
 ]);
