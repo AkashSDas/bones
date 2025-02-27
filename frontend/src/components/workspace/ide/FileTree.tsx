@@ -1,4 +1,6 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
+    CheckIcon,
     FilePlusIcon,
     FolderPlusIcon,
     LinkIcon,
@@ -6,11 +8,17 @@ import {
     RotateCcwIcon,
     TrashIcon,
 } from "lucide-react";
-import { ControlledTreeEnvironment, Tree } from "react-complex-tree";
+import { useEffect } from "node_modules/react-resizable-panels/dist/declarations/src/vendor/react";
+import { useState } from "react";
+import { ControlledTreeEnvironment, Tree, TreeItemIndex } from "react-complex-tree";
 import "react-complex-tree/lib/style-modern.css";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Button } from "@/components/shared/Button";
 import { Dialog, DialogTrigger } from "@/components/shared/Dialog";
+import { Form, FormField } from "@/components/shared/Form";
+import { Input } from "@/components/shared/Input";
 import { Loader } from "@/components/shared/Loader";
 import { useToast } from "@/hooks/toast";
 import { useWorkspaceFileTree, useWorkspaceURL } from "@/hooks/workspace";
@@ -31,6 +39,10 @@ import { FileIcon } from "./FileIcon";
 
 const TREE_ID = "file-tree";
 
+const RenameFormSchema = z.object({
+    name: z.string(),
+});
+
 export function FileTree() {
     const {
         flatFileTree,
@@ -47,6 +59,8 @@ export function FileTree() {
         addFileOrFolderInDirectory,
         setCollapsedFileTreeAllItems,
         isDeletingFilesOrFolders,
+        copyFileOrFolder,
+        moveFileOrFolder,
     } = useWorkspaceFileTreeStore();
     const { getFileTree, deleteFilesOrFolders, getFile } = useWorkspaceFileTree();
     const { contextWindow } = useWorkspaceStore();
@@ -55,7 +69,74 @@ export function FileTree() {
     const { bridgeWsURL } = useWorkspaceURL();
     const { toast } = useToast();
 
-    if (!fileTree) return null;
+    /** List of absolute paths */
+    const [copiedItems, setCopiedItems] = useState<TreeItemIndex[]>([]);
+
+    useEffect(
+        function addFileTreeKeyBindings() {
+            document.addEventListener("keydown", handleKeyDown);
+
+            return () => {
+                document.removeEventListener("keydown", handleKeyDown);
+            };
+
+            function handleKeyDown(e: KeyboardEvent) {
+                // On copy
+                if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+                    if (selectedFileTreeItems.length > 0) {
+                        setCopiedItems(selectedFileTreeItems);
+                    }
+                }
+
+                // On paste
+                if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+                    if (copiedItems.length > 0 && selectedFileTreeItems.length === 1) {
+                        const selectedItemIdx = selectedFileTreeItems[0];
+                        const destFile = flatFileTree[selectedItemIdx];
+
+                        if (destFile) {
+                            let destPath = destFile.data.absolutePath;
+
+                            if (destFile.data.isFile) {
+                                const parts = destPath.split("/");
+                                parts.pop();
+                                destPath = parts.join("/"); // Parent dir path
+                            }
+
+                            copyFileOrFolder(
+                                copiedItems.map((f) => f.toString()),
+                                destPath,
+                            );
+
+                            setCopiedItems([]); // Clear the copied items state after pasting
+                        }
+                    }
+                }
+
+                // Clear copied items on escape key press
+                if (e.key === "Escape") {
+                    setCopiedItems([]);
+                }
+            }
+        },
+        [copiedItems, selectedFileTreeItems, flatFileTree, copyFileOrFolder],
+    );
+
+    if (!fileTree) {
+        return (
+            <div
+                className={cn(
+                    "no-scrollbar h-full overflow-y-auto overflow-x-hidden border-r border-r-grey-900 !pb-12 group my-4",
+                    contextWindow === "files" ? "block" : "hidden",
+                )}
+            >
+                <div className="px-4 flex items-center gap-4">
+                    <Loader sizeInPx={16} />
+                    <span className="text-grey-400 text-sm">Loading file tree</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div
@@ -251,10 +332,75 @@ export function FileTree() {
                     },
                 }}
                 canReorderItems={false}
-                canDragAndDrop
-                onDrop={() => {}}
                 canRename
+                canDragAndDrop
                 canDropOnFolder
+                canDropOnNonFolder
+                renderDragBetweenLine={function () {
+                    return <div className="w-full h-[1px] bg-brand-500" />;
+                }}
+                onDrop={function (items, target) {
+                    const destFile = flatFileTree[target.treeId];
+                    if (destFile) {
+                        let destPath = destFile.data.absolutePath;
+
+                        if (destFile.data.isFile) {
+                            const parts = destPath.split("/");
+                            parts.pop();
+                            destPath = parts.join("/"); // Parent dir path
+
+                            moveFileOrFolder(
+                                items.map((f) => f.data.absolutePath),
+                                destPath,
+                            );
+                        }
+                    }
+                }}
+                renderRenameInput={function (props) {
+                    const { item } = props;
+
+                    const form = useForm<z.infer<typeof RenameFormSchema>>({
+                        resolver: zodResolver(RenameFormSchema),
+                        defaultValues: { name: item.data.name },
+                    });
+
+                    async function onSubmit(values: z.infer<typeof RenameFormSchema>) {
+                        console.log({ values });
+                    }
+
+                    return (
+                        <Form {...form}>
+                            <form
+                                onSubmit={form.handleSubmit(onSubmit)}
+                                className="flex items-center gap-[1px] z-10 absolute"
+                            >
+                                <FormField
+                                    control={form.control}
+                                    name="name"
+                                    render={({ field }) => (
+                                        <Input
+                                            placeholder="Enter name"
+                                            type="text"
+                                            minLength={3}
+                                            maxLength={255}
+                                            required
+                                            {...field}
+                                            className="text-sm"
+                                            style={{ height: "28px" }}
+                                        />
+                                    )}
+                                />
+
+                                <Button
+                                    size="icon"
+                                    style={{ height: "28px", width: "28px" }}
+                                >
+                                    <CheckIcon size="16px" />
+                                </Button>
+                            </form>
+                        </Form>
+                    );
+                }}
                 onFocusItem={setFocusedFileTreeItems}
                 onExpandItem={setExpandedFileTreeItems}
                 onCollapseItem={setCollapsedFileTreeItems}
