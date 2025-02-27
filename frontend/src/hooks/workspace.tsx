@@ -5,6 +5,7 @@ import { useWorkspaceStore } from "@/store/workspace";
 import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
 import { useWorkspaceFileTreeStore } from "@/store/workspace-file-tree";
 import { useWorkspaceLSPStore } from "@/store/workspace-lsp";
+import { useWorkspaceSearchStore } from "@/store/workspace-search";
 import {
     createTerminalInstance,
     useWorkspaceTerminalStore,
@@ -16,11 +17,13 @@ import {
     GetFileResponseSchema,
     ListFileTreeResponseSchema,
     SaveFileResponseSchema,
+    SearchFileResponseSchema,
     fileTreeManger,
 } from "@/utils/workspace-file-tree";
 import {
     InstallLSPResponseSchema,
     LSPEventSchema,
+    ListInstalledLSPsResponseSchema,
     ListLSPsResponseSchema,
     ReadableLSPNameToLSP,
     type SupportedLSP,
@@ -89,9 +92,13 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
         setAddFileOrFolderInDirectory,
         setIsDeletingFilesOrFolders,
         isDeletingFilesOrFolders,
+        moveFileOrFolder,
+        copyFileOrFolder,
     } = useWorkspaceFileTreeStore();
     const { loadingFiles, addLoadingFile, removeLoadingFile, upsertFile } =
         useWorkspaceStore();
+    const { setIsSearchingFile, setSearchTotalResults, setSearchFileQueryResult } =
+        useWorkspaceSearchStore();
 
     const { toast } = useToast();
 
@@ -192,6 +199,55 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
         [bridgeWsURL, bridgeSocket],
     );
 
+    const move = useCallback(
+        function (absoluteSourcePaths: string[], absoluteDestinationPath: string) {
+            if (bridgeWsURL && bridgeSocket) {
+                moveFileOrFolder(absoluteSourcePaths, absoluteDestinationPath);
+
+                bridgeSocket.send(
+                    JSON.stringify(
+                        fileTreeManger.moveFilesOrFoldersRequest(
+                            absoluteSourcePaths,
+                            absoluteDestinationPath,
+                        ),
+                    ),
+                );
+            }
+        },
+        [bridgeWsURL, bridgeSocket, moveFileOrFolder],
+    );
+
+    const copy = useCallback(
+        function (absoluteSourcePaths: string[], absoluteDestinationPath: string) {
+            if (bridgeWsURL && bridgeSocket) {
+                copyFileOrFolder(absoluteSourcePaths, absoluteDestinationPath);
+
+                bridgeSocket.send(
+                    JSON.stringify(
+                        fileTreeManger.copyFilesOrFoldersRequest(
+                            absoluteSourcePaths,
+                            absoluteDestinationPath,
+                        ),
+                    ),
+                );
+            }
+        },
+        [bridgeWsURL, bridgeSocket, copyFileOrFolder],
+    );
+
+    const searchFile = useCallback(
+        function (query: string) {
+            if (bridgeWsURL && bridgeSocket) {
+                setIsSearchingFile(true);
+
+                bridgeSocket.send(
+                    JSON.stringify(fileTreeManger.searchFileRequest(query)),
+                );
+            }
+        },
+        [bridgeWsURL, bridgeSocket, setIsSearchingFile],
+    );
+
     // ==========================================
     // Handlers
     // ==========================================
@@ -282,6 +338,26 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
         }
     }, []);
 
+    const handleSearchFileResponse = useCallback(
+        function (data: Record<string, unknown>) {
+            const parsed = SearchFileResponseSchema.parse(data);
+            setIsSearchingFile(false);
+
+            if (!parsed.success) {
+                toast({
+                    title: "Error",
+                    description: "Failed to search file",
+                    variant: "error",
+                });
+            } else {
+                const { total, results } = parsed;
+                setSearchTotalResults(total);
+                setSearchFileQueryResult(results);
+            }
+        },
+        [setSearchFileQueryResult, setSearchTotalResults, setIsSearchingFile],
+    );
+
     const mapRequestToHandler = useCallback(
         function (data: Record<string, unknown>) {
             const { data: event } = FileTreeEventSchema.safeParse(data.event);
@@ -302,6 +378,9 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
                 case "save-file":
                     handleSaveFileResponse(data);
                     break;
+                case "search-file":
+                    handleSearchFileResponse(data);
+                    break;
             }
         },
         [
@@ -310,6 +389,7 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
             handleDeleteFilesOrFoldersResponse,
             handleGetFileResponse,
             handleSaveFileResponse,
+            handleSearchFileResponse,
         ],
     );
 
@@ -346,6 +426,9 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
         createFileOrFolder,
         deleteFilesOrFolders,
         saveFile,
+        moveFileOrFolder: move,
+        copyFileOrFolder: copy,
+        searchFile,
         mapRequestToHandler,
     };
 }
@@ -496,10 +579,10 @@ export function useWorkspaceLSP() {
     // Send request
     // ==========================================
 
-    const listLSPs = useCallback(
+    const listAvailableLSPs = useCallback(
         function () {
             if (bridgeSocket && bridgeWsURL) {
-                bridgeSocket.send(JSON.stringify(lspManger.list()));
+                bridgeSocket.send(JSON.stringify(lspManger.listAvailable()));
             }
         },
         [bridgeWsURL, bridgeSocket],
@@ -509,6 +592,15 @@ export function useWorkspaceLSP() {
         function (lsp: SupportedLSP) {
             if (bridgeSocket && bridgeWsURL) {
                 bridgeSocket.send(JSON.stringify(lspManger.install(lsp)));
+            }
+        },
+        [bridgeWsURL, bridgeSocket],
+    );
+
+    const listInstalledLSPs = useCallback(
+        function () {
+            if (bridgeSocket && bridgeWsURL) {
+                bridgeSocket.send(JSON.stringify(lspManger.listInstalled()));
             }
         },
         [bridgeWsURL, bridgeSocket],
@@ -527,6 +619,19 @@ export function useWorkspaceLSP() {
             }
         },
         [setAvailableLSPs],
+    );
+
+    const handleListInstalledLSPsResponse = useCallback(
+        function (data: Record<string, unknown>) {
+            const parsed = ListInstalledLSPsResponseSchema.parse(data);
+
+            if (parsed?.success) {
+                setInstalledLSPs(
+                    parsed.languageServers.map((lsp) => lsp.lspName as SupportedLSP),
+                );
+            }
+        },
+        [setInstalledLSPs],
     );
 
     const handleInstallLSPResponse = useCallback(
@@ -575,17 +680,25 @@ export function useWorkspaceLSP() {
                 case "install":
                     handleInstallLSPResponse(data);
                     break;
+                case "listInstalled":
+                    handleListInstalledLSPsResponse(data);
+                    break;
                 default:
                     break;
             }
         },
-        [handleListLSPsResponse, handleInstallLSPResponse],
+        [
+            handleListLSPsResponse,
+            handleInstallLSPResponse,
+            handleListInstalledLSPsResponse,
+        ],
     );
 
     return {
         mapRequestToHandler,
-        listLSPs,
+        listAvailableLSPs,
         installLSP,
+        listInstalledLSPs,
     };
 }
 
