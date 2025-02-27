@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -54,6 +56,10 @@ body {
 
 .rct-tree-item-button:hover {
     @apply !bg-grey-900;
+}
+
+.rct-tree-item-title-container-dragging-over .rct-tree-item-button {
+    @apply !bg-grey-700;
 }
 
 .rct-tree-item-button-selected {
