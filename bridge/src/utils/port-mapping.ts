@@ -15,11 +15,10 @@ const Extension = ".conf";
 const NginxReloadShellCommand = "nginx -s reload";
 
 /** Available exposed ports. This should be in sync with what is used in the Bones backend */
-const PortSchema = z.union([
+export const PortSchema = z.union([
     z.literal(80),
     z.literal(3000),
     z.literal(3001),
-    z.literal(3002),
     z.literal(3002),
     z.literal(4200),
     z.literal(5173),
@@ -34,11 +33,30 @@ type PortMapping = {
 
 class PortMappingManager {
     private nginxPath = "/etc/nginx/conf.d/";
+    private allExternalPorts: number[];
 
-    constructor() {}
+    constructor() {
+        this.allExternalPorts = [80, 3000, 3001, 3002, 4200, 5173, 8000, 8080];
+    }
+
+    /** List available external ports */
+    async listAvailableExternalPorts(): Promise<number[] | Error> {
+        try {
+            const currentMapping = await this.listCurrentMapping();
+            if (currentMapping instanceof Error) {
+                throw currentMapping;
+            }
+
+            return this.allExternalPorts.filter(
+                (port) => !currentMapping.find((m) => m.externalPort === port),
+            );
+        } catch (e) {
+            return Error(`Failed to list available external ports: ${e}`);
+        }
+    }
 
     /** List of the current Nginx internal-external port mappings */
-    async list(): Promise<PortMapping[] | Error> {
+    async listCurrentMapping(): Promise<PortMapping[] | Error> {
         try {
             const mappings: PortMapping[] = [];
 
