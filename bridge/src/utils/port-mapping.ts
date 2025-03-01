@@ -11,9 +11,6 @@ const FilePrefix = "port-";
 /** Port mapping file extension */
 const Extension = ".conf";
 
-/** Whenever nginx config is changed */
-const NginxReloadShellCommand = "nginx -s reload";
-
 /** Available exposed ports. This should be in sync with what is used in the Bones backend */
 export const PortSchema = z.union([
     z.literal(80),
@@ -66,7 +63,11 @@ class PortMappingManager {
             for await (const file of files) {
                 const name = file.name;
 
-                if (name.startsWith(FilePrefix) && name.endsWith(Extension)) {
+                if (
+                    name.startsWith(FilePrefix) &&
+                    name.endsWith(Extension) &&
+                    !name.includes("-tmp-")
+                ) {
                     // > var a = "port-8000-80.conf"
                     // > a.split(".conf")
                     // [ 'port-8000-80', '' ]
@@ -113,12 +114,18 @@ class PortMappingManager {
             const basename = `${FilePrefix}${internalPort}-${externalPort}${Extension}`;
             const filePath = join(absolutePath, basename);
 
+            await Deno.remove(filePath);
+
             if (externalPort == 80) {
                 const encoder = new TextEncoder();
                 const data = encoder.encode(this.buildEmptyPort80NginxConfig());
+
+                // Adding `-tmp-` so that can skipped in listing and all and port 80 (external)
+                // can be marked as available
+                const basename = `${FilePrefix}${externalPort}-tmp-${Extension}`;
+                const filePath = join(absolutePath, basename);
+
                 await Deno.writeFile(filePath, data, { createNew: true });
-            } else {
-                await Deno.remove(filePath);
             }
 
             if (reloadNginx) {
@@ -146,6 +153,14 @@ class PortMappingManager {
                 const data = encoder.encode(
                     this.buildPort80NginxConfig(internalPort),
                 );
+
+                await (async function deleteEmptyPort80NginxConfig() {
+                    // Removing empty port 80 (external)
+                    const basename = `${FilePrefix}${externalPort}-tmp-${Extension}`;
+                    const filePath = join(absolutePath, basename);
+
+                    await Deno.remove(filePath);
+                })();
 
                 await Deno.writeFile(filePath, data, { createNew: true });
             } else {
@@ -323,7 +338,9 @@ class PortMappingManager {
 
     /** Reload nginx to reflect port mapping changes */
     private async reloadNginx() {
-        const cmd = new Deno.Command(NginxReloadShellCommand);
+        const cmd = new Deno.Command("nginx", {
+            args: ["-s reload"],
+        });
         await cmd.output();
     }
 }
