@@ -131,6 +131,8 @@ cp .env.sample .env
 pnpm run dev
 ```
 
+Inside of frontend, uncomment `StrictMode` so that you can use the terminal. The issue is that, during 2x running `useEffect`, `xterm` instance is disposed and terminals are initialized while setting xterm instances in `workspace-terminal` store.
+
 Create a container image and load it in KinD cluster, so that you can go to the frontend and create a workspace. Following commands does these things for one image but you can go to the `./containers` folder and check out other images too:
 
 ```bash
