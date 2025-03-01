@@ -8,8 +8,7 @@ import {
     RotateCcwIcon,
     TrashIcon,
 } from "lucide-react";
-import { useEffect } from "node_modules/react-resizable-panels/dist/declarations/src/vendor/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ControlledTreeEnvironment, Tree, TreeItemIndex } from "react-complex-tree";
 import "react-complex-tree/lib/style-modern.css";
 import { useForm } from "react-hook-form";
