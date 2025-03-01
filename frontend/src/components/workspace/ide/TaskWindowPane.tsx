@@ -10,16 +10,6 @@ export function TaskWindowPane() {
         <div className="relative w-full h-full">
             <div
                 className={cn(
-                    activePaneId === "browserConsole"
-                        ? "absolute w-full h-full opacity-100 visible"
-                        : "absolute w-full h-full opacity-0 invisible",
-                )}
-            >
-                <div>Browser Console</div>
-            </div>
-
-            <div
-                className={cn(
                     activePaneId === "terminalSessions"
                         ? "absolute w-full h-full opacity-100 visible"
                         : "absolute w-full h-full opacity-0 invisible",

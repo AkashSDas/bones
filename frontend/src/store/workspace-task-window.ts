@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 export type TaskWindowPane = {
-    id: "browserConsole" | "terminalSessions";
+    id: "terminalSessions";
     label: string;
 };
 
@@ -17,10 +17,7 @@ type WorkspaceTaskWindow = {
 export const useWorkspaceTaskWindowStore = create<WorkspaceTaskWindow>()(
     function (set) {
         return {
-            panes: [
-                { id: "terminalSessions", label: "Terminal Sessions" },
-                { id: "browserConsole", label: "Browser Console" },
-            ],
+            panes: [{ id: "terminalSessions", label: "Terminal Sessions" }],
             activePaneId: "terminalSessions",
             setActivePaneId(id) {
                 set({ activePaneId: id });
