@@ -1,3 +1,8 @@
+import { toJsxRuntime } from "hast-util-to-jsx-runtime";
+import type { JSX } from "react";
+import { Fragment } from "react";
+import { jsx, jsxs } from "react/jsx-runtime";
+import { codeToHast } from "shiki/bundle/web";
 import { z } from "zod";
 
 // ==========================================
@@ -234,11 +239,13 @@ export const SearchTextInFilesResponseSchema = z.union([
         event: z.literal("search-text-in-files"),
         success: z.literal(true),
         total: z.number().int(),
-        results: z.object({
-            file: FileSchema,
-            numberOfMatches: z.number().int(),
-            previewContent: z.string(),
-        }),
+        results: z.array(
+            z.object({
+                file: FileSchema,
+                numberOfMatches: z.number().int(),
+                previewContent: z.string(),
+            }),
+        ),
     }),
     getErrorSchema(z.literal("search-text-in-files")),
 ]);
@@ -248,7 +255,6 @@ export const SearchFileResponseSchema = z.union([
         type: z.literal("fs"),
         event: z.literal("search-file"),
         success: z.literal(true),
-        total: z.number().int(),
         results: z.array(
             z.object({
                 file: FileSchema,
@@ -259,7 +265,7 @@ export const SearchFileResponseSchema = z.union([
     }),
     getErrorSchema(z.literal("search-file")),
 ]);
-
+``;
 export const SaveFileResponseSchema = z.union([
     z.object({
         type: z.literal("fs"),
@@ -407,3 +413,16 @@ class WorkspaceFileTreeManager {
 }
 
 export const fileTreeManger = new WorkspaceFileTreeManager();
+
+export async function highlightCodeText(code: string, lang: string) {
+    const out = await codeToHast(code, {
+        lang,
+        theme: "vitesse-dark",
+    });
+
+    return toJsxRuntime(out, {
+        Fragment,
+        jsx,
+        jsxs,
+    }) as JSX.Element;
+}
