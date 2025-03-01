@@ -10,29 +10,52 @@ type SearchFileResult =
       }[]
     | null;
 
+type SearchTextInFileResult =
+    | {
+          file: File;
+          numberOfMatches: number;
+          previewContent: string;
+      }[]
+    | null;
+
 type WorkspaceSearchState = {
     isSearchingFiles: boolean;
     searchFileQueryResult: SearchFileResult;
-    searchTotalResults: number;
 
     setIsSearchingFile: (v: boolean) => void;
     setSearchFileQueryResult: (v: SearchFileResult) => void;
-    setSearchTotalResults: (v: number) => void;
+
+    isSearchingTextInFiles: boolean;
+    searchTextInFileQueryResult: SearchTextInFileResult;
+    searchTextInFileTotalResults: number;
+
+    setIsSearchingTextInFile: (v: boolean) => void;
+    setSearchTextInFileQueryResult: (v: SearchTextInFileResult) => void;
+    setSearchTextInFileTotalResults: (v: number) => void;
 };
 
 export const useWorkspaceSearchStore = create<WorkspaceSearchState>(function (set) {
     return {
-        searchTotalResults: NaN,
         isSearchingFiles: false,
         searchFileQueryResult: null,
         setIsSearchingFile(v) {
             set({ isSearchingFiles: v });
         },
-        setSearchTotalResults(v) {
-            set({ searchTotalResults: v });
-        },
         setSearchFileQueryResult(v) {
             set({ searchFileQueryResult: v });
+        },
+
+        searchTextInFileTotalResults: NaN,
+        isSearchingTextInFiles: false,
+        searchTextInFileQueryResult: null,
+        setIsSearchingTextInFile(v) {
+            set({ isSearchingTextInFiles: v });
+        },
+        setSearchTextInFileTotalResults(v) {
+            set({ searchTextInFileTotalResults: v });
+        },
+        setSearchTextInFileQueryResult(v) {
+            set({ searchTextInFileQueryResult: v });
         },
     };
 });
