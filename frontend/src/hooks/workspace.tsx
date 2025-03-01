@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReconnectingWebSocket from "reconnecting-websocket";
 
 import { useWorkspaceStore } from "@/store/workspace";
 import { useWorkspaceBridgeStore } from "@/store/workspace-bridge";
 import { useWorkspaceFileTreeStore } from "@/store/workspace-file-tree";
 import { useWorkspaceLSPStore } from "@/store/workspace-lsp";
+import { useWorkspacePortForwardingStore } from "@/store/workspace-port-forwarding";
 import { useWorkspaceSearchStore } from "@/store/workspace-search";
 import {
     createTerminalInstance,
@@ -18,6 +19,7 @@ import {
     ListFileTreeResponseSchema,
     SaveFileResponseSchema,
     SearchFileResponseSchema,
+    SearchTextInFilesResponseSchema,
     fileTreeManger,
 } from "@/utils/workspace-file-tree";
 import {
@@ -29,6 +31,14 @@ import {
     type SupportedLSP,
     lspManger,
 } from "@/utils/workspace-lsp";
+import {
+    CreateMappingResponseSchema,
+    DeleteMappingResponseSchema,
+    GetAvailablePortsResponseSchema,
+    GetCurrentMappingResponseSchema,
+    PortForwardingEventSchema,
+    portForwardingManager,
+} from "@/utils/workspace-port-forwarding";
 import {
     CreateTerminalResponseSchema,
     ListTerminalsResponseSchema,
@@ -97,8 +107,14 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
     } = useWorkspaceFileTreeStore();
     const { loadingFiles, addLoadingFile, removeLoadingFile, upsertFile } =
         useWorkspaceStore();
-    const { setIsSearchingFile, setSearchTotalResults, setSearchFileQueryResult } =
-        useWorkspaceSearchStore();
+
+    const {
+        setIsSearchingFile,
+        setSearchFileQueryResult,
+        setSearchTextInFileTotalResults,
+        setIsSearchingTextInFile,
+        setSearchTextInFileQueryResult,
+    } = useWorkspaceSearchStore();
 
     const { toast } = useToast();
 
@@ -248,6 +264,31 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
         [bridgeWsURL, bridgeSocket, setIsSearchingFile],
     );
 
+    const searchTextInFile = useCallback(
+        function (
+            query: string,
+            matchCase: boolean,
+            matchWholeWord: boolean,
+            useRegex: boolean,
+        ) {
+            if (bridgeWsURL && bridgeSocket) {
+                setIsSearchingTextInFile(true);
+
+                bridgeSocket.send(
+                    JSON.stringify(
+                        fileTreeManger.searchTextInFilesRequest(
+                            query,
+                            matchCase,
+                            matchWholeWord,
+                            useRegex,
+                        ),
+                    ),
+                );
+            }
+        },
+        [bridgeWsURL, bridgeSocket, setIsSearchingTextInFile],
+    );
+
     // ==========================================
     // Handlers
     // ==========================================
@@ -350,12 +391,35 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
                     variant: "error",
                 });
             } else {
-                const { total, results } = parsed;
-                setSearchTotalResults(total);
+                const { results } = parsed;
                 setSearchFileQueryResult(results);
             }
         },
-        [setSearchFileQueryResult, setSearchTotalResults, setIsSearchingFile],
+        [setSearchFileQueryResult, setIsSearchingFile],
+    );
+
+    const handleSearchTextInFileResponse = useCallback(
+        function (data: Record<string, unknown>) {
+            const parsed = SearchTextInFilesResponseSchema.parse(data);
+            setIsSearchingTextInFile(false);
+
+            if (!parsed.success) {
+                toast({
+                    title: "Error",
+                    description: "Failed to text search file",
+                    variant: "error",
+                });
+            } else {
+                const { total, results } = parsed;
+                setSearchTextInFileTotalResults(total);
+                setSearchTextInFileQueryResult(results);
+            }
+        },
+        [
+            setIsSearchingTextInFile,
+            setSearchTextInFileTotalResults,
+            setSearchTextInFileQueryResult,
+        ],
     );
 
     const mapRequestToHandler = useCallback(
@@ -381,6 +445,9 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
                 case "search-file":
                     handleSearchFileResponse(data);
                     break;
+                case "search-text-in-files":
+                    handleSearchTextInFileResponse(data);
+                    break;
             }
         },
         [
@@ -390,6 +457,7 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
             handleGetFileResponse,
             handleSaveFileResponse,
             handleSearchFileResponse,
+            handleSearchTextInFileResponse,
         ],
     );
 
@@ -429,6 +497,7 @@ export function useWorkspaceFileTree(opts?: { implicitlyGetFileTree?: boolean })
         moveFileOrFolder: move,
         copyFileOrFolder: copy,
         searchFile,
+        searchTextInFile,
         mapRequestToHandler,
     };
 }
@@ -702,6 +771,201 @@ export function useWorkspaceLSP() {
     };
 }
 
+export function useWorkspacePortForwarding() {
+    const { bridgeWsURL } = useWorkspaceURL();
+    const { bridgeSocket } = useWorkspaceBridgeStore();
+    const { setIsLoading, setCurrentMappings, setAvailableExternalPorts } =
+        useWorkspacePortForwardingStore();
+    const { toast } = useToast();
+    const [reload, setReload] = useState(false);
+
+    useEffect(
+        function duckTapeLoadUpdatePortMappingStateFromBridgeToLocalState() {
+            // The issue is that when in `handleCreateMappingResponse` and `handleDeleteMappingResponse`
+            // you call `listCurrentMapping` and `listAvailablePorts` (and these are included
+            // in the dependencies of handle response callbacks), the `bridgeSocket` state
+            // is `null`
+
+            if (bridgeSocket && bridgeWsURL) {
+                setIsLoading(true);
+
+                bridgeSocket.send(
+                    JSON.stringify(portForwardingManager.getAvailblePorts()),
+                );
+                bridgeSocket.send(
+                    JSON.stringify(portForwardingManager.getCurrentMapping()),
+                );
+            }
+        },
+        [bridgeSocket, bridgeWsURL, reload],
+    );
+
+    // ==========================================
+    // Send request
+    // ==========================================
+
+    const listAvailablePorts = useCallback(
+        function () {
+            if (bridgeSocket && bridgeWsURL) {
+                setIsLoading(true);
+
+                bridgeSocket.send(
+                    JSON.stringify(portForwardingManager.getAvailblePorts()),
+                );
+            }
+        },
+        [bridgeWsURL, bridgeSocket, setIsLoading],
+    );
+
+    const listCurrentMapping = useCallback(
+        function () {
+            if (bridgeSocket && bridgeWsURL) {
+                setIsLoading(true);
+
+                bridgeSocket.send(
+                    JSON.stringify(portForwardingManager.getCurrentMapping()),
+                );
+            }
+        },
+        [bridgeWsURL, bridgeSocket, setIsLoading],
+    );
+
+    const createMapping = useCallback(
+        function (internalPort: number, externalPort: number) {
+            if (bridgeSocket && bridgeWsURL) {
+                setIsLoading(true);
+
+                bridgeSocket.send(
+                    JSON.stringify(
+                        portForwardingManager.create(internalPort, externalPort),
+                    ),
+                );
+            }
+        },
+        [bridgeWsURL, bridgeSocket, setIsLoading],
+    );
+
+    const deleteMapping = useCallback(
+        function (internalPort: number, externalPort: number) {
+            if (bridgeSocket && bridgeWsURL) {
+                setIsLoading(true);
+
+                bridgeSocket.send(
+                    JSON.stringify(
+                        portForwardingManager.delete(internalPort, externalPort),
+                    ),
+                );
+            }
+        },
+        [bridgeWsURL, bridgeSocket, setIsLoading],
+    );
+
+    // ==========================================
+    // Handle response
+    // ==========================================
+
+    const handleAvailablePortsResponse = useCallback(
+        function (data: Record<string, unknown>) {
+            const parsed = GetAvailablePortsResponseSchema.parse(data);
+
+            if (parsed?.success) {
+                setAvailableExternalPorts(parsed.availableExternalPorts);
+            }
+
+            setIsLoading(false);
+        },
+        [setAvailableExternalPorts, setIsLoading],
+    );
+
+    const handleGetCurrentMappingResponse = useCallback(
+        function (data: Record<string, unknown>) {
+            const parsed = GetCurrentMappingResponseSchema.parse(data);
+
+            if (parsed?.success) {
+                setCurrentMappings(parsed.currentMapping);
+            }
+
+            setIsLoading(false);
+        },
+        [setCurrentMappings, setIsLoading],
+    );
+
+    const handleCreateMappingResponse = useCallback(
+        function (data: Record<string, unknown>) {
+            const parsed = CreateMappingResponseSchema.parse(data);
+
+            if (parsed?.success) {
+                setReload((v) => !v);
+            } else {
+                toast({
+                    title: "Error",
+                    description: "Failed to create mapping",
+                    variant: "error",
+                });
+
+                setIsLoading(false);
+            }
+        },
+        [setIsLoading, toast, setReload],
+    );
+
+    const handleDeleteMappingResponse = useCallback(
+        function (data: Record<string, unknown>) {
+            const parsed = DeleteMappingResponseSchema.parse(data);
+
+            if (parsed?.success) {
+                setReload((v) => !v);
+            } else {
+                toast({
+                    title: "Error",
+                    description: "Failed to create mapping",
+                    variant: "error",
+                });
+
+                setIsLoading(false);
+            }
+        },
+        [setIsLoading, toast, setReload],
+    );
+
+    const mapRequestToHandler = useCallback(
+        function (data: Record<string, unknown>) {
+            const { data: event } = PortForwardingEventSchema.safeParse(data.event);
+
+            switch (event) {
+                case "get-available-ports":
+                    handleAvailablePortsResponse(data);
+                    break;
+                case "get-current-mapping":
+                    handleGetCurrentMappingResponse(data);
+                    break;
+                case "create":
+                    handleCreateMappingResponse(data);
+                    break;
+                case "delete":
+                    handleDeleteMappingResponse(data);
+                    break;
+                default:
+                    break;
+            }
+        },
+        [
+            handleAvailablePortsResponse,
+            handleGetCurrentMappingResponse,
+            handleCreateMappingResponse,
+            handleDeleteMappingResponse,
+        ],
+    );
+
+    return {
+        mapRequestToHandler,
+        listAvailablePorts,
+        listCurrentMapping,
+        createMapping,
+        deleteMapping,
+    };
+}
+
 /** Handle the workspace bridge connection. Should be used in one place only */
 export function useWorkspaceBridgeConnection() {
     const { bridgeWsURL } = useWorkspaceURL();
@@ -711,6 +975,8 @@ export function useWorkspaceBridgeConnection() {
         implicitlyGetFileTree: true,
     });
     const { mapRequestToHandler: mapLSPRequestToHandler } = useWorkspaceLSP();
+    const { mapRequestToHandler: mapPortForwardingRequestToHandler } =
+        useWorkspacePortForwarding();
 
     const handleOpen = useCallback(
         function handleBridgeOpen() {
@@ -741,6 +1007,10 @@ export function useWorkspaceBridgeConnection() {
                     }
                     case "lsp": {
                         mapLSPRequestToHandler(parsed);
+                        break;
+                    }
+                    case "port-forwarding": {
+                        mapPortForwardingRequestToHandler(parsed);
                         break;
                     }
                     default:
