@@ -148,6 +148,10 @@ function SortableItem(props: {
                 setContextWindow("textSearch");
                 break;
             }
+            case "networking": {
+                setContextWindow("networking");
+                break;
+            }
             case "lsp": {
                 setContextWindow("lsp");
                 break;
