@@ -2,11 +2,7 @@ import { type Context, Hono } from "jsr:@hono/hono";
 import { upgradeWebSocket } from "jsr:@hono/hono/deno";
 import { status } from "#utils/http.ts";
 import { FileSystemWs } from "#ws/fs.ts";
-import {
-    LanguageServerPool,
-    LanguageServerWs,
-    SupportedLSPSchema,
-} from "#ws/lsp.ts";
+import { LanguageServerPool, LanguageServerWs, SupportedLSPSchema } from "#ws/lsp.ts";
 import { IWebSocket } from "vscode-ws-jsonrpc";
 import { PortForwardingWs } from "#ws/port-forwarding.ts";
 
@@ -49,7 +45,8 @@ app.get(
                             ws.send(
                                 JSON.stringify({
                                     success: false,
-                                    error: `Failed to parse incoming data: Invalid request type`,
+                                    error:
+                                        `Failed to parse incoming data: Invalid request type`,
                                 }),
                             );
                             break;

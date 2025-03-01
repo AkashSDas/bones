@@ -15,12 +15,12 @@ const EventSchema = z.union([
 
 const CreateMappingPayloadSchema = z.object({
     externalPort: PortSchema,
-    internalPort: PortSchema,
+    internalPort: z.number(),
 });
 
 const DeleteMappingPayloadSchema = z.object({
     externalPort: PortSchema,
-    internalPort: PortSchema,
+    internalPort: z.number(),
 });
 
 // ==========================================
@@ -131,8 +131,9 @@ export class PortForwardingWs {
      * ```
      */
     private async create(): Promise<string> {
-        const { success, data } =
-            await CreateMappingPayloadSchema.safeParseAsync(this.payload);
+        const { success, data } = await CreateMappingPayloadSchema.safeParseAsync(
+            this.payload,
+        );
 
         if (success) {
             const res = await portMappingManager.create(
@@ -171,8 +172,9 @@ export class PortForwardingWs {
      * ```
      */
     private async delete(): Promise<string> {
-        const { success, data } =
-            await DeleteMappingPayloadSchema.safeParseAsync(this.payload);
+        const { success, data } = await DeleteMappingPayloadSchema.safeParseAsync(
+            this.payload,
+        );
 
         if (success) {
             const res = await portMappingManager.delete(
@@ -202,7 +204,7 @@ export class PortForwardingWs {
 
     private returnResult(res: Record<string, unknown>): string {
         return JSON.stringify({
-            type: "fs",
+            type: "port-forwarding",
             event: this.event,
             ...res,
         });
