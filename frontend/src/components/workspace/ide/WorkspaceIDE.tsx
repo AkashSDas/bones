@@ -27,10 +27,12 @@ import { Dock } from "./Dock";
 import { FileTree } from "./FileTree";
 import { LSPExtensions } from "./LSPExtensions";
 import { MainSection } from "./MainSection";
+import { PortForwarding } from "./PortForwarding";
+import { SearchFile } from "./SearchFile";
+import { SearchTextInFile } from "./SearchTextInFile";
 import { TaskWindowPane as TaskWindow } from "./TaskWindowPane";
 
 const ICON_MAPPING: Record<TaskWindowPane["id"], React.JSX.Element> = {
-    browserConsole: <LogsIcon size={16} />,
     terminalSessions: <TerminalIcon size={16} />,
 };
 
@@ -55,6 +57,9 @@ export function WorkspaceIDE() {
                 >
                     <FileTree />
                     <LSPExtensions />
+                    <SearchFile />
+                    <SearchTextInFile />
+                    <PortForwarding />
                 </ResizablePanel>
 
                 {contextWindow && <ResizableHandle withHandle />}
