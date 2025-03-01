@@ -77,7 +77,7 @@ const lspCommandMapping: Record<
                 toolName: "Python PIP",
                 description: `PIP is required to install Pyright Language Server`,
                 exampleInstallCommand: "apt install python3-pip",
-
+            },
         ],
         extension: "py",
     },
@@ -172,12 +172,11 @@ const lspCommandMapping: Record<
 // TODO: a better way to handle this would be to save this info in a SQLite storage
 // Issue with this would be that if the pod is recovered from a crash then LSP would
 // be installed, but would be marked as uninstalled, but that's not a big issue.
-let installedLSPs: SupportedLSP[] = []
+let installedLSPs: SupportedLSP[] = [];
 
 export class LanguageServerWs {
     public event: z.infer<typeof EventSchema> | undefined;
     public payload: unknown;
-
 
     constructor(
         public ws: WSContext,
@@ -366,7 +365,7 @@ const lspProcessMapping: Map<SupportedLSP, unknown> = new Map();
 /**
  * Initialize language server so that it can communicate with the Monaco editor in the
  * frontend and you'll get the auto-complete, hints, signatures, etc
- **/
+ */
 export class LanguageServerPool {
     constructor() {}
 
@@ -383,8 +382,10 @@ export class LanguageServerPool {
         const reader = new rpc.WebSocketMessageReader(socket);
         const writer = new rpc.WebSocketMessageWriter(socket);
 
-        const socketConnection = server.createConnection(reader, writer, () =>
-            socket.dispose(),
+        const socketConnection = server.createConnection(
+            reader,
+            writer,
+            () => socket.dispose(),
         );
 
         const config = lspCommandMapping[lsp];
@@ -407,8 +408,7 @@ export class LanguageServerPool {
                         );
 
                         if (message.method === InitializeRequest.type.method) {
-                            const initializeParams =
-                                message.params as InitializeParams;
+                            const initializeParams = message.params as InitializeParams;
                             initializeParams.processId = Deno.pid;
                         }
                     }
