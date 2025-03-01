@@ -115,6 +115,18 @@ body {
 }
 
 /* ======================================== */
+/* Others */
+/* ======================================== */
+
+.search-file-preivew-code .shiki {
+    @apply no-scrollbar border !border-grey-700 !bg-grey-800;
+
+    padding: 4px;
+    overflow-x: auto;
+    border-radius: 4px;
+}
+
+/* ======================================== */
 /* Fonts */
 /* ======================================== */
 
