@@ -1,0 +1,17 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+    name: my-admin-binding
+roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+
+    # Kubernetes ships with a default cluster-admin role and group. However
+    # EKS API for managing access won't let us use the default group that start
+    # with the system prefix, So we'll need to create our own admin group in K8s
+    name: cluster-admin
+subjects:
+    - kind: Group
+      name: my-admin # We'll use this custom admin group instead of default cluster-admin
+      apiGroup: rbac.authorization.k8s.io
