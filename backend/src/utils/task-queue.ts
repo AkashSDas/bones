@@ -1,6 +1,9 @@
 import { env } from "./env";
 
-import { BullAdapter } from "@bull-board/api/bullAdapter";
+// Use this `.js` so that build is successful (since type=module is used in package.json
+// all import around should .js and for 3rd only this one was causing issue -- not found
+// module because it was looking for it with .js therefore added .js)
+import { BullAdapter } from "@bull-board/api/bullAdapter.js";
 import Bull from "bull";
 
 import { log } from "@/lib/logger";

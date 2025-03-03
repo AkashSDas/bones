@@ -56,3 +56,10 @@ CREATE TYPE account_status AS ENUM ('uninitialized', 'active', 'suspended', 'dea
 CREATE TYPE iam_permission_service_type AS ENUM ('iam', 'workspace');
 CREATE TYPE iam_permission_access_type AS ENUM ('read', 'write');
 ```
+
+## Docker
+
+```bash
+docker build -t backend -f Dockerfile .
+docker run --rm -it -p 5050:5050 backend # Also pass env
+```

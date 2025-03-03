@@ -4,6 +4,7 @@
     "type": "module",
     "scripts": {
         "dev": "node -v && tsc -v && tsx watch src/index.ts",
+        "build": "tsc && tsc-alias && ts-add-js-extension --dir=dist --showchanges=false",
         "vers": "tsc -v",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
@@ -60,7 +61,9 @@
         "lint-staged": "^15.2.10",
         "msw": "^2.4.9",
         "prettier": "^3.3.3",
-        "tsx": "^4.7.1",
+        "ts-add-js-extension": "^1.6.5",
+        "tsc-alias": "^1.8.11",
+        "tsx": "^4.19.1",
         "typescript": "5.5.3",
         "typescript-eslint": "^8.6.0",
         "vitest": "^2.1.1"

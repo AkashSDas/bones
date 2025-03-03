@@ -1,18 +1,22 @@
 {
     "compilerOptions": {
-        "target": "ESNext",
-        "module": "ESNext",
-        "moduleResolution": "Bundler",
-        "strict": true,
-        "skipLibCheck": true,
-        "types": ["node", "vitest/globals"],
-        "jsx": "react-jsx",
-        "jsxImportSource": "hono/jsx",
-
-        /* Path Aliases */
+        "allowSyntheticDefaultImports": true,
         "baseUrl": ".",
         "paths": {
             "@/*": ["./src/*"]
-        }
-    }
+        },
+
+        "target": "ESNext",
+        "moduleResolution": "Node",
+        "strict": true,
+        "verbatimModuleSyntax": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "types": ["node"],
+        "jsx": "react-jsx",
+        "jsxImportSource": "hono/jsx",
+        "outDir": "./dist"
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist"]
 }
