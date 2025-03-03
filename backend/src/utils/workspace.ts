@@ -8,7 +8,7 @@ import { dal } from "@/db/dal";
 import { type AccountId, type AccountPk } from "@/db/models/account";
 import { type UserPk } from "@/db/models/user";
 import {
-    WorkspaceClient,
+    type WorkspaceClient,
     type WorkspaceId,
     type WorkspacePk,
 } from "@/db/models/workspace";

@@ -16,12 +16,14 @@ async function resetTable(db: DB, table: Table) {
     );
 }
 
-for (const table of []) {
-    // await db.delete(table); // clear tables without truncating / resetting ids
-    await resetTable(db, table);
-}
+(async () => {
+    for (const table of []) {
+        // await db.delete(table); // clear tables without truncating / resetting ids
+        await resetTable(db, table);
+    }
 
-// TODO: seed here
-// await user(db); // example
+    // TODO: seed here
+    // await user(db); // example
 
-await connection.end();
+    await connection.end();
+})();

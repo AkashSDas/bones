@@ -12,6 +12,8 @@ if (!env.DB_MIGRATING) {
     );
 }
 
-await migrate(db, { migrationsFolder: config.out! });
+(async () => {
+    await migrate(db, { migrationsFolder: config.out! });
 
-await connection.end();
+    await connection.end();
+})();
