@@ -459,7 +459,7 @@ class IAMPermissionDAL extends BaseDAL {
     // Private methods
     // ==================================
 
-    private get permissionSelect() {
+    get permissionSelect() {
         return {
             id: iamPermission.id,
             permissionId: iamPermission.permissionId,
