@@ -1,8 +1,10 @@
 # Base image for Bridge service
 FROM bridge:1.0.0 AS bridge
+# FROM <aws_account_id>.dkr.ecr.<your-region>.amazonaws.com/bones:bridge AS bridge
 
 # Base image for Bridge v2 service
 FROM bridge-v2:1.0.0 AS bridge-v2
+# FROM <aws_account_id>.dkr.ecr.<your-region>.amazonaws.com/bones:bridge-v2 AS bridge-v2
 
 # Starting with an Alpine-based Deno image that includes a shell and apk package manager
 FROM denoland/deno:alpine-2.0.6

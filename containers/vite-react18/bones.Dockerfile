@@ -1,8 +1,11 @@
 # Base image for Bridge service
-FROM bridge:1.0.0 AS bridge
+# FROM bridge:1.0.0 AS bridge
+FROM bones:bridge AS bridge
+# FROM <aws_account_id>.dkr.ecr.<your-region>.amazonaws.com/bones:bridge AS bridge
 
 # Base image for Bridge v2 service
-FROM bridge-v2:1.0.0 AS bridge-v2
+FROM bones:bridge-v2 AS bridge-v2
+# FROM <aws_account_id>.dkr.ecr.<your-region>.amazonaws.com/bones:bridge-v2 AS bridge-v2
 
 # Starting with NodeJS image since it's Vite-React Workspace
 FROM node:20.8.0-bullseye-slim

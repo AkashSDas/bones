@@ -1,8 +1,10 @@
 # Base image for Bridge service
 FROM bridge:1.0.0 AS bridge
+# FROM <aws_account_id>.dkr.ecr.<your-region>.amazonaws.com/bones:bridge AS bridge
 
 # Base image for Bridge v2 service
 FROM bridge-v2:1.0.0 AS bridge-v2
+# FROM <aws_account_id>.dkr.ecr.<your-region>.amazonaws.com/bones:bridge-v2 AS bridge-v2
 
 # Starting with Go image since it's a Go Workspace
 FROM golang:1.23-bullseye AS go-base
