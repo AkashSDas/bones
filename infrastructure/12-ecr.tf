@@ -114,6 +114,11 @@ resource "aws_iam_group_policy_attachment" "ecr_admins_attachment" {
   policy_arn = aws_iam_policy.ecr_admin_policy.arn
 }
 
+resource "aws_iam_group_policy_attachment" "ecr_admins_image_builder" {
+  group      = aws_iam_group.ecr_admins.name
+  policy_arn = "arn:aws:iam::aws:policy/EC2InstanceProfileForImageBuilderECRContainerBuilds"
+}
+
 resource "aws_iam_user_group_membership" "ecr_developer_membership" {
   user   = aws_iam_user.developer.name
   groups = [aws_iam_group.ecr_developers.name]
