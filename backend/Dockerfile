@@ -7,7 +7,7 @@ RUN pnpm run build
 
 FROM node:20-alpine
 WORKDIR /app
-COPY --from=build /app/dist ./dist
+COPY --from=build /app/dist .
 COPY --from=build /app/package.json ./
 COPY --from=build /app/pnpm-lock.yaml ./
 RUN npm install -g pnpm@9.12.2 \
@@ -16,4 +16,5 @@ RUN npm install -g pnpm@9.12.2 \
 EXPOSE 5050
 ENV NODE_ENV=staging
 
-CMD ["node", "dist/src/index.js"]
+CMD ["node", "src/index.js"]
+
