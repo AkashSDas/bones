@@ -43,9 +43,7 @@ resource "aws_subnet" "public_zone1" {
   tags = {
     Name = "${local.env}-public-${local.zone1}"
 
-    # This is a specail tag that is used by EKS to create private load balancers,
-    # in case you want to expose your serivce internally within the VPC 
-    "kubernetes.io/role/internal-elb" = "1"
+    "kubernetes.io/role/elb" = "1"
 
     # This is optional but is useful if you want to provision multiple EKS cluster 
     # in the same AWS account
@@ -62,9 +60,7 @@ resource "aws_subnet" "public_zone2" {
   tags = {
     Name = "${local.env}-public-${local.zone2}"
 
-    # This is a specail tag that is used by EKS to create private load balancers,
-    # in case you want to expose your serivce internally within the VPC 
-    "kubernetes.io/role/internal-elb" = "1"
+    "kubernetes.io/role/elb" = "1"
 
     # This is optional but is useful if you want to provision multiple EKS cluster 
     # in the same AWS account
