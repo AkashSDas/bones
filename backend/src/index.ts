@@ -18,7 +18,6 @@ import { iamRouter } from "./api/iam";
 import { iamPermissionRouter } from "./api/iam-permission";
 import { pingRouter } from "./api/ping";
 import { workspaceRouter } from "./api/workspace";
-import "./db/migrate";
 import { asyncLocalStorage, log } from "./lib/logger";
 import { correlationId } from "./middlewares/correlation-id";
 import { createHonoApp } from "./utils/app";
