@@ -10,18 +10,8 @@ import { Button } from "../../shared/Button";
 type PredefinedWorkspace = {
     icons: { filename: string; alt: string }[];
     label: string;
-    containerImage: `workspace`;
-    containerTag:
-        | "go1.23"
-        | "python3.13"
-        | "vite-react18"
-        | "hono4.6-deno2.0"
-        | "actix"
-        | "mongodb"
-        | "postgres"
-        | "typescript"
-        | "ubuntu"
-        | "c";
+    containerImage: string;
+    containerTag: string;
     supported: boolean;
 };
 
@@ -29,15 +19,15 @@ const PREDEFINED_WORKSPACES: PredefinedWorkspace[] = [
     {
         icons: [{ filename: "go-original", alt: "Go" }],
         label: "Go",
-        containerImage: "workspace",
-        containerTag: "go1.23",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "go1.23" : "workspace-go1.23",
         supported: true,
     },
     {
         icons: [{ filename: "python-original", alt: "Python" }],
         label: "Python",
-        containerImage: "workspace",
-        containerTag: "python3.13",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "python3.13" : "workspace-python3.13",
         supported: true,
     },
     {
@@ -46,15 +36,17 @@ const PREDEFINED_WORKSPACES: PredefinedWorkspace[] = [
             { filename: "react-original", alt: "React" },
         ],
         label: "React with Vite",
-        containerImage: "workspace",
-        containerTag: "vite-react18",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "vite-react18" : "workspace-vite-react18",
         supported: true,
     },
     {
         icons: [{ filename: "deno2", alt: "Deno" }],
         label: "Hono with Deno2",
-        containerImage: "workspace",
-        containerTag: "hono4.6-deno2.0",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV
+            ? "hono4.6-deno2.0"
+            : "workspace-hono4.6-deno2.0",
         supported: true,
     },
     {
@@ -63,43 +55,43 @@ const PREDEFINED_WORKSPACES: PredefinedWorkspace[] = [
             { filename: "actix", alt: "Actix" },
         ],
         label: "Actix",
-        containerImage: "workspace",
-        containerTag: "actix",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "actix" : "workspace-actix",
         supported: false,
     },
     {
         icons: [{ filename: "mongodb", alt: "MongoDB" }],
         label: "MongoDB",
-        containerImage: "workspace",
-        containerTag: "mongodb",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "mongodb" : "workspace-mongodb",
         supported: false,
     },
     {
         icons: [{ filename: "postgres", alt: "Postgres" }],
         label: "Postgres",
-        containerImage: "workspace",
-        containerTag: "postgres",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "postgres" : "workspace-postgres",
         supported: false,
     },
     {
         icons: [{ filename: "typescript-original", alt: "TypeScript" }],
         label: "TypeScript",
-        containerImage: "workspace",
-        containerTag: "typescript",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "typescript" : "workspace-typescript",
         supported: false,
     },
     {
         icons: [{ filename: "ubuntu-plain", alt: "Ubuntu" }],
         label: "Ubuntu",
-        containerImage: "workspace",
-        containerTag: "ubuntu",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "ubuntu" : "workspace-ubuntu",
         supported: false,
     },
     {
         icons: [{ filename: "c-original", alt: "C" }],
         label: "C",
-        containerImage: "workspace",
-        containerTag: "c",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "c" : "workspace-c",
         supported: false,
     },
 ];

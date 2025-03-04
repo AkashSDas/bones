@@ -3301,19 +3301,8 @@
                                 "type": "object",
                                 "properties": {
                                     "name": { "type": "string" },
-                                    "containerImage": {
-                                        "type": "string",
-                                        "enum": ["workspace"]
-                                    },
-                                    "containerImageTag": {
-                                        "type": "string",
-                                        "enum": [
-                                            "go1.23",
-                                            "python3.13",
-                                            "vite-react18",
-                                            "hono4.6-deno2.0"
-                                        ]
-                                    }
+                                    "containerImage": { "type": "string" },
+                                    "containerImageTag": { "type": "string" }
                                 },
                                 "required": [
                                     "name",

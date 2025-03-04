@@ -4,11 +4,9 @@
  * Bones
  * OpenAPI spec version: 1.0.0
  */
-import type { PostApiV1WorkspaceBodyContainerImage } from "./postApiV1WorkspaceBodyContainerImage";
-import type { PostApiV1WorkspaceBodyContainerImageTag } from "./postApiV1WorkspaceBodyContainerImageTag";
 
 export type PostApiV1WorkspaceBody = {
-    containerImage: PostApiV1WorkspaceBodyContainerImage;
-    containerImageTag: PostApiV1WorkspaceBodyContainerImageTag;
+    containerImage: string;
+    containerImageTag: string;
     name: string;
 };

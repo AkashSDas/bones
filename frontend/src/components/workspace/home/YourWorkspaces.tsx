@@ -65,7 +65,7 @@ export function YourWorkspaceSection() {
             <h2 className="h3">Your Workspace</h2>
             <p className="text-sm text-grey-500">Workspaces created in your account.</p>
 
-            <div className="flex gap-1 justify-center items-center mt-2">
+            <div className="flex items-center justify-center gap-1 mt-2">
                 <Input
                     className={"!h-8 w-full text-sm"}
                     placeholder="Search by name"
@@ -143,15 +143,15 @@ const ICONS = [
     {
         icons: [{ filename: "go-original", alt: "Go" }],
         label: "Go",
-        containerImage: "workspace",
-        containerTag: "go1.23",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "go1.23" : "workspace-go1.23",
         supported: true,
     },
     {
         icons: [{ filename: "python-original", alt: "Python" }],
         label: "Python",
-        containerImage: "workspace",
-        containerTag: "python3.13",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "python3.13" : "workspace-python3.13",
         supported: true,
     },
     {
@@ -160,15 +160,17 @@ const ICONS = [
             { filename: "react-original", alt: "React" },
         ],
         label: "React with Vite",
-        containerImage: "workspace",
-        containerTag: "vite-react18",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "vite-react18" : "workspace-vite-react18",
         supported: true,
     },
     {
         icons: [{ filename: "deno2", alt: "Deno" }],
         label: "Hono with Deno2",
-        containerImage: "workspace",
-        containerTag: "hono4.6-deno2.0",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV
+            ? "hono4.6-deno2.0"
+            : "workspace-hono4.6-deno2.0",
         supported: true,
     },
     {
@@ -177,43 +179,43 @@ const ICONS = [
             { filename: "actix", alt: "Actix" },
         ],
         label: "Actix",
-        containerImage: "workspace",
-        containerTag: "actix",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "actix" : "workspace-actix",
         supported: false,
     },
     {
         icons: [{ filename: "mongodb", alt: "MongoDB" }],
         label: "MongoDB",
-        containerImage: "workspace",
-        containerTag: "mongodb",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "mongodb" : "workspace-mongodb",
         supported: false,
     },
     {
         icons: [{ filename: "postgres", alt: "Postgres" }],
         label: "Postgres",
-        containerImage: "workspace",
-        containerTag: "postgres",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "postgres" : "workspace-postgres",
         supported: false,
     },
     {
         icons: [{ filename: "typescript-original", alt: "TypeScript" }],
         label: "TypeScript",
-        containerImage: "workspace",
-        containerTag: "typescript",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "typescript" : "workspace-typescript",
         supported: false,
     },
     {
         icons: [{ filename: "ubuntu-plain", alt: "Ubuntu" }],
         label: "Ubuntu",
-        containerImage: "workspace",
-        containerTag: "ubuntu",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "ubuntu" : "workspace-ubuntu",
         supported: false,
     },
     {
         icons: [{ filename: "c-original", alt: "C" }],
         label: "C",
-        containerImage: "workspace",
-        containerTag: "c",
+        containerImage: import.meta.env.DEV ? "workspace" : "bones",
+        containerTag: import.meta.env.DEV ? "c" : "workspace-c",
         supported: false,
     },
 ];
@@ -261,7 +263,7 @@ function WorkspaceCard(props: {
 
     return (
         <Link to="/workspace/$workspaceId" params={{ workspaceId: props.workspaceId }}>
-            <div className="flex gap-4 items-center px-4 w-full h-10 cursor-pointer rounded-card hover:bg-grey-900">
+            <div className="flex items-center w-full h-10 gap-4 px-4 cursor-pointer rounded-card hover:bg-grey-900">
                 <img src={`/tools/${icons[0].filename}.svg`} alt={icons[0].alt} />
                 <span className="w-full text-sm text-grey-400">{props.label}</span>
 
