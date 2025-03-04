@@ -23,7 +23,7 @@ export const K8sKind = {
 export const k8sNames = {
     /** Domain using which a workspace will be accessed */
     workspaceDomain(workspaceId: string): string {
-        return `${workspaceId}-${env.WORKSPACE_DOMAIN_SUFFIX}`;
+        return `${workspaceId}.${env.WORKSPACE_DOMAIN_SUFFIX}`;
     },
 
     workspaceNamespace(accountId: string): `workspace-${string}` {
