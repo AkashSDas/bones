@@ -11,14 +11,14 @@ export default defineConfig(({ mode }): UserConfig => {
     const plugins: PluginOption[] = [];
     const isDev = mode === "development";
 
-    if (isDev) {
-        plugins.push(
-            TanStackRouterVite({
-                autoCodeSplitting: true,
-                quoteStyle: "double",
-            }),
-        );
+    plugins.push(
+        TanStackRouterVite({
+            autoCodeSplitting: true,
+            quoteStyle: "double",
+        }),
+    );
 
+    if (isDev) {
         plugins.push(
             visualizer({
                 filename: "stats.html",
