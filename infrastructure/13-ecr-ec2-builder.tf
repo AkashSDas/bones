@@ -11,7 +11,7 @@ variable "ec2_docker_instance_ssh_key_pair" {
 variable "ec2_instance_type" {
   description = "Instance type for the EC2 instance"
   type        = string
-  default     = "t2.micro"
+  default     = "t2.medium"
 }
 
 variable "trusted_cidr" {
@@ -44,6 +44,45 @@ resource "aws_iam_role" "ec2_docker_role" {
 resource "aws_iam_instance_profile" "ec2_instance_profile" {
   name = "EC2DockerInstanceProfile"
   role = aws_iam_role.ec2_docker_role.name
+}
+
+resource "aws_iam_policy" "ec2_rds_proxy_access" {
+  name        = "EC2DockerRDSProxyAccess"
+  description = "Allow EC2 Docker instance to access RDS proxy and secrets"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = aws_secretsmanager_secret.app_secrets_final.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "rds-db:connect"
+        ]
+        Resource = "arn:aws:rds-db:${local.region}:${data.aws_caller_identity.current.account_id}:dbuser/${aws_db_instance.postgres.identifier}/${local.secrets.DB_USERNAME}"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "rds:DescribeDBProxies",
+          "rds:DescribeDBProxyTargetGroups",
+          "rds:DescribeDBProxyTargets"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_rds_proxy_access" {
+  policy_arn = aws_iam_policy.ec2_rds_proxy_access.arn
+  role       = aws_iam_role.ec2_docker_role.name
 }
 
 # ==============================================================
@@ -84,8 +123,9 @@ resource "aws_instance" "docker_instance" {
   ami                  = "ami-0c614dee691cbbf37"
   instance_type        = var.ec2_instance_type
   key_name             = var.ec2_docker_instance_ssh_key_pair
-  security_groups      = [aws_security_group.docker_instance_sg.name]
+  security_groups      = [aws_security_group.docker_instance_sg.id]
   iam_instance_profile = aws_iam_instance_profile.ec2_instance_profile.name
+  subnet_id            = aws_subnet.public_zone1.id
 
   user_data = templatefile("${path.module}/scripts/init-ec2-instance.tpl", {
     username  = "ec2-user"

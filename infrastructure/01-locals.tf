@@ -11,4 +11,5 @@ locals {
   eks_version   = "1.32"
   ecr_repo_name = "bones"
   secrets       = jsondecode(data.local_file.secrets.content)
+  domain        = "akashdas.site"
 }
