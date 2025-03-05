@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: honojs
+    namespace: bones
+    labels:
+        app: honojs
+spec:
+    selector:
+        matchLabels:
+            app: honojs
+    template:
+        metadata:
+            labels:
+                app: honojs
+        spec:
+            serviceAccountName: eks-access-sa
+            containers:
+                - name: honojs
+                  image: <account-id>.dkr.ecr.us-east-1.amazonaws.com/bones:backend
+                  imagePullPolicy: Always # Force pull new image
+                  envFrom:
+                      - secretRef:
+                            name: bones-env
+                  volumeMounts:
+                      - name: env-file
+                        mountPath: /app/.env
+                        subPath: .env
+                  ports:
+                      - name: http
+                        containerPort: 5050
+                  resources:
+                      requests:
+                          memory: 64Mi
+                          cpu: 100m
+                      limits:
+                          memory: 128Mi
+                          cpu: 500m
+            volumes:
+                - name: env-file
+                  secret:
+                      secretName: bones-env
