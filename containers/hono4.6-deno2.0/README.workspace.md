@@ -3,7 +3,7 @@
 ## Docker Image
 
 ```bash
-docker build -t workspace:hono4.6-deno2.0 -f Dockerfile .
+docker build -t workspace:hono4.6-deno2.0 -f bones.Dockerfile .
 docker run --rm -it -p 80:80 workspace:hono4.6-deno2.0
 ```
 
