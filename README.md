@@ -2,6 +2,8 @@
 
 An online collaborative coding workspace environment where teams can connect and write software together. This is like CodeSandbox and it has a rich code editor (intellisense like VSCode, terminal sessions, dynamic layout, file edit real time sync across connected users, and much more) along with user management and authorization policies (to restrict access to workspaces).
 
+![Presentation image](./docs/presentation.png)
+
 ## Technologies used
 
 **For frontend**:
