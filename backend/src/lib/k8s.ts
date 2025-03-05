@@ -2,8 +2,17 @@ import { env } from "@/utils/env";
 
 import * as k8s from "@kubernetes/client-node";
 
+import { log } from "./logger";
+
 const kc = new k8s.KubeConfig();
-kc.loadFromDefault(); // Loads from $HOME/.kube/config or from KUBECONFIG env variable
+
+if (env.ENV === "development") {
+    kc.loadFromDefault(); // Loads from $HOME/.kube/config or from KUBECONFIG env variable
+} else if (env.K8S_CLUSTER_API_URL) {
+    kc.loadFromCluster(env.K8S_CLUSTER_API_URL);
+} else {
+    log.fatal(`K8s cluster not setup for env ${env.ENV}`);
+}
 
 export const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
 

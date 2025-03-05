@@ -93,6 +93,8 @@ export const EnvironmentVariablesSchema = z
             }
         }),
         WORKSPACE_DOMAIN_SUFFIX: z.string(),
+
+        K8S_CLUSTER_API_URL: z.string().nullable().optional(),
     })
     .transform((env) => ({
         APP_URL: env.APP_URL,
@@ -105,7 +107,10 @@ export const EnvironmentVariablesSchema = z
         COOKIE_ENCRYPTION_KEY: env.COOKIE_ENCRYPTION_KEY,
         CORS_ORIGINS: env.CORS_ORIGINS,
 
-        DB_URL: `postgresql://${env.DB_USERNAME}:${env.DB_PASSWORD}@${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}?ssl=true`, // ssl true for prod
+        DB_URL:
+            env.ENV === "development"
+                ? `postgresql://${env.DB_USERNAME}:${env.DB_PASSWORD}@${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}`
+                : `postgresql://${env.DB_USERNAME}:${env.DB_PASSWORD}@${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}?ssl=true`, // ssl true for prod
         DB_MIGRATING: env.DB_MIGRATING,
         DB_SEEDING: env.DB_SEEDING,
 
@@ -126,6 +131,8 @@ export const EnvironmentVariablesSchema = z
 
         WORKSPACE_EXPOSED_PORTS: env.WORKSPACE_EXPOSED_PORTS,
         WORKSPACE_DOMAIN_SUFFIX: env.WORKSPACE_DOMAIN_SUFFIX,
+
+        K8S_CLUSTER_API_URL: env.K8S_CLUSTER_API_URL,
     }));
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariablesSchema>;
