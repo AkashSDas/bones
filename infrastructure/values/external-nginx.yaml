@@ -1,0 +1,9 @@
+---
+controller:
+    ingressClassResource:
+        name: external-ingress
+    service:
+        annotations:
+            service.beta.kubernetes.io/aws-load-balancer-type: external
+            service.beta.kubernetes.io/aws-load-balancer-nbl-target-type: ip
+            service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
