@@ -13,6 +13,11 @@ sudo usermod -aG docker ${username}
 
 sudo yum install -y aws-cli
 
+# Install Node.js and pnpm (On instance launch this won't be directly available as it would be downloading in the background)
+curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+sudo yum install -y nodejs
+sudo npm install -g pnpm@9.12.2
+
 # Display next steps for users after SSHing into the instance
 cat <<EOL >>/etc/motd
 
@@ -41,7 +46,7 @@ EOL
 newgrp docker
 
 # Useful commands:
-# sudo docker rmi -f $(sudo docker images -aq)  # delete all images
-# sudo docker pull <account-id>.dkr.ecr.<region>.amazonaws.com/bones:workspace-vite-react18
-# sudo docker run -d -p 80:80 <account-id>.dkr.ecr.<region>.amazonaws.com/bones:workspace-vite-react18
-# sudo docker exec -it 818c5ce14124 /bin/bash # Get inside of container
+# docker rmi -f $(sudo docker images -aq)  # delete all images
+# docker pull <account-id>.dkr.ecr.<region>.amazonaws.com/bones:workspace-vite-react18
+# docker run -d -p 80:80 <account-id>.dkr.ecr.<region>.amazonaws.com/bones:workspace-vite-react18
+# docker exec -it 818c5ce14124 /bin/bash # Get inside of container
