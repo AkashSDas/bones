@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "tsc -v && vite",
         "vers": "tsc -v",
-        "build": "pnpm routes:generate && tsc -b && vite build",
+        "build": "pnpm generate:client && pnpm routes:generate && tsc -b && vite build",
         "preview": "vite preview",
         "test": "vitest",
         "test:cov": "vitest --coverage",
