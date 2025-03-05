@@ -105,7 +105,7 @@ export const EnvironmentVariablesSchema = z
         COOKIE_ENCRYPTION_KEY: env.COOKIE_ENCRYPTION_KEY,
         CORS_ORIGINS: env.CORS_ORIGINS,
 
-        DB_URL: `postgresql://${env.DB_USERNAME}:${env.DB_PASSWORD}@${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}`,
+        DB_URL: `postgresql://${env.DB_USERNAME}:${env.DB_PASSWORD}@${env.DB_HOST}:${env.DB_PORT}/${env.DB_NAME}?ssl=true`, // ssl true for prod
         DB_MIGRATING: env.DB_MIGRATING,
         DB_SEEDING: env.DB_SEEDING,
 

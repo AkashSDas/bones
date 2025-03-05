@@ -16,7 +16,8 @@
         "test:cov": "vitest --coverage",
         "test:ui": "vitest --ui",
         "db:generate": "drizzle-kit generate",
-        "db:migrate": "cross-env DB_MIGRATING=true tsx src/db/migrate.ts",
+        "db:migrate": "drizzle-kit migrate",
+        "db:migrate:deprecated": "cross-env DB_MIGRATING=true tsx src/db/migrate.ts",
         "db:seed": "cross-env DB_SEEDING=true tsx src/db/seed.ts",
         "db:studio": "drizzle-kit studio"
     },
@@ -39,7 +40,7 @@
         "nodemailer": "^6.9.15",
         "pino": "^9.4.0",
         "pino-pretty": "^11.2.2",
-        "postgres": "^3.4.4",
+        "postgres": "^3.4.5",
         "rotating-file-stream": "^3.2.5",
         "uuid": "^10.0.0",
         "zod": "^3.23.8"
