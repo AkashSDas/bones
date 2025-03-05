@@ -244,6 +244,15 @@ export class WorkspaceManager {
         containerImage: string;
         containerImageTag: string;
     }): k8s.V1Pod {
+        let image = config.containerImage;
+
+        if (env.ENV !== "development") {
+            // ECR repo
+            // TODO: pass this via external secret and secret manager and use an env var
+            // instead of this
+            image = `<account-id>.dkr.ecr.<region>.amazonaws.com/${image}`;
+        }
+
         return {
             apiVersion: API_VERSION,
             kind: K8sKind.Pod,
@@ -259,7 +268,7 @@ export class WorkspaceManager {
                 containers: [
                     {
                         name: k8sNames.workspaceMainContainer(config.workspaceId),
-                        image: `${config.containerImage}:${config.containerImageTag}`,
+                        image: `${image}:${config.containerImageTag}`,
                         imagePullPolicy: "IfNotPresent",
 
                         // Exposing multiple ports. This will give users the option to map any internal port
@@ -332,7 +341,8 @@ export class WorkspaceManager {
                     podName: k8sNames.workspacePod(config.workspaceId),
                 },
                 annotations: {
-                    "kubernetes.io/ingress.class": "nginx",
+                    "kubernetes.io/ingress.class":
+                        env.ENV === "development" ? "nginx" : "external-ingress",
                     "nginx.ingress.kubernetes.io/rewrite-target": "/",
                     "nginx.ingress.kubernetes.io/ssl-redirect": "false",
                     "nginx.ingress.kubernetes.io/use-regex": "true",
@@ -350,7 +360,8 @@ export class WorkspaceManager {
                 },
             },
             spec: {
-                ingressClassName: "nginx",
+                ingressClassName:
+                    env.ENV === "development" ? "nginx" : "external-ingress",
                 rules: [
                     {
                         host: config.workspaceDomain,
