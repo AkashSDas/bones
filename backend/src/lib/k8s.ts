@@ -9,7 +9,7 @@ const kc = new k8s.KubeConfig();
 if (env.ENV === "development") {
     kc.loadFromDefault(); // Loads from $HOME/.kube/config or from KUBECONFIG env variable
 } else if (env.K8S_CLUSTER_API_URL) {
-    kc.loadFromCluster(env.K8S_CLUSTER_API_URL);
+    kc.loadFromCluster();
 } else {
     log.fatal(`K8s cluster not setup for env ${env.ENV}`);
 }
