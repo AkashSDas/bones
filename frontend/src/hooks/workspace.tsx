@@ -59,10 +59,19 @@ export function useWorkspaceURL(): {
 } {
     const workspaceId = useWorkspaceStore((s) => s.workspace?.workspaceId);
 
-    const host = useMemo(
-        () => (workspaceId ? `${workspaceId}-workspace.bones.test` : null),
-        [workspaceId],
-    );
+    const host = useMemo(() => {
+        if (workspaceId) {
+            const currentHost = window.location.hostname;
+
+            if (currentHost.includes("akashdas.site")) {
+                return `${workspaceId}.workspace.akashdas.site`;
+            } else {
+                return `${workspaceId}-workspace.bones.test`;
+            }
+        } else {
+            return null;
+        }
+    }, [workspaceId]);
 
     const baseURL = useMemo(() => (host ? `http://${host}` : null), [host]);
 
