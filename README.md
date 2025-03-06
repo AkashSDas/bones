@@ -4,6 +4,8 @@ An online collaborative coding workspace environment where teams can connect and
 
 ![Presentation image](./docs/presentation.png)
 
+[Demo](https://www.youtube.com/watch?v=RG5bCvMIqtQ)
+
 ## Technologies used
 
 **For frontend**:
@@ -34,6 +36,20 @@ An online collaborative coding workspace environment where teams can connect and
 - Express.js and Node.js
 - Yjs-websockets (for collaboration)
 - Node Pty (for terminal sessions)
+
+**Deployment**:
+
+Everything is deployed on AWS using Terraform. AWS ECR is used to store all the Docker images and then using Kubernetes config we can deploy frontend and backend with domains mappings which are supported by Route53 and Network Load Balancer (Nginx Ingress). Backend is horizontally scalable based on CPU/Memory utilization. Security is taken care private subnets, route tables, security groups, and IAM policies.
+
+- Terraform
+- AWS Elastic Kubernetes Service (EKS), access entry for restricting pod and K8s resource access
+- AWS RDS and Elastic Cache
+- AWS IAM roles and policies for security
+- AWS Elastic Container Registry (ECR)
+- AWS Secret Manager
+- AWS IAM (users, groups, roles, policies), VPC, public and private subnets
+- AWS EC2 (for build/pushing Docker images and DB migrations -- secured by IAM roles and policies)
+- AWS Route53
 
 ## Bridge v1 vs v2
 
